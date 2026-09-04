@@ -65,10 +65,20 @@ whether the callback prints one notice or many.
 **b. Vendor opt-out surfaces — always look for these first**
 
 ```bash
-command grep -rnE "apply_filters\( *['\"][^'\"]*(notice|promo|upsell|nag|review|deal|banner|sale|discount|tracking|opt_?in|announcement)" "${WORK_PATH}"
+command grep -rnE "apply_filters\( *['\"][^'\"]*(notice|promo|upsell|nag|review|deal|banner|sale|discount|tracking|opt_?in|announcement|widget|dashboard|show_)" "${WORK_PATH}"
 ```
 
 A documented vendor filter is mechanism 1 and always beats unhooking.
+
+`widget`, `dashboard` and `show_` are in that list because of a real miss: YITH's
+`yith_plugin_fw_show_dashboard_widgets` contains none of the promotional words, so
+the first pass over `plugin-fw` reported "no vendor opt-out" and the rule was written
+as a `remove_meta_box()` instead. If a vendor gates a promotional surface at all, the
+switch is often named after the surface rather than after the promotion.
+
+Do not treat this list as complete. When passes (a), (d) or (e) find a promotional
+surface, go and read the code that registers it and look for a condition wrapping the
+registration — that is where an opt-out lives, whatever it is called.
 
 **c. Opt-out constants**
 

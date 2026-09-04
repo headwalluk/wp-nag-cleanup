@@ -153,6 +153,18 @@ drift is detectable when a vendor renames something.
 Live sites for testing, and the deployment path to the hosting fleet, are in
 `dev-notes/` — which is gitignored and stays that way.
 
+### The audit trail
+
+Every plugin examined gets a committed document in `docs/plugins/`, whether or not it
+produced a rule. A plugin with no nags is a completed result, not a gap.
+
+`/analyse-plugin <slug>` runs the process: extract from the vault into `work/`, work
+a fixed search checklist, classify each finding against the boundary rule, write the
+document from `docs/plugins/_TEMPLATE.md`. The `## Deliberately left alone` section
+is the point of the exercise — it is the evidence the boundary rule was applied.
+
+Rules and their documents change in the same commit.
+
 ## Coding style
 
 PHP, matching the wider Headwall house style:
@@ -178,6 +190,23 @@ PHP, matching the wider Headwall house style:
 - Data-driven output over long strings of concatenation
 - Lean on nothing. A dependency must earn its place against the code it saves;
   in this project nothing has earned it
+
+### Comments
+
+Comments say **how the code works**, not why the decision behind it was taken.
+Background, rationale, rejected alternatives, evidence and version archaeology all
+belong in `docs/plugins/` — reference the document, do not restate it.
+
+- One line of docblock per method, saying what it does
+- Inline comments only where the mechanism is genuinely non-obvious: a load-order
+  trap, a core function behaving unexpectedly, a guard whose absence would be
+  silently wrong
+- A rule gets a comment naming the vendor, the version verified against, and the doc
+  path. Not the reasoning — that is what the doc is for
+- No-op branches still get a comment, but a terse one. `// Core widgets stay unless
+  the site owner opts in.` not a paragraph on whose call it is
+- If a comment is running past three or four lines, it is documentation that has
+  ended up in the wrong file
 
 ## Things not to do
 

@@ -5,6 +5,57 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] — 2026-09-04
+
+First stable release. Every rule in the plugin now has a source audit behind it, and
+the three mechanisms are exercised by real vendors rather than by design intent.
+
+Version 1.0.0 is a commitment about process, not about coverage. The rule set is
+small and will stay that way: it grows one audited vendor at a time, and a vendor
+that turns out to need no rule is a completed piece of work, not a gap.
+
+### Changed
+
+- **YITH moves from mechanism 3 to mechanism 1.** `plugin-fw` exposes
+  `yith_plugin_fw_show_dashboard_widgets` (`class-yith-dashboard.php:145`), a vendor
+  opt-out gating both RSS dashboard widgets. It replaces the two `remove_meta_box()`
+  calls and is better on three counts: the widgets are never registered rather than
+  registered then removed, the same block also gates an `admin_enqueue_scripts`
+  registration so a script and stylesheet stop loading on every admin page, and a
+  vendor switch survives a widget being renamed
+- Plugin author changed to Paul Faulkner
+- **In-code comments trimmed** (278 lines to 226). Comments now describe how the code
+  works; rationale, evidence and version archaeology live in `docs/plugins/` and are
+  referenced by path. Recorded as a standing preference in `CLAUDE.md`
+- `PROMOTIONAL_DASHBOARD_WIDGETS` is now empty. That is the correct outcome, not a
+  gap — mechanism 3 has no vendor occupant because its only one was promoted to
+  mechanism 1. The machinery stays for the next vendor that offers no switch
+
+### Added
+
+- `docs/plugins/yith-plugin-fw.md`. One rule covers **every** YITH plugin, free and
+  premium: `plugin-fw` is a shared framework, confirmed by finding byte-identical
+  4.7.8 copies inside `yith-woocommerce-wishlist` 4.18.0 from the vault and
+  `yith-woocommerce-eu-vat-premium` installed on a live site
+
+### Fixed
+
+- **Documentation accuracy.** The status block still read "Version 0.1.0" while the
+  rules table read 0.1.2, and the README claimed every rule had an analysis in
+  `docs/plugins/` when YITH had none. Both corrected; the YITH analysis was written
+  rather than the claim weakened
+- The `/analyse-plugin` opt-out search now also matches `widget`, `dashboard` and
+  `show_`. It previously matched only promotional vocabulary, which is why
+  `yith_plugin_fw_show_dashboard_widgets` was missed on the first pass and YITH was
+  written as a mechanism 3 rule. The skill now also says to read the registration
+  site of any promotional surface and look for a wrapping condition, whatever it is
+  named
+
+### Left alone in this release
+
+- YITH's system-requirements warning, its post-deactivation confirmation, and its
+  settings-panel tabs — all operational or vendor UI
+
 ## [0.1.2] — 2026-09-04
 
 Audit of Essential Addons for Elementor. Opposite result to EmbedPress: the rule is

@@ -7,9 +7,10 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: early development, working baseline.** Version 0.1.0. The machinery is
-> complete and the three mechanisms work end to end; the rule set is small and
-> growing. See [`CHANGELOG.md`](CHANGELOG.md).
+> **Status: stable.** Version 1.0.0. The machinery is complete, all three mechanisms
+> work end to end, and every rule has a source audit behind it. The rule set is
+> deliberately small and grows one audited vendor at a time.
+> See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## The problem
 
@@ -88,6 +89,7 @@ one-line `add_filter()` against a core return helper, registered at file scope:
 
 ```php
 add_filter( 'eael/disable_promotions', '__return_true', 100 );
+add_filter( 'yith_plugin_fw_show_dashboard_widgets', '__return_false' );
 ```
 
 Sanctioned, stable, and cannot break anything the vendor did not intend to be
@@ -121,22 +123,35 @@ Core's own "WordPress Events and News" widget also makes an outbound call, but i
 is core output and so is left alone by default. There is a constant to remove it
 if you want that (see Configuration).
 
+No vendor currently uses this mechanism. YITH did until 1.0.0, when the vendor's own
+opt-out filter was found and the rule moved up to mechanism 1 — which is the order of
+preference working as intended. The mechanism stays because it is still the right
+answer for a vendor that offers no switch.
+
 ## What it suppresses today
 
-Version 0.1.2. Every entry was verified against real plugin source, and each has a
-written analysis in [`docs/plugins/`](docs/plugins/).
+Version 1.0.0. Every vendor rule below was verified against that vendor's real source
+and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
-| Vendor | Verified | How | What goes |
+| Vendor | Verified against | Mechanism | What goes |
 |---|---|---|---|
-| Elementor | 4.2.4 | 2 | Nine promotional notices |
-| YITH (`plugin-fw`) | 4.7.8 | 3 | Two RSS dashboard widgets fetching `yithemes.com` |
 | Essential Addons for Elementor | 6.8.3 | 1 | Promo banner, two dashboard widgets, seasonal pointer |
-| WordPress core | 7.1 | 3 | "WordPress Events and News" — opt-in only |
+| YITH — all plugins, via `plugin-fw` | 4.7.8 | 1 | Two `yithemes.com` RSS dashboard widgets, and their script and style enqueue |
+| Elementor | 4.2.4 | 2 | Nine promotional notices |
+| WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
+
+The core widget is the one entry that is not a vendor nag. It is off unless you turn
+it on, and it is documented under [Configuration](#configuration) rather than in
+`docs/plugins/`, which covers third-party plugins.
+
+The YITH rule is worth singling out: `plugin-fw` is a framework bundled inside every
+YITH plugin, free and premium, so a single filter covers the whole vendor — including
+YITH plugins you install in future.
 
 The list is short on purpose. A rule that has not been read out of the vendor's own
 source does not go in — and one that has been read out and found wanting comes back
-out again. EmbedPress was audited in 0.1.1 and its two rules were **removed**: the
-hooks they targeted do not exist in any release we hold. See
+out again. EmbedPress shipped two rules in 0.1.0 and both were **removed** in 0.1.1:
+the hooks they targeted do not exist in any of the 57 releases we hold. See
 [`docs/plugins/embedpress.md`](docs/plugins/embedpress.md).
 
 ## The audit trail
