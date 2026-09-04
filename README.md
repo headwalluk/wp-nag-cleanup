@@ -123,14 +123,14 @@ if you want that (see Configuration).
 
 ## What it suppresses today
 
-Version 0.1.1. Every entry was verified against real plugin source, and each has a
+Version 0.1.2. Every entry was verified against real plugin source, and each has a
 written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified | How | What goes |
 |---|---|---|---|
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | YITH (`plugin-fw`) | 4.7.8 | 3 | Two RSS dashboard widgets fetching `yithemes.com` |
-| Essential Addons for Elementor | in production, audit outstanding | 1 | Promotions |
+| Essential Addons for Elementor | 6.8.3 | 1 | Promo banner, two dashboard widgets, seasonal pointer |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" — opt-in only |
 
 The list is short on purpose. A rule that has not been read out of the vendor's own

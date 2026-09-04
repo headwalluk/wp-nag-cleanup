@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     0.1.1
+ * Version:     0.1.2
  * Author:      Headwall Hosting
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -46,7 +46,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '0.1.1';
+		const VERSION = '0.1.2';
 
 		/**
 		 * Promotional dashboard widgets removed on every dashboard load.
@@ -145,9 +145,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Mechanism 1: the vendor's own opt-out hooks. Registered at file scope.
 		 */
 		private function register_vendor_optouts() : void {
-			// Essential Addons for Elementor (WPDeveloper). Inherited from the fleet
-			// mu-plugin on the provenance "works in production"; the source audit is
-			// still outstanding.
+			// Essential Addons for Elementor (WPDeveloper) 6.8.3. A real, documented
+			// vendor kill switch, covering the ThinkRank promo banner, both
+			// promotional dashboard widgets and the Black Friday pointer. The vendor
+			// reads it per-surface rather than once at construction, so registering it
+			// this early is explicitly the supported use. Note it has only existed
+			// since 6.7.2, and is inert on anything older.
+			// See docs/plugins/essential-addons-for-elementor-lite.md.
 			add_filter( 'eael/disable_promotions', '__return_true', 100 );
 			$this->log( 'essential-addons', 'Registered eael/disable_promotions.' );
 

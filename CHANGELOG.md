@@ -5,6 +5,39 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-09-04
+
+Audit of Essential Addons for Elementor. Opposite result to EmbedPress: the rule is
+real, and better built than expected.
+
+### Changed
+
+- `eael/disable_promotions` provenance upgraded from "works in production" to
+  **verified against 6.8.3**. It is a genuine vendor kill switch, documented by
+  WPDeveloper in `readme.txt`, and read **per-surface** rather than once at
+  construction — so registering it early from an mu-plugin is explicitly the
+  supported use. It covers the ThinkRank promo banner, both promotional dashboard
+  widgets (`eael_xspeed_speed_check`, `eael_thinkrank_seo_check`) and the Black
+  Friday pointer
+
+### Added
+
+- `docs/plugins/essential-addons-for-elementor-lite.md`
+
+### Notes
+
+- The filter is **new**: it first appears in 6.7.2 (zero occurrences in 6.7.1 and in
+  every one of the 70-odd earlier releases held). The rule works, but can only have
+  been working since 6.7.2
+- No rule was added for `eael/templately_promo`, which defaults to `false`. Filtering
+  it could only turn the promo **on**. Recorded in the analysis as a trap
+- `WPDeveloper_Notice`, the same review-and-upsell library bundled dead in EmbedPress,
+  is bundled dead here too — present, never instantiated
+- Left alone: the `elementor_not_loaded` dependency notice and the bulk
+  approve/reject result notice
+- Also recorded: Essential Addons calls `remove_all_actions()` on four notice hooks on
+  its own settings screen — the same pattern as EmbedPress, one hook more thorough
+
 ## [0.1.1] — 2026-09-04
 
 First release driven by an `/analyse-plugin` audit, which immediately invalidated
