@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     0.1.0
+ * Version:     0.1.1
  * Author:      Headwall Hosting
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -46,7 +46,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '0.1.0';
+		const VERSION = '0.1.1';
 
 		/**
 		 * Promotional dashboard widgets removed on every dashboard load.
@@ -145,16 +145,18 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Mechanism 1: the vendor's own opt-out hooks. Registered at file scope.
 		 */
 		private function register_vendor_optouts() : void {
-			// EmbedPress (WPDeveloper). In production across the Headwall fleet since
-			// before this project existed; source audit still to be written up in
-			// docs/plugins/embedpress.md.
-			add_filter( 'embedpress_show_admin_notices', '__return_false' );
-			add_filter( 'embedpress_admin_notices', '__return_empty_array', 100 );
-			$this->log( 'embedpress', 'Registered EmbedPress notice opt-out filters.' );
-
-			// Essential Addons for Elementor (WPDeveloper). Same provenance.
+			// Essential Addons for Elementor (WPDeveloper). Inherited from the fleet
+			// mu-plugin on the provenance "works in production"; the source audit is
+			// still outstanding.
 			add_filter( 'eael/disable_promotions', '__return_true', 100 );
 			$this->log( 'essential-addons', 'Registered eael/disable_promotions.' );
+
+			// EmbedPress carried two filters here until 0.1.1. Neither hook name
+			// exists in any of the 57 releases held in the vault (4.0.5 to 4.6.5), so
+			// they never fired. EmbedPress 4.6.5 has no suppressible promotional
+			// notices at all: its review and upsell framework is present but never
+			// instantiated, and everything it does register is operational. No action
+			// is taken for this vendor. See docs/plugins/embedpress.md.
 		}
 
 		/**

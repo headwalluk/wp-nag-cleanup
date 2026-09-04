@@ -5,6 +5,38 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-09-04
+
+First release driven by an `/analyse-plugin` audit, which immediately invalidated
+two of the rules shipped the same day.
+
+### Removed
+
+- **EmbedPress rules `embedpress_show_admin_notices` and `embedpress_admin_notices`.**
+  Neither hook exists. Sampling across all 57 EmbedPress releases held in the vault
+  (4.0.5 – 4.6.5) returns zero occurrences of either name, so the filters never
+  fired. They were inherited from the fleet mu-plugin on the provenance "works in
+  production" and were never checked against source. Harmless, but false provenance
+  in the README, the changelog and the code — which is worse than no rule at all
+
+### Added
+
+- `docs/plugins/embedpress.md` — full analysis. EmbedPress 4.6.5 has **no**
+  suppressible promotional notices: its review-and-upsell framework
+  (`EmbedPress_Notice`) is present but never instantiated, and every notice it
+  actually registers is operational (licence state, an analytics database cleanup
+  prompt, per-user Google Calendar results)
+
+### Notes
+
+- The vault holds only the free EmbedPress plugin. EmbedPress Pro is a separate
+  package and is not held, so the absence of those hooks in Pro is unproven
+- Recorded in the analysis: EmbedPress itself calls `remove_all_actions('admin_notices')`
+  on its own two admin screens, so no plugin's notices — including database upgrade
+  prompts — render there. Out of scope for us, but worth knowing about
+- `eael/disable_promotions` is unaffected: Essential Addons is a separate plugin and
+  its audit is still outstanding
+
 ## [0.1.0] — 2026-09-04
 
 First working baseline. The machinery is complete and three mechanisms are

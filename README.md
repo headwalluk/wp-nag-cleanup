@@ -87,8 +87,6 @@ Where a vendor provides a documented switch, use it. This is nearly always a
 one-line `add_filter()` against a core return helper, registered at file scope:
 
 ```php
-add_filter( 'embedpress_show_admin_notices', '__return_false' );
-add_filter( 'embedpress_admin_notices', '__return_empty_array', 100 );
 add_filter( 'eael/disable_promotions', '__return_true', 100 );
 ```
 
@@ -125,19 +123,21 @@ if you want that (see Configuration).
 
 ## What it suppresses today
 
-Version 0.1.0. Every entry was verified against real plugin source, and each has a
+Version 0.1.1. Every entry was verified against real plugin source, and each has a
 written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified | How | What goes |
 |---|---|---|---|
-| EmbedPress | in production | 1 | Admin notices and promotional nags |
-| Essential Addons for Elementor | in production | 1 | Promotions |
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | YITH (`plugin-fw`) | 4.7.8 | 3 | Two RSS dashboard widgets fetching `yithemes.com` |
+| Essential Addons for Elementor | in production, audit outstanding | 1 | Promotions |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" — opt-in only |
 
 The list is short on purpose. A rule that has not been read out of the vendor's own
-source does not go in.
+source does not go in — and one that has been read out and found wanting comes back
+out again. EmbedPress was audited in 0.1.1 and its two rules were **removed**: the
+hooks they targeted do not exist in any release we hold. See
+[`docs/plugins/embedpress.md`](docs/plugins/embedpress.md).
 
 ## The audit trail
 
