@@ -78,6 +78,26 @@ on a settings screen, "upgrade" tabs, locked panels — those are the vendor's
 business and are out of scope by construction. This project only ever touches the
 admin notice area and the dashboard.
 
+### WooCommerce is out of scope
+
+`wp-nag-cleanup` does not touch WooCommerce, and will not.
+
+Not because there is nothing to remove, but because WooCommerce cannot be cleaned up
+by the means this project allows itself. Some of its tracking carries on regardless of
+the setting that claims to disable it, and there is no hook to filter — so removing it
+means editing WooCommerce's own files, version by version. That is a fundamentally
+different tool: it needs a multi-file patch set, it has to track upstream releases, and
+it cannot be a single drop-in file that keeps working when the vendor updates.
+
+That work lives in a separate project:
+
+**[headwalluk/woocommerce-debloat](https://github.com/headwalluk/woocommerce-debloat)** —
+performance and privacy patches to debloat WooCommerce.
+
+It applies the same boundary rule as this project: telemetry, marketplace upsells and
+remote-install endpoints go; subscription validation, licence state and plugin updates
+stay.
+
 ## How it works
 
 One file, one class. Three mechanisms, in order of preference.
