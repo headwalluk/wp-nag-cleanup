@@ -1,0 +1,27 @@
+# Local development notes — host paths, dev site URLs, fleet deployment targets.
+# Never committed.
+dev-notes/
+
+# Scratch space for extracting plugin releases from the vault.
+# /analyse-plugin extracts into work/. Never committed.
+work/
+scratch/
+tmp/
+
+# Editor and OS noise
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# PHP tooling — not used by this project, but caught if ever introduced
+vendor/
+composer.lock
+.phpunit.result.cache
+.php-cs-fixer.cache
+
+# Logs
+*.log
