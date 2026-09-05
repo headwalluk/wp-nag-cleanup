@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.8.0
+ * Version:     1.9.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.8.0';
+		const VERSION = '1.9.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -159,6 +159,35 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_elementor_notices();
 			$this->unhook_wpb_product_slider_review_notice();
 			$this->unhook_forminator_dashboard_promo();
+			$this->unhook_premium_addons_promos();
+		}
+
+		/**
+		 * Replace Premium Addons' notice dispatcher with its dependency check alone.
+		 *
+		 * One callback prints the Elementor dependency notice and three promos. Both
+		 * methods are public, so the dispatcher is swapped for the operational half
+		 * rather than the promos being dismissed on the site owner's behalf.
+		 * Premium Addons for Elementor 4.11.102. docs/plugins/premium-addons-for-elementor.md
+		 */
+		public function unhook_premium_addons_promos() : void {
+			$notices_class = '\\PremiumAddons\\Admin\\Includes\\Admin_Notices';
+
+			if ( ! class_exists( $notices_class ) || ! method_exists( $notices_class, 'get_instance' ) ) {
+				return;
+			}
+
+			$notices = $notices_class::get_instance();
+
+			if ( ! is_object( $notices ) || ! method_exists( $notices, 'required_plugins_check' ) ) {
+				// Without the dependency check to put back, removing the dispatcher would
+				// lose an operational notice. Leave the promos rather than risk that.
+				$this->log( 'premium-addons', 'required_plugins_check not reachable; no action taken.' );
+			} else {
+				remove_action( 'admin_notices', [ $notices, 'admin_notices' ] );
+				add_action( 'admin_notices', [ $notices, 'required_plugins_check' ] );
+				$this->log( 'premium-addons', 'Swapped admin_notices dispatcher for required_plugins_check.' );
+			}
 		}
 
 		/**

@@ -5,6 +5,57 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] — 2026-09-05
+
+### Added
+
+- **Premium Addons' three promotional notices removed** — the review request
+  (`pa_review_notice`), the Angie "new feature" notice (`pa-angie-not`) and the Connect-AI
+  upsell (`pa-connect-ai-not`) — **without dismissing anything on the site owner's
+  behalf**
+
+### A rejected finding, reversed
+
+1.6.0 recorded this as impossible. Premium Addons registers one `admin_notices` callback
+that prints the Elementor dependency notice *and* the three promos, so unhooking it would
+take an operational notice with it. That was documented as mixed output with no rule.
+
+**The conclusion only held if the callback were atomic, and it is not.**
+`required_plugins_check()` is declared `public`, as is `admin_notices()`. So the
+dispatcher is removed and the dependency check re-added on its own:
+
+```php
+remove_action( 'admin_notices', [ $notices, 'admin_notices' ] );
+add_action( 'admin_notices', [ $notices, 'required_plugins_check' ] );
+```
+
+The three promotional methods are private and called only from the dispatcher, so they
+cannot run. Reached through the vendor's own singleton,
+`\PremiumAddons\Admin\Includes\Admin_Notices::get_instance()`. No `$wp_filter`, no
+option written, nothing left behind when this plugin is removed.
+
+The swap is **guarded**: if `required_plugins_check()` cannot be found, nothing is removed
+at all. Leaving three promos in place is better than silently losing a dependency notice.
+
+**The lesson generalises**: when a callback is mixed, check the visibility of its parts
+before declaring it atomic. A public operational method can be re-hooked.
+
+### The alternative that was rejected
+
+Writing the three dismissal options (`pa_review_notice`, `pa-angie-not`,
+`pa-connect-ai-not`) to `'1'` would have worked, and would have needed a second, opt-in
+file to keep this plugin's read-only guarantee intact. Rejected: it writes permanent
+per-site residue that removing this plugin would not undo, records a dismissal the site
+owner never made, and would need repeating for every vendor that gates on an option.
+
+### Verified
+
+A/B on WP 7.1: `pa-connect-ai-notice` goes 1 → 0 while the Elementor dependency notice
+stays at 1. The review and Angie notices could not be observed on the bench — the first is
+time-gated, the second needs `ANGIE_VERSION` from a companion plugin — so their removal is
+structural rather than observed: both are private and only the dispatcher called them.
+Zero PHP fatals.
+
 ## [1.8.0] — 2026-09-05
 
 ### Added

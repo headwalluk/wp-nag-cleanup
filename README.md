@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.8.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.9.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -177,7 +177,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.8.0. Every vendor rule below was verified against that vendor's real source
+Version 1.9.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -192,7 +192,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | Forminator | 1.57.2 | 2 | "Pro Form Templates" dashboard promo, review request |
-| Premium Addons for Elementor | 4.11.102 | 3 | "Premium Addons News" widget, and its `premiumaddons.com` fetch |
+| Premium Addons for Elementor | 4.11.102 | 2, 3 | Review nag, Angie and Connect-AI upsells, "Premium Addons News" widget and its `premiumaddons.com` fetch |
 | CSS Hero | 5.1.0 | 3 | "From the CSS Hero world" RSS widget |
 | WooCommerce Lottery (wpgenie) | 1.1.21 | 3 | "wpgenie.org - Our latest themes and plugins" RSS widget |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
