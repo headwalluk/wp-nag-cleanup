@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.15.0
+ * Version:     1.16.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.15.0';
+		const VERSION = '1.16.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -68,6 +68,18 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'normal',
 				'vendor'    => 'WooCommerce Lottery 1.1.21',
 				'reason'    => 'wpgenie.org latest themes and plugins; RSS feed fetched on render',
+			],
+			[
+				'widget_id' => 'hasthemes-dashboard-stories',
+				'context'   => 'normal',
+				'vendor'    => 'HT Mega for Elementor 3.2.5',
+				'reason'    => 'HasThemes Stories; vendor feed',
+			],
+			[
+				'widget_id' => 'happy_addons_news_update',
+				'context'   => 'normal',
+				'vendor'    => 'Happy Elementor Addons 3.23.1',
+				'reason'    => 'HappyAddons News & Updates; vendor feed',
 			],
 			[
 				'widget_id' => 'wp-dashboard-widget-news',
@@ -193,6 +205,48 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_wp_swings_offer_banners();
 			$this->unhook_quadlayers_promote_notice();
 			$this->unhook_essential_blocks_campaigns();
+			$this->unhook_happy_addons_promos();
+		}
+
+		/**
+		 * Remove Happy Elementor Addons' review notices and tracking opt-in.
+		 *
+		 * The two review callbacks are static, so they are named directly. The Appsero
+		 * opt-in is reached through the plugin's own singleton.
+		 * Happy Elementor Addons 3.23.1. docs/plugins/happy-elementor-addons.md
+		 */
+		public function unhook_happy_addons_promos() : void {
+			// The sibling Classes\Notice carries a campaign window that closed in March
+			// 2025, so it is not targeted. See the doc before adding it back.
+			$review_callback = [ '\\Happy_Addons\\Elementor\\Classes\\Review', 'ha_void_grid_display_admin_notice' ];
+
+			if ( false !== has_action( 'admin_notices', $review_callback ) ) {
+				remove_action( 'admin_notices', $review_callback );
+				$this->log( 'happy-addons', 'Removed Review::ha_void_grid_display_admin_notice from admin_notices.' );
+			}
+
+			$this->unhook_happy_addons_appsero_optin();
+		}
+
+		/**
+		 * Remove the Appsero tracking opt-in notice Happy Addons bundles.
+		 */
+		private function unhook_happy_addons_appsero_optin() : void {
+			$base_class = '\\Happy_Addons\\Elementor\\Base';
+
+			if ( ! class_exists( $base_class ) || ! method_exists( $base_class, 'instance' ) ) {
+				return;
+			}
+
+			$base = $base_class::instance();
+
+			if ( ! is_object( $base ) || ! isset( $base->appsero ) || ! is_object( $base->appsero )
+				|| ! isset( $base->appsero->insights ) || ! is_object( $base->appsero->insights ) ) {
+				// Appsero not initialised on this request.
+			} else {
+				remove_action( 'admin_notices', [ $base->appsero->insights, 'admin_notice' ] );
+				$this->log( 'happy-addons', 'Removed Appsero Insights::admin_notice from admin_notices.' );
+			}
 		}
 
 		/**

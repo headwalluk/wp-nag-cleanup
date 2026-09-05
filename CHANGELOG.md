@@ -5,6 +5,62 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] — 2026-09-05
+
+### Added
+
+- **HT Mega's "HasThemes Stories" and Happy Addons' "HappyAddons News & Updates"
+  dashboard widgets** removed, plus Happy Addons' **review nag** and its **Appsero
+  tracking opt-in**
+
+  Different vendors despite both being Elementor addon packs — HasThemes and
+  HappyMonster — so no shared framework between them.
+
+### Five vendors now force their widget to the top
+
+Both widgets register and then reorder `$wp_meta_boxes['dashboard']['normal']['core']` to
+put themselves first. That makes five: WP Desk, Elementor, Wpmet, HasThemes and
+HappyMonster. Worth treating as a genre rather than a quirk.
+
+### Appsero, reached through the plugin's own singleton
+
+`Base::instance() -> appsero -> insights`, every step public and every step guarded with
+`isset()` / `is_object()`. **Covers Happy Addons only**: Appsero is bundled by three fleet
+plugins but each creates its own `Client`, and the SDK's only filters (`appsero_endpoint`,
+`appsero_is_local`, `appsero_custom_deactivation_reasons`) do not gate the notice.
+
+### Deliberately not done
+
+- **HT Mega's "fast asset mode" notice is operational**, despite the class name
+  `HTMega_Performance_Upgrade_Notice`. It offers to stop loading HT Mega's CSS/JS on pages
+  that do not need them — a real performance setting. Verified still hooked
+- **HT Mega's diagnostic-data opt-in is a closure** on `admin_notices`. A closure has
+  neither class nor method, so the `$wp_filter` reader cannot identify it and
+  `remove_action()` has nothing to name. Matching a closure's bound scope would be a far
+  bigger escalation than the reader represents, so it was not attempted
+- **HT Mega's `Dynamic_Notice` framework is unfed** — nothing calls `set_notice()`, so it
+  renders nothing, like EmbedPress's promo framework
+- **Happy Addons' `Classes\Notice` targets a campaign window of 18–30 March 2025**,
+  hardcoded and long closed. A rule for it would target a hook that cannot fire. The doc
+  records the one-line addition to make if a future version opens a new window
+- **`Attention_Seeker::seek_attention`** loops over `get_attentions()`, which returns `[]`
+
+### Verified
+
+Structurally. A content-based A/B was attempted and **discarded as invalid** — activating
+Happy Addons redirects to its own dashboard, so the captures were of different screens,
+the same trap hit with Essential Blocks.
+
+| Check | Rules off | Rules on |
+|---|---|---|
+| `hasthemes-dashboard-stories` in `$wp_meta_boxes` | PRESENT | **gone** |
+| `happy_addons_news_update` in `$wp_meta_boxes` | PRESENT | **gone** |
+| HT Mega fast-asset-mode notice | present | **present** |
+
+The review nag and Appsero opt-in **could not be exercised**: `Review` registers only 10
+days after install, and Appsero's `Insights` is created lazily. Both rules are guarded so
+a missing target is a silent no-op, and both were confirmed not to fire spuriously.
+
 ## [1.15.0] — 2026-09-05
 
 ### Added
