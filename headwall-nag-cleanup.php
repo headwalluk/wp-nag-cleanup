@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.2.0';
+		const VERSION = '1.3.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -150,6 +150,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		public function unhook_vendor_notices() : void {
 			$this->unhook_elementor_notices();
+			$this->unhook_wpb_product_slider_review_notice();
 		}
 
 		/**
@@ -168,6 +169,72 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				remove_action( 'admin_notices', [ $admin_notices_component, 'admin_notices' ], 20 );
 				$this->log( 'elementor', 'Removed Admin_Notices::admin_notices from admin_notices priority 20.' );
 			}
+		}
+
+		/**
+		 * Remove WPB Product Slider's five-star review notice.
+		 *
+		 * WPB Product Slider for WooCommerce 2.4. docs/plugins/wpb-woocommerce-product-slider.md
+		 *
+		 * The vendor creates the notice object with a bare `new WPB_WPS_Review_Notice()`
+		 * and discards it, so the callback cannot be named for remove_action() the way
+		 * every other mechanism 2 rule names one. Reading $wp_filter to recover the
+		 * instance is the documented exception to the no-$wp_filter rule, and it is
+		 * narrow by construction: it matches one class and one method, never content.
+		 * Nothing else in this file may read $wp_filter without the same write-up.
+		 */
+		public function unhook_wpb_product_slider_review_notice() : void {
+			global $wp_filter;
+
+			$review_notice_callback = null;
+			$review_notice_priority = null;
+
+			if ( ! class_exists( 'WPB_WPS_Review_Notice' ) ) {
+				// Plugin not installed, not active, or its bootstrap did not run.
+			} elseif ( ! isset( $wp_filter['admin_notices'] ) || ! $wp_filter['admin_notices'] instanceof \WP_Hook ) {
+				// Nothing on the hook, or $wp_filter is not the WP_Hook shape used since 4.7.
+				$this->log( 'wpb-product-slider', 'admin_notices is not a WP_Hook; no action taken.' );
+			} else {
+				// Every priority is scanned rather than just the vendor's current 10, so
+				// the rule survives the vendor changing it.
+				foreach ( $wp_filter['admin_notices']->callbacks as $priority => $callbacks_at_priority ) {
+					foreach ( $callbacks_at_priority as $callback ) {
+						if ( $this->is_wpb_review_notice_callback( $callback ) ) {
+							$review_notice_callback = $callback['function'];
+							$review_notice_priority = $priority;
+							break 2;
+						}
+					}
+				}
+
+				if ( null === $review_notice_callback ) {
+					$this->log( 'wpb-product-slider', 'Review notice callback not registered; no action taken.' );
+				} else {
+					remove_action( 'admin_notices', $review_notice_callback, $review_notice_priority );
+					$this->log(
+						'wpb-product-slider',
+						sprintf( 'Removed WPB_WPS_Review_Notice::maybe_show_notice from admin_notices priority %d.', $review_notice_priority )
+					);
+				}
+			}
+		}
+
+		/**
+		 * Is this hook entry WPB_WPS_Review_Notice::maybe_show_notice?
+		 */
+		private function is_wpb_review_notice_callback( array $callback ) : bool {
+			$is_review_notice = false;
+
+			if ( ! isset( $callback['function'] ) || ! is_array( $callback['function'] ) ) {
+				// Named function, closure or static call; never this rule's target.
+			} elseif ( 2 !== count( $callback['function'] ) || ! is_object( $callback['function'][0] ) ) {
+				// Class-name-and-method array rather than an instance method.
+			} else {
+				$is_review_notice = $callback['function'][0] instanceof \WPB_WPS_Review_Notice
+					&& 'maybe_show_notice' === $callback['function'][1];
+			}
+
+			return $is_review_notice;
 		}
 
 		/**

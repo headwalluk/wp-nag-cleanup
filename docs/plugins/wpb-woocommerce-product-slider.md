@@ -20,9 +20,9 @@ scope — the vendor's own settings screens, the plugin list row, and the admin 
 Its second `admin_notices` registration looks promotional from its name but is a
 plugin-conflict notice and stays.
 
-**No rule is added.** The one legitimate target cannot be reached by any mechanism
-this project permits — see "Why no rule" below. That is a blocked result, not a clean
-one, and it is recorded here so the question is not re-opened from scratch.
+**One rule is added, and it is the first in this project to read `$wp_filter`.** The
+vendor discards the notice object, so no other mechanism can reach it. The exception
+and its boundaries are set out in "The `$wp_filter` exception" below.
 
 ### Search checklist
 
@@ -39,7 +39,7 @@ one, and it is recorded here so the question is not re-opened from scratch.
 
 | Item | Hook / widget ID | Verdict | Reason |
 |---|---|---|---|
-| Five-star review request | `admin_notices` → `WPB_WPS_Review_Notice::maybe_show_notice`, priority 10 | **suppress — but blocked** | "Enjoying…? a quick 5-star review would mean the world to us." Review begging, no site state. Instance unreachable; see below |
+| Five-star review request | `admin_notices` → `WPB_WPS_Review_Notice::maybe_show_notice`, priority 10 | **suppress** | "Enjoying…? a quick 5-star review would mean the world to us." Review begging, no site state |
 | Free/premium conflict notice | `admin_notices` → `wpb_wps_install_free_admin_notice`, priority 10 | keep | Plugin conflict notice. Never suppressed |
 | PRO 10% discount notice | `wpb_wps_pro_discount_admin_notice` | keep (moot) | **Registration is commented out** at `main.php:146` in both 2.3 and 2.4. Never hooked, so nothing to remove |
 | Review request in admin footer | `admin_footer_text` → `wpb_wps_wp_admin_bottom_left_text` | keep | Filter is global but the callback only rewrites the text on the plugin's own two screens. Vendor's own interface |
@@ -82,10 +82,10 @@ crimson button. It is promotional and it is global, but it styles an **admin men
 item**, not a notice or a dashboard widget. This project touches the notice area and
 the dashboard only; widening that to the admin menu is a different tool.
 
-## Why no rule — the blocker
+## The `$wp_filter` exception
 
-The review notice is the one clear-cut suppression target in this plugin, and it
-cannot be removed by any mechanism `CLAUDE.md` permits.
+The review notice is the one clear-cut suppression target in this plugin, and none of
+the three standard mechanisms can reach it.
 
 - **Mechanism 1 is unavailable.** There is no vendor filter, action or constant gating
   the notice. The plugin's only gates are `get_user_meta( $user_id,
@@ -105,40 +105,67 @@ cannot be removed by any mechanism `CLAUDE.md` permits.
 Disabling the plugin's `plugins_loaded` bootstrap would take the shortcodes, widgets
 and settings screen with it, so that is not an option either.
 
-### Options that exist, and what each would cost
+### The option that was rejected
 
-Both require relaxing a rule that is currently absolute, so neither was taken
-unilaterally. Recorded here so the trade-off does not have to be re-derived.
+**Short-circuiting `get_user_metadata` for `wpb_wps_review_dismissed`**, or writing
+that meta directly, would make the plugin believe the notice was already dismissed.
+Both were rejected.
 
-1. **Short-circuit `get_user_metadata` for `wpb_wps_review_dismissed`.** A core filter
-   at file scope, making the plugin believe the notice was already dismissed. It reads
-   as mechanism 1 but is not: it works by lying to the vendor about stored state rather
-   than by unhooking, it fires on *every* user meta read on every request, and the
-   short-circuit return value has to be shaped correctly for `$single`. Worst of all it
-   generalises — the same trick suppresses any notice gated on a dismissal flag,
-   including operational ones, which is precisely the general-purpose lever this
-   project has refused to build
-2. **A class-scoped `$wp_filter` lookup.** Read
-   `$wp_filter['admin_notices']->callbacks[10]`, match only callbacks whose object is
-   `instanceof WPB_WPS_Review_Notice`, and `remove_action()` that one. This is
-   narrower than the banned pattern — `CLAUDE.md` prohibits walking `$wp_filter`
-   "removing whatever looks promotional", i.e. heuristic removal, whereas this names
-   the class and the method. But `$wp_filter` internals are not a public API, their
-   shape changed in WP 4.7, and once the helper exists it will be reached for again
+Writing the meta is the worse of the two: it leaves permanent residue in `wp_usermeta`
+on every admin user of every site, it is not undone by removing this plugin, and it
+silently tells the vendor a site owner declined to review when they never saw the
+request. It also turns a read-only hook-level tool into one that mutates third-party
+state. Filtering the read avoids the residue but keeps the rest: it works by lying
+about stored state rather than by unhooking, it fires on every user meta read on every
+request, and it generalises to any notice gated on a dismissal flag — including
+operational ones. That is the general-purpose lever this project has refused to build.
 
-The honest position for 2.4 is that this vendor gives us nothing to hold on to, and a
-review nag that appears once a week is not worth either concession. If WPBean ships a
-version that registers the discount notice again, or moves the review notice to a
-named function, revisit.
+A sketch of the write-the-meta version was also wrong in two ways worth recording, in
+case it is proposed again. The plugin stores the **string** `'true'`
+(`class-wpb-wps-review-notice.php:130`) and gates on a truthy check, so a `=== true`
+comparison never matches; and writing boolean `true` stores `'1'`, which defeats the
+unchanged-value skip in `update_metadata()` at `wp-includes/meta.php:259`, so it would
+issue an `UPDATE` on every admin page load.
+
+### What was built instead
+
+A **class-scoped `$wp_filter` lookup**: scan `$wp_filter['admin_notices']->callbacks`,
+match only a callback whose object is `instanceof WPB_WPS_Review_Notice` and whose
+method is `maybe_show_notice`, and `remove_action()` that one entry.
+
+This is narrower than the pattern `CLAUDE.md` bans. That rule prohibits walking
+`$wp_filter` "removing whatever looks promotional" — heuristic removal by appearance.
+This names one class and one method and inspects no content at all. It is still an
+exception, and it is the only one: **nothing else in `headwall-nag-cleanup.php` may
+read `$wp_filter` without an equivalent write-up here.**
+
+Costs accepted:
+
+- `WP_Hook::$callbacks` is a public property but not a documented API, and its shape
+  changed in WP 4.7. The rule guards on `instanceof \WP_Hook` and no-ops with a debug
+  log if the shape is not what it expects
+- It scans every priority rather than the vendor's current 10, so a vendor priority
+  change does not silently kill the rule
+- If the callback is not found the rule logs and does nothing, so
+  `HEADWALL_NAG_CLEANUP_DEBUG` still answers "why did I never see that prompt?"
+
+Verified against core 7.1's real `WP_Hook` and `remove_action()` with a harness
+covering: removal at the default priority; removal at priority 42; removal with a
+closure earlier on the hook; an empty hook; a hook with only unrelated callbacks; and
+— the important one — a decoy class exposing a `maybe_show_notice()` method of its
+own, which survives untouched. The vendor's own `handle_notice_action` also survives,
+so the dismissal links keep working for anyone who has already seen the notice.
 
 ## Mechanism
 
-- tier: N/A — no rule written
-- phase: N/A
+- tier: 2 (targeted unhook), with the `$wp_filter` exception above
+- phase: `admin_init`, priority 999
 - vendor registers at: `WPB_WPS_Review_Notice::__construct`, reached from
-  `wpb_wps_free_plugin_init()` on `plugins_loaded` priority 10
-- instance reachable via: **nothing.** `new WPB_WPS_Review_Notice();` at `main.php:157`
-  discards the instance
+  `wpb_wps_free_plugin_init()` on `plugins_loaded` priority 10 — so `admin_init` is
+  comfortably late enough
+- instance reachable via: **nothing the vendor exposes.** `new WPB_WPS_Review_Notice();`
+  at `main.php:157` discards the return value. Recovered from
+  `$wp_filter['admin_notices']->callbacks` by `instanceof` match
 
 ## Drift check
 
@@ -148,12 +175,72 @@ Re-check when a new version appears in the vault:
   is uncommented, that notice becomes a clean mechanism 2 target: a plain named
   function on `admin_notices` at default priority
 - `main.php:157` — if `new WPB_WPS_Review_Notice()` is ever assigned to a global, a
-  static property or a singleton, the review notice becomes reachable and a mechanism 2
-  rule can be written
+  static property or a singleton, **withdraw the `$wp_filter` exception** and rewrite
+  the rule as an ordinary mechanism 2 unhook naming the instance
 - `inc/class-wpb-wps-review-notice.php` — if a filter or constant is added around
-  `maybe_show_notice()`, that is a mechanism 1 rule
+  `maybe_show_notice()`, that is a mechanism 1 rule and likewise retires the exception.
+  A rename of the class or of `maybe_show_notice` makes the rule a silent no-op, which
+  the debug log will report as "callback not registered"
+- `wp-includes/class-wp-hook.php` — if `WP_Hook::$callbacks` stops being a public
+  `array<int, array<string, array>>`, the rule no-ops rather than breaking, but it
+  needs revisiting
 - `main.php:61` — `wpb_wps_install_free_admin_notice` must stay untouched. If a future
   version reuses that function name for an actual cross-sell, re-read it before
   assuming the classification still holds
 
-## Additions to `headwall-nag-cleanup.php`: NONE
+## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2 with the `$wp_filter` exception
+
+Called from `unhook_vendor_notices()` on `admin_init` priority 999.
+
+```php
+public function unhook_wpb_product_slider_review_notice() : void {
+	global $wp_filter;
+
+	$review_notice_callback = null;
+	$review_notice_priority = null;
+
+	if ( ! class_exists( 'WPB_WPS_Review_Notice' ) ) {
+		// Plugin not installed, not active, or its bootstrap did not run.
+	} elseif ( ! isset( $wp_filter['admin_notices'] ) || ! $wp_filter['admin_notices'] instanceof \WP_Hook ) {
+		// Nothing on the hook, or $wp_filter is not the WP_Hook shape used since 4.7.
+		$this->log( 'wpb-product-slider', 'admin_notices is not a WP_Hook; no action taken.' );
+	} else {
+		// Every priority is scanned rather than just the vendor's current 10, so
+		// the rule survives the vendor changing it.
+		foreach ( $wp_filter['admin_notices']->callbacks as $priority => $callbacks_at_priority ) {
+			foreach ( $callbacks_at_priority as $callback ) {
+				if ( $this->is_wpb_review_notice_callback( $callback ) ) {
+					$review_notice_callback = $callback['function'];
+					$review_notice_priority = $priority;
+					break 2;
+				}
+			}
+		}
+
+		if ( null === $review_notice_callback ) {
+			$this->log( 'wpb-product-slider', 'Review notice callback not registered; no action taken.' );
+		} else {
+			remove_action( 'admin_notices', $review_notice_callback, $review_notice_priority );
+			$this->log(
+				'wpb-product-slider',
+				sprintf( 'Removed WPB_WPS_Review_Notice::maybe_show_notice from admin_notices priority %d.', $review_notice_priority )
+			);
+		}
+	}
+}
+
+private function is_wpb_review_notice_callback( array $callback ) : bool {
+	$is_review_notice = false;
+
+	if ( ! isset( $callback['function'] ) || ! is_array( $callback['function'] ) ) {
+		// Named function, closure or static call; never this rule's target.
+	} elseif ( 2 !== count( $callback['function'] ) || ! is_object( $callback['function'][0] ) ) {
+		// Class-name-and-method array rather than an instance method.
+	} else {
+		$is_review_notice = $callback['function'][0] instanceof \WPB_WPS_Review_Notice
+			&& 'maybe_show_notice' === $callback['function'][1];
+	}
+
+	return $is_review_notice;
+}
+```

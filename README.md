@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.2.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.3.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -129,6 +129,33 @@ Only ever a named callback on a named hook. Never a blanket `remove_all_actions(
 on a notice hook, and never a walk over `$wp_filter` removing whatever looks
 promotional — that is how a database migration prompt gets destroyed.
 
+#### The one `$wp_filter` exception
+
+Some vendors register a notice from an object they then throw away:
+
+```php
+new WPB_WPS_Review_Notice();   // return value discarded
+```
+
+`remove_action()` matches an object callback by `spl_object_hash()`, so there is
+nothing to name — an instance you construct yourself will not match. The only way to
+reach it is to read `$wp_filter`.
+
+Exactly one rule does this, for WPB Product Slider, and it is bounded:
+
+- It matches **one class and one method** by `instanceof`, and inspects no content.
+  That is categorically different from the banned pattern, which removes callbacks
+  because they *look* promotional
+- It guards on `instanceof \WP_Hook` and no-ops with a debug log if `$wp_filter` is
+  not the shape WordPress has used since 4.7
+- It scans every priority, so a vendor changing priority does not silently kill it
+- If nothing matches it logs and does nothing
+
+Adding a second such rule requires the same write-up in `docs/plugins/`, and the
+first question has to be whether mechanisms 1 to 3 really are all unavailable. See
+[`docs/plugins/wpb-woocommerce-product-slider.md`](docs/plugins/wpb-woocommerce-product-slider.md)
+for the full reasoning, including the approach that was rejected.
+
 ### 3. Dashboard widget removal
 
 `remove_meta_box()` on `wp_dashboard_setup`, naming the widget by ID.
@@ -150,7 +177,7 @@ answer for a vendor that offers no switch.
 
 ## What it suppresses today
 
-Version 1.2.0. Every vendor rule below was verified against that vendor's real source
+Version 1.3.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -160,6 +187,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | WP Desk — all plugins, via `ltv-dashboard-widget` | Flexible Invoices 6.2.27 | 1 | "Grow your business with WP Desk" dashboard widget, and its `wpdesk.net` catalogue fetch |
 | WP Desk — all plugins, via `wp-wpdesk-tracker` | Flexible Invoices 6.2.27 | 1 | Usage-tracking opt-in notice, deactivation survey, activation redirect, weekly payload |
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
+| WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 

@@ -5,6 +5,49 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-09-05
+
+Removes WPB Product Slider for WooCommerce's five-star review notice, and in doing so
+opens the project's first and only exception to the `$wp_filter` ban.
+
+### Added
+
+- **WPB Product Slider review notice removed**, verified against 2.4.
+  `docs/plugins/wpb-woocommerce-product-slider.md` has the full audit
+
+- **The `$wp_filter` exception.** The vendor registers the notice from
+  `new WPB_WPS_Review_Notice();` at `main.php:157` and discards the return value.
+  `remove_action()` matches object callbacks by `spl_object_hash()`, so there is no
+  instance to name and an instance we build ourselves will not match. There is no
+  vendor filter, action or constant anywhere near the notice, and it is not a
+  dashboard widget — all three mechanisms are unavailable
+
+  The rule reads `$wp_filter['admin_notices']->callbacks` and removes the single entry
+  whose object is `instanceof WPB_WPS_Review_Notice` and whose method is
+  `maybe_show_notice`. This is narrower than the banned pattern, which removes
+  callbacks because they *look* promotional; this one names a class and a method and
+  inspects no content. It guards on `instanceof \WP_Hook`, scans every priority so a
+  vendor priority change cannot silently kill it, and logs a no-op when nothing matches
+
+  **This is the only place in the file permitted to read `$wp_filter`.** A second such
+  rule needs the same write-up, and the first question is whether mechanisms 1 to 3
+  really are all unavailable
+
+  Verified against core 7.1's real `WP_Hook` and `remove_action()`: removal at the
+  default priority and at priority 42, removal past a closure on the same hook, an
+  empty hook, a hook with only unrelated callbacks, and a decoy class exposing its own
+  `maybe_show_notice()` — which survives untouched, as does the vendor's
+  `handle_notice_action`, so existing dismissal links keep working
+
+### Rejected
+
+- **Writing or filtering the `wpb_wps_review_dismissed` user meta.** Writing it leaves
+  permanent residue in `wp_usermeta` that removing this plugin does not undo, and tells
+  the vendor a site owner declined a review they never saw. Filtering the read avoids
+  the residue but still works by lying about stored state, fires on every user meta
+  read on every request, and generalises to any dismissal-gated notice including
+  operational ones
+
 ## [1.2.0] — 2026-09-05
 
 ### Added

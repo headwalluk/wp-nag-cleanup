@@ -68,6 +68,15 @@ signal the rule is too clever and probably should not be written.
 - Admin only. Bail early on front end, AJAX, REST and cron
 - Never a blanket `remove_all_actions()` on any notice hook
 - Never walk `$wp_filter` removing whatever looks promotional
+
+There is **one** sanctioned `$wp_filter` read, added in 1.3.0 for WPB Product Slider,
+where the vendor registers a notice from an object it immediately discards and
+`remove_action()` therefore has nothing to name. It matches one class and one method
+by `instanceof` and inspects no content — which is not the banned pattern, that being
+removal by appearance. Do not delete it as non-compliant, and do not treat it as
+permission: a second one needs the same write-up in `docs/plugins/`, and the first
+question is whether mechanisms 1 to 3 really are all unavailable. See
+`docs/plugins/wpb-woocommerce-product-slider.md`.
 - Keep it well under ~1000 lines
 
 ### Double-include guard — verified behaviour, get this right
