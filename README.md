@@ -179,7 +179,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.18.0. Every vendor rule below was verified against that vendor's real source
+Version 1.19.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -205,6 +205,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Happy Elementor Addons | 3.23.1 | 2, 3 | "HappyAddons News & Updates" widget, review nag, Appsero tracking opt-in |
 | Easy FancyBox (FirelightWP) | 2.3.22 | 2 | Review request |
 | WPCode (Insert Headers and Footers) | 2.3.9 | 2 | Review request and footer link, "Pro Tip" upsell, library connect promo |
+| Converter for Media (WebP & AVIF) | 6.6.5 | 2 | Review request, PRO upsell and Black Friday sale. Subscription, Cloudflare and welcome notices preserved |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 

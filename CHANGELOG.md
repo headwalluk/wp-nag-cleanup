@@ -5,6 +5,53 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] — 2026-09-05
+
+### Added
+
+- **Converter for Media's review request, PRO upsell and Black Friday sale notices**
+  removed — **82 fleet sites**, the widest reach of any single-plugin rule in the project
+
+### The notices could not be told apart, so a different handle was used
+
+Converter for Media has the cleanest notice architecture audited so far, and that is
+exactly what made it hard. Six notices, one class each, all rendered through a single
+`NoticeIntegrator::load_notice` — built as six anonymous temporaries, so there is no
+singleton, no registry and no property holding them. Class-plus-method, all
+`remove_discarded_instance_callback()` matches on, cannot separate a Black Friday coupon
+from *"your subscription has expired"*.
+
+The handle is elsewhere. Each integrator also registers its dismiss handler on
+`wp_ajax_<notice option>`, and those six option names are distinct — so
+`wp_ajax_webpc_notice_thanks` holds exactly one callback, and its object is the integrator
+wrapping the review nag and nothing else. From there its own `load_notice` entry is named
+directly.
+
+The dismiss handlers themselves are left in place; removing them would break the dismiss
+button on the notices that remain.
+
+### Three notices deliberately kept
+
+- **`TokenInactiveNotice`** — expired subscription or exhausted conversion quota. Squarely
+  on the never-suppress list, and the reason this rule had to be precise rather than
+  convenient. Verified still rendering, on the same request that dropped the review nag
+- **`CloudflareNotice`** — cache-purge steps, and on the vendor's own settings screen
+- **`WelcomeNotice`** — the one that shows on *every* admin screen until dismissed, and so
+  the likeliest source of the original report. It stays: a fresh install converts nothing
+  until Bulk Optimization runs, so *"click Start Bulk Optimization"* is a true and
+  actionable statement about the site. Recorded in full in the audit doc, including the
+  `mattplugins.com` logo it loads
+
+No vendor opt-out exists — 33 `apply_filters` calls in `src/` and not one near a notice —
+and there is no dashboard widget.
+
+### Changed
+
+- `remove_discarded_instance_callback()` split: the `$wp_filter` walk moved into a new
+  private `find_instance_callback()`, which returns the callback and its priority. **Still
+  exactly one place in the file reads `$wp_filter`** — the split exists because this rule
+  needs the *instance* to reach a sibling callback, not just the entry to delete
+
 ## [1.18.0] — 2026-09-05
 
 ### Added

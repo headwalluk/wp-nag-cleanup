@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.18.0
+ * Version:     1.19.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.18.0';
+		const VERSION = '1.19.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -217,6 +217,53 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_essential_blocks_campaigns();
 			$this->unhook_happy_addons_promos();
 			$this->unhook_easy_fancybox_review_request();
+			$this->unhook_webp_converter_promos();
+		}
+
+		/**
+		 * Remove Converter for Media's review request, PRO upsell and seasonal sale notices.
+		 *
+		 * All six of the vendor's notices are rendered by NoticeIntegrator::load_notice, one
+		 * throwaway integrator per notice, so admin_notices cannot tell them apart. Each
+		 * integrator also registers set_disable_value on wp_ajax_<option>, one hook name per
+		 * notice, which is what identifies the instance holding the notice we want.
+		 * Converter for Media 6.6.5. docs/plugins/webp-converter-for-media.md
+		 */
+		public function unhook_webp_converter_promos() : void {
+			$integrator_class = 'WebpConverter\\Notice\\NoticeIntegrator';
+
+			if ( ! class_exists( $integrator_class ) ) {
+				return;
+			}
+
+			$promotional_notice_options = [
+				'webpc_notice_thanks',      // Review request.
+				'webpc_notice_pro_version', // PRO upsell carrying a discount coupon.
+				'webpc_notice_bf2026',      // Black Friday sale.
+			];
+
+			foreach ( $promotional_notice_options as $notice_option ) {
+				$found = $this->find_instance_callback( 'wp_ajax_' . $notice_option, $integrator_class, 'set_disable_value', 'webp-converter' );
+
+				if ( null === $found ) {
+					// Notice not built on this request, or the vendor renamed the option.
+					continue;
+				}
+
+				$notice_callback = [ $found['function'][0], 'load_notice' ];
+
+				foreach ( [ 'admin_notices', 'network_admin_notices' ] as $notice_hook ) {
+					$notice_priority = has_action( $notice_hook, $notice_callback );
+
+					if ( false === $notice_priority ) {
+						// is_available()/is_active() said no; nothing was hooked.
+						continue;
+					}
+
+					remove_action( $notice_hook, $notice_callback, $notice_priority );
+					$this->log( 'webp-converter', sprintf( 'Removed %s from %s priority %d.', $notice_option, $notice_hook, $notice_priority ) );
+				}
+			}
 		}
 
 		/**
@@ -531,40 +578,59 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Remove one hooked callback belonging to a vendor object we cannot otherwise reach.
 		 *
-		 * The only place in this file permitted to read $wp_filter. It matches one class
-		 * and one method and never inspects content, which is what separates it from the
-		 * banned pattern. Every use needs its own write-up in docs/plugins/, and the first
-		 * question is always whether mechanisms 1 to 3 really are all unavailable.
+		 * Reads $wp_filter through find_instance_callback() below, which is the only place
+		 * in this file permitted to touch it. It matches one class and one method and never
+		 * inspects content, which is what separates it from the banned pattern. Every use
+		 * needs its own write-up in docs/plugins/, and the first question is always whether
+		 * mechanisms 1 to 3 really are all unavailable.
 		 */
 		private function remove_discarded_instance_callback( string $hook_name, string $class_name, string $method_name, string $rule_id ) : void {
-			global $wp_filter;
-
-			$found_callback = null;
-			$found_priority = null;
-
 			if ( ! class_exists( $class_name ) ) {
 				// Not installed.
-			} elseif ( ! isset( $wp_filter[ $hook_name ] ) || ! $wp_filter[ $hook_name ] instanceof \WP_Hook ) {
+			} else {
+				$found = $this->find_instance_callback( $hook_name, $class_name, $method_name, $rule_id );
+
+				if ( null === $found ) {
+					$this->log( $rule_id, sprintf( '%s::%s not registered on %s; no action taken.', $class_name, $method_name, $hook_name ) );
+				} else {
+					remove_action( $hook_name, $found['function'], $found['priority'] );
+					$this->log( $rule_id, sprintf( 'Removed %s::%s from %s priority %d.', $class_name, $method_name, $hook_name, $found['priority'] ) );
+				}
+			}
+		}
+
+		/**
+		 * Find the named method of an instance of the named class on a hook.
+		 *
+		 * The only place in this file permitted to read $wp_filter, and the reason
+		 * remove_discarded_instance_callback() is split: a rule may need the instance
+		 * itself to reach a sibling callback, not just the entry to remove.
+		 *
+		 * Returns the callback array and its priority, or null.
+		 */
+		private function find_instance_callback( string $hook_name, string $class_name, string $method_name, string $rule_id ) : ?array {
+			global $wp_filter;
+
+			$found = null;
+
+			if ( ! isset( $wp_filter[ $hook_name ] ) || ! $wp_filter[ $hook_name ] instanceof \WP_Hook ) {
 				// Not the WP_Hook shape used since 4.7.
 				$this->log( $rule_id, sprintf( '%s is not a WP_Hook; no action taken.', $hook_name ) );
 			} else {
 				foreach ( $wp_filter[ $hook_name ]->callbacks as $priority => $callbacks_at_priority ) {
 					foreach ( $callbacks_at_priority as $callback ) {
 						if ( $this->is_instance_callback( $callback, $class_name, $method_name ) ) {
-							$found_callback = $callback['function'];
-							$found_priority = $priority;
+							$found = [
+								'function' => $callback['function'],
+								'priority' => $priority,
+							];
 							break 2;
 						}
 					}
 				}
-
-				if ( null === $found_callback ) {
-					$this->log( $rule_id, sprintf( '%s::%s not registered on %s; no action taken.', $class_name, $method_name, $hook_name ) );
-				} else {
-					remove_action( $hook_name, $found_callback, $found_priority );
-					$this->log( $rule_id, sprintf( 'Removed %s::%s from %s priority %d.', $class_name, $method_name, $hook_name, $found_priority ) );
-				}
 			}
+
+			return $found;
 		}
 
 		/**

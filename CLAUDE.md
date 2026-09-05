@@ -71,17 +71,22 @@ signal the rule is too clever and probably should not be written.
 - Keep it well under ~1000 lines
 
 There is **one** sanctioned `$wp_filter` reader — the private method
-`remove_discarded_instance_callback()` — for vendors that register a callback from an
-object they immediately discard, leaving `remove_action()` nothing to name. It takes a
-hook, a class and a method, matches by `instanceof`, and inspects no content. That is
-not the banned pattern, which is removal by appearance. Do not delete it as
-non-compliant.
+`find_instance_callback()` — for vendors that register a callback from an object they
+immediately discard, leaving `remove_action()` nothing to name. It takes a hook, a class
+and a method, matches by `instanceof`, and inspects no content. That is not the banned
+pattern, which is removal by appearance. Do not delete it as non-compliant.
+
+`remove_discarded_instance_callback()` is the usual front door to it: find the entry,
+remove it. Call the finder directly only when a rule needs the *instance* rather than the
+entry — Converter for Media identifies one of six identical `NoticeIntegrator::load_notice`
+callbacks via a sibling hook, then names that object's own entry (1.19.0).
 
 It is **one reader, not a licence**. Every use needs its own write-up in
 `docs/plugins/`, and the first question is always whether mechanisms 1 to 3 really are
 all unavailable — twice now a route was found on a second look that the first pass had
 declared impossible. Current uses: WPB Product Slider (1.3.0) and Elementor's promotions
-module (1.12.0), ElementsKit's Wpmet libs (1.13.0) and QuadLayers (1.14.0). Never add a second reader; extend this one.
+module (1.12.0), ElementsKit's Wpmet libs (1.13.0), QuadLayers (1.14.0) and Converter for
+Media (1.19.0). Never add a second reader; extend this one.
 
 Two habits that have repeatedly avoided needing it:
 
