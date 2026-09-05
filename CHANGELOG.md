@@ -5,6 +5,55 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] — 2026-09-05
+
+### Added
+
+- **WP Swings' seasonal offer banners removed** — three named callbacks
+  (`wps_banner_notification_plugin_html`, `wps_giftcard_notification_plugin_html`,
+  `wps_sfw_banner_notification_html`) that all render the same `wps-offer-notice` markup.
+  Reported from a live client site as a US Labor Day sale banner
+
+  All three are plain named functions registered at file scope, so `remove_action()` names
+  them directly — no singleton, no `$wp_filter`, no object identity to get wrong.
+
+### The first remotely-driven nag
+
+This is the first vendor audited whose promotional content is **served from the vendor's
+own server rather than shipped in the plugin**. The banner image and link are fetched from
+`demo.wpswings.com/client-notification/…/wps-client-notify.php` and stored in options,
+then rendered from those options.
+
+That explains how a seasonal sale appears on a site whose plugin has not been updated, and
+it means the drift check cannot rely on reading the plugin's source for banner content —
+only for the callbacks that render it.
+
+The remote endpoint is deliberately **not** blocked. It may carry other information, and
+this project removes notices rather than intercepting a vendor's HTTP traffic. Removing
+the render callbacks means the banner never displays whatever the endpoint returns.
+
+### Vendor spread
+
+`wps_banner_notification_plugin_html` is registered by **both** WP Swings plugins on the
+fleet, each guarded with `function_exists()`, so whichever loads first owns it. One
+`remove_action()` covers both and any future WP Swings plugin using the same pattern.
+
+### Deliberately not done
+
+- **Both dashboard widgets stay.** `wps_gift_card_summary` shows the site's own gift card
+  figures; `wps_ai_subscription_health` shows subscription health and only registers once
+  the owner has configured an AI provider
+- **Two notices left as ambiguous** — `wps_wgm_display_notification_bar` and
+  `wps_sfw_membership_feature_notice`. Both look promotional by name, but their rendered
+  content was not established, and ambiguous does not go in
+
+### Verified
+
+Hook state before and after on WP 7.1 with both plugins active: all three callbacks
+HOOKED → **gone**, zero PHP fatals, front page 200. Verified by hook state rather than
+rendered output, because the banner only appears once the remote endpoint has populated
+its options — which a fresh bench has not done.
+
 ## [1.9.0] — 2026-09-05
 
 ### Added

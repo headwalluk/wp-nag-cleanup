@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.9.0
+ * Version:     1.10.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.9.0';
+		const VERSION = '1.10.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -160,6 +160,33 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_wpb_product_slider_review_notice();
 			$this->unhook_forminator_dashboard_promo();
 			$this->unhook_premium_addons_promos();
+			$this->unhook_wp_swings_offer_banners();
+		}
+
+		/**
+		 * Remove WP Swings' remotely-configured seasonal offer banners.
+		 *
+		 * Plain named functions, so no instance is needed. The first name is shared by
+		 * every WP Swings plugin and guarded with function_exists, so whichever loads
+		 * first owns it. Gift Cards Lite 3.2.10, Subscriptions 2.0.2.
+		 * docs/plugins/wp-swings.md
+		 */
+		public function unhook_wp_swings_offer_banners() : void {
+			$offer_banner_callbacks = [
+				'wps_banner_notification_plugin_html',
+				'wps_giftcard_notification_plugin_html',
+				'wps_sfw_banner_notification_html',
+			];
+
+			foreach ( $offer_banner_callbacks as $offer_banner_callback ) {
+				if ( false === has_action( 'admin_notices', $offer_banner_callback ) ) {
+					// Not registered on this site.
+					continue;
+				}
+
+				remove_action( 'admin_notices', $offer_banner_callback );
+				$this->log( 'wp-swings', sprintf( 'Removed %s from admin_notices.', $offer_banner_callback ) );
+			}
 		}
 
 		/**
