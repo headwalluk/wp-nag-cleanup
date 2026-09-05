@@ -241,6 +241,33 @@ drift is detectable when a vendor renames something.
 Live sites for testing, and the deployment path to the hosting fleet, are in
 `dev-notes/` — which is gitignored and stays that way.
 
+### Verifying a rule on the bench
+
+`wp-cli` **cannot** verify these rules. It runs with `is_admin()` false, so the plugin
+bails and no filters register. Every check goes over an authenticated admin HTTP request.
+
+Four things have each produced a false reading at least once, and all four cost more than
+the rule did:
+
+- **Prove the notice renders before claiming you removed it.** Capture the "before" and
+  confirm a non-zero count. A rule that removes something already absent looks identical to
+  a rule that works
+- **Nags are often time-gated, and a fresh install has not waited.** WP Mail Bank starts its
+  review nag 7 days out, Converter for Media 1 and 2 weeks, seasonal banners are gated on
+  `gmdate()`. Read the vendor's gate and backdate its option on the bench rather than
+  concluding the rule does not fire. `docs/plugins/wp-mail-bank.md` has a worked example
+- **Plugin activation redirects.** The request after activating a plugin is often a 302 to
+  a setup wizard, so the capture is not the screen you think. Absorb it with
+  `curl -L -o /dev/null` first, then capture — and **assert the screen**
+  (`grep -c 'id="dashboard-widgets"'`), never trust the URL you asked for
+- **Separate capture files and a settle delay after each deploy.** Reusing a filename, or
+  reading `tail -1` of a log where two runs concatenate into one Apache line, reads the old
+  result back at you
+
+Prefer structural probes to content greps: a meta box `id`, a `data-` attribute the
+template emits, `has_action()`. Matching marketing copy breaks on a translation or a
+reworded sentence and tells you nothing about the hook.
+
 ### The audit trail
 
 Every plugin examined gets a committed document in `docs/plugins/`, whether or not it
