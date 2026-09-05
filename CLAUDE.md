@@ -175,6 +175,12 @@ registration order, and an mu-plugin registers *first* — so tying would make u
 `admin_init` at 999, 1000, 99999 and 999999999. There is no priority that guarantees
 being last, so do not chase one.
 
+**Some producers run on `admin_init` themselves.** If a vendor builds its notice from
+an `admin_init` callback at the default priority, `LATE_PRIORITY` is too late — it has
+already run. Use `self::EARLY_PRIORITY` (1) and remove it before it fires. That pass
+exists only for targets on `admin_init` itself; everything else stays late. WPCode is
+the worked example.
+
 **Some vendors only register once the screen is known.** `wp-admin/admin.php` fires
 `admin_init` at line 180 but calls `set_current_screen()` at line 217. A vendor that
 adds its notice from a `current_screen` handler is invisible at `admin_init` — hook

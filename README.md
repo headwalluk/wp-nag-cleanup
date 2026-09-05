@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.17.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.18.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -179,7 +179,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.17.0. Every vendor rule below was verified against that vendor's real source
+Version 1.18.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -204,6 +204,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | HT Mega for Elementor (HasThemes) | 3.2.5 | 3 | "HasThemes Stories" dashboard widget |
 | Happy Elementor Addons | 3.23.1 | 2, 3 | "HappyAddons News & Updates" widget, review nag, Appsero tracking opt-in |
 | Easy FancyBox (FirelightWP) | 2.3.22 | 2 | Review request |
+| WPCode (Insert Headers and Footers) | 2.3.9 | 2 | Review request and footer link, "Pro Tip" upsell, library connect promo |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 

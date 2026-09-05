@@ -5,6 +5,58 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] — 2026-09-05
+
+### Added
+
+- **WPCode's review request, its admin-footer review link, the "Pro Tip" upsell and the
+  library connect promo** removed — **19 fleet sites**, the widest reach of any
+  single-plugin rule so far behind Elementor
+
+### A new phase — `EARLY_PRIORITY`
+
+First vendor whose promotional notices are **built from `admin_init` callbacks at the
+default priority**. `WPCode_Review::review_request()` calls `$this->review()` directly,
+and `WPCode_Features_Notices::maybe_show_notices()` adds its `admin_notices` hook — both
+at `admin_init` 10.
+
+`LATE_PRIORITY` (999) is **too late**: the producer has already run and queued its notice.
+So a new `unhook_early_vendor_notices()` pass runs at `admin_init` **priority 1**, before
+they fire.
+
+`EARLY_PRIORITY` is only for targets on `admin_init` itself. Everything else stays late.
+Recorded in `CLAUDE.md`.
+
+### Producers removed, framework kept
+
+`WPCode_Notice::display` renders whatever `WPCode_Notice::add()` has queued, at
+`admin_notices` 999000, and its callers include ordinary operational feedback from the
+snippet generator. Removing the renderer would be blanket suppression of a general
+framework — the pattern rejected for Astra's `astra-notices`. Removing the **producers**
+achieves the same result with no collateral, and was verified: the framework is still
+hooked at p999000 with the rules active.
+
+### Deliberately not done
+
+- **`wpcode_safe_mode_notice`** reports that WPCode is in safe mode and snippets are not
+  executing — exactly the "why is my site behaving oddly" notice this project exists to
+  make visible
+- **`wpcode_lite_notice`** is a Pro/Lite conflict notice
+- **The WPConsent cross-promo and Lite top-bar notices** render from `wpcode_admin_page`
+  hooks, inside WPCode's own screens
+
+### Verified
+
+Probe at `admin_init` 500 — after the early pass, before the late one:
+
+| Check | Rules off | Rules on |
+|---|---|---|
+| `WPCode_Review::review_request` | HOOKED p10 | **gone** |
+| `WPCode_Review::admin_footer` | HOOKED p1 | **gone** |
+| `WPCode_Features_Notices::maybe_show_notices` | HOOKED p10 | **gone** |
+| `wpcode_maybe_add_library_connect_notice` | HOOKED | **gone** |
+| `WPCode_Notice::display` (must survive) | HOOKED p999000 | **HOOKED p999000** |
+
 ## [1.17.0] — 2026-09-05
 
 ### Added

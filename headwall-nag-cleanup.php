@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.17.0
+ * Version:     1.18.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.17.0';
+		const VERSION = '1.18.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -46,6 +46,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * rule; see docs/plugins/ for the per-vendor priorities.
 		 */
 		const LATE_PRIORITY = 999;
+
+		/**
+		 * Priority for removing a producer that itself runs on admin_init.
+		 *
+		 * Vendors that build a notice from an admin_init callback at the default
+		 * priority have already run by LATE_PRIORITY, so those are unhooked before
+		 * them instead. Only used where the target is on admin_init itself.
+		 */
+		const EARLY_PRIORITY = 1;
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -121,6 +130,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			if ( $this->is_admin_page_request() ) {
 				$this->register_vendor_optouts();
 
+				add_action( 'admin_init', [ $this, 'unhook_early_vendor_notices' ], self::EARLY_PRIORITY );
 				add_action( 'admin_init', [ $this, 'unhook_vendor_notices' ], self::LATE_PRIORITY );
 				add_action( 'admin_init', [ $this, 'remove_core_welcome_panel' ], self::LATE_PRIORITY );
 				add_action( 'current_screen', [ $this, 'unhook_late_vendor_notices' ], self::LATE_PRIORITY );
@@ -308,6 +318,32 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'admin_notices',
 				'quadlayers'
 			);
+		}
+
+		/**
+		 * Mechanism 2, for producers that themselves run on admin_init.
+		 */
+		public function unhook_early_vendor_notices() : void {
+			$this->unhook_wpcode_promos();
+		}
+
+		/**
+		 * Remove WPCode's review request, Pro Tip upsell and library promo.
+		 *
+		 * These build their notices from admin_init callbacks at the default priority,
+		 * so they are removed before those run rather than after. The plugin's notice
+		 * framework and its Pro/Lite conflict notice are left alone.
+		 * WPCode 2.3.9. docs/plugins/insert-headers-and-footers.md
+		 */
+		public function unhook_wpcode_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_init', 'WPCode_Review', 'review_request', 'wpcode' );
+			$this->remove_discarded_instance_callback( 'admin_footer_text', 'WPCode_Review', 'admin_footer', 'wpcode' );
+			$this->remove_discarded_instance_callback( 'admin_init', 'WPCode_Features_Notices', 'maybe_show_notices', 'wpcode' );
+
+			if ( false !== has_action( 'admin_init', 'wpcode_maybe_add_library_connect_notice' ) ) {
+				remove_action( 'admin_init', 'wpcode_maybe_add_library_connect_notice' );
+				$this->log( 'wpcode', 'Removed wpcode_maybe_add_library_connect_notice from admin_init.' );
+			}
 		}
 
 		/**
