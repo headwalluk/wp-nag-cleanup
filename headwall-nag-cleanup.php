@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.4.1
+ * Version:     1.4.2
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.4.1';
+		const VERSION = '1.4.2';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -98,24 +98,26 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 		/**
 		 * Mechanism 1: vendor opt-out hooks, registered at file scope.
+		 *
+		 * These are not logged individually. A filter registration is not a
+		 * suppression: it happens on every admin request whether or not the vendor is
+		 * installed, and `__return_false` gives no callback of ours to log from when
+		 * the vendor actually reads it. One line at the end records that the set ran.
 		 */
 		private function register_vendor_optouts() : void {
 			// Essential Addons for Elementor 6.8.3, read per-surface by the vendor.
 			// docs/plugins/essential-addons-for-elementor-lite.md
 			add_filter( 'eael/disable_promotions', '__return_true', 100 );
-			$this->log( 'essential-addons', 'Registered eael/disable_promotions.' );
 
 			// YITH plugin-fw 4.7.8, bundled in every YITH plugin. Gates both RSS
 			// dashboard widgets and their asset enqueue.
 			// docs/plugins/yith-plugin-fw.md
 			add_filter( 'yith_plugin_fw_show_dashboard_widgets', '__return_false' );
-			$this->log( 'yith-plugin-fw', 'Registered yith_plugin_fw_show_dashboard_widgets opt-out.' );
 
 			// WP Desk ltv-dashboard-widget 1.x, bundled in every WP Desk plugin.
 			// Verified against Flexible Invoices 6.2.27.
 			// docs/plugins/flexible-invoices.md
 			add_filter( 'wpdesk/ltvdashboard/disable', '__return_true' );
-			$this->log( 'wpdesk-ltv-dashboard', 'Registered wpdesk/ltvdashboard/disable opt-out.' );
 
 			// WP Desk wp-wpdesk-tracker, bundled in every WP Desk plugin. Gates the
 			// usage-tracking opt-in notice, the deactivation survey and the payload send.
@@ -125,20 +127,20 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// Priority 999: UsageDataTracker::hooks() adds its own callback returning
 			// true at priority 10, so a default-priority opt-out here is overwritten.
 			add_filter( 'wpdesk_tracker_enabled', '__return_false', 999 );
-			$this->log( 'wpdesk-tracker', 'Registered wpdesk_tracker_enabled opt-out.' );
 
 			// Brainstorm Force bsf-analytics, bundled in Astra Pro, Spectra and others.
 			// The vendor documents this in-code as a kill switch for hosting providers.
 			// Verified against Astra Pro 4.13.8 and Spectra 2.20.3.
 			// docs/plugins/brainstorm-force.md
 			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
-			$this->log( 'brainstorm-force', 'Registered bsf_usage_tracking_enabled opt-out.' );
 
 			// BSF licence-activation and database-migration notices are deliberately
 			// untouched; BSF_PRODUCTS_NOTICES would take both. See the doc.
 
 			// EmbedPress needs no rule; its promo framework is never instantiated.
 			// docs/plugins/embedpress.md
+
+			$this->log( 'vendor-optouts', 'Registered vendor opt-out filters.' );
 		}
 
 		/**
@@ -157,10 +159,17 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Rationale and withdrawal conditions: docs/plugins/elementor.md
 		 */
 		public function unhook_elementor_notices() : void {
+			if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
+				// Not installed or not active. Silent: this is the common case, and a
+				// line here would fire on every admin request of every site without
+				// Elementor, burying the lines that record an actual suppression.
+				return;
+			}
+
 			$admin_notices_component = $this->get_elementor_admin_notices_component();
 
 			if ( null === $admin_notices_component ) {
-				$this->log( 'elementor', 'Admin_Notices component not reachable; no action taken.' );
+				$this->log( 'elementor', 'Installed, but Admin_Notices component not reachable; no action taken.' );
 			} else {
 				remove_action( 'admin_notices', [ $admin_notices_component, 'admin_notices' ], 20 );
 				$this->log( 'elementor', 'Removed Admin_Notices::admin_notices from admin_notices priority 20.' );
@@ -256,13 +265,14 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 		/**
 		 * Elementor's Admin_Notices component, or null if it cannot be reached.
+		 *
+		 * Callers guarantee \Elementor\Plugin exists, so every null here means the
+		 * vendor moved something and the rule needs revisiting.
 		 */
 		private function get_elementor_admin_notices_component() : ?object {
 			$component = null;
 
-			if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
-				// Elementor not installed or not active.
-			} elseif ( ! isset( \Elementor\Plugin::$instance ) || ! is_object( \Elementor\Plugin::$instance ) ) {
+			if ( ! isset( \Elementor\Plugin::$instance ) || ! is_object( \Elementor\Plugin::$instance ) ) {
 				// Elementor has not bootstrapped.
 			} elseif ( ! isset( \Elementor\Plugin::$instance->admin ) || ! is_object( \Elementor\Plugin::$instance->admin ) ) {
 				// Admin module absent; Elementor only builds it for admin requests.

@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.4.1. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.4.2. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -177,7 +177,7 @@ answer for a vendor that offers no switch.
 
 ## What it suppresses today
 
-Version 1.4.1. Every vendor rule below was verified against that vendor's real source
+Version 1.4.2. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |

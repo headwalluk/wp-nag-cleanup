@@ -5,6 +5,33 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] — 2026-09-05
+
+### Changed
+
+- **Debug logging now records what happened, not what was registered.** With
+  `HEADWALL_NAG_CLEANUP_DEBUG` on, an admin page load emitted six lines, five of which
+  were mechanism 1 filter registrations that fire identically on every request of every
+  site whether or not the vendor is installed. The one line that recorded a real
+  suppression was buried among them
+
+  - The five per-rule registration lines become **one**: `Registered vendor opt-out
+    filters.` A filter registration is not a suppression, and a mechanism 1 rule cannot
+    report one — the vendor reads the filter and `__return_false` is core's callback,
+    not ours. Adding a wrapper method per rule purely to log would trade five methods
+    for information the site's plugin list already gives you
+  - **"Not installed" branches are now silent.** Elementor's "component not reachable"
+    line fired on every admin request of every site without Elementor. It now logs only
+    when Elementor *is* installed but the component cannot be reached — which is the
+    drift signal that actually means something
+
+  A dashboard load now logs three lines (one summary, two real removals) and the Plugins
+  screen two. Both harnesses — double-include and the WPB `$wp_filter` unhook — still
+  pass, and `error.log` on the bench shows zero fatals.
+
+- `CLAUDE.md` gains the rule this follows: log an actual removal, or a vendor that is
+  installed but unreachable. Never a registration, never a missing vendor.
+
 ## [1.4.1] — 2026-09-05
 
 ### Changed

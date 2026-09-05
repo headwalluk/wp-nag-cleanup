@@ -154,6 +154,24 @@ test `wp_doing_ajax()` explicitly.
 suppression. This is the only remaining answer to "why did I never see that
 prompt?", so keep it working, but keep it small. It is not a reporting system.
 
+**Log things that happened, not things that were registered.** A line is warranted
+when:
+
+- Something was actually removed — an unhooked callback, a removed meta box
+- A vendor **is installed** but the target could not be reached, which is the drift
+  signal that says a rule needs revisiting
+
+A line is *not* warranted when a mechanism 1 filter is registered, or when the vendor
+simply is not installed. Both fire on every admin request of every site regardless of
+what is on it, and five unchanging lines per page load bury the one line that records
+a real suppression. Mechanism 1 registrations therefore share a single summary line,
+and "not installed" branches stay silent.
+
+A mechanism 1 rule cannot report an actual suppression at all: the vendor reads the
+filter and `__return_false` is core's callback, not ours. Do not add a wrapper method
+per rule just to log — that trades five methods for information the site's plugin list
+already gives you.
+
 ## Verifying rules against real plugin source
 
 There is a corpus of real plugin releases on this machine:
