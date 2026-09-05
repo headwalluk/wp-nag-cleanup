@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.4.2
+ * Version:     1.4.3
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,12 +34,10 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.4.2';
+		const VERSION = '1.4.3';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
-		 *
-		 * Empty since 1.0.0: YITH moved to a vendor filter. See docs/plugins/yith-plugin-fw.md.
 		 */
 		const PROMOTIONAL_DASHBOARD_WIDGETS = [];
 
@@ -98,47 +96,25 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 		/**
 		 * Mechanism 1: vendor opt-out hooks, registered at file scope.
-		 *
-		 * These are not logged individually. A filter registration is not a
-		 * suppression: it happens on every admin request whether or not the vendor is
-		 * installed, and `__return_false` gives no callback of ours to log from when
-		 * the vendor actually reads it. One line at the end records that the set ran.
 		 */
 		private function register_vendor_optouts() : void {
-			// Essential Addons for Elementor 6.8.3, read per-surface by the vendor.
-			// docs/plugins/essential-addons-for-elementor-lite.md
+			// Essential Addons for Elementor 6.8.3. docs/plugins/essential-addons-for-elementor-lite.md
 			add_filter( 'eael/disable_promotions', '__return_true', 100 );
 
-			// YITH plugin-fw 4.7.8, bundled in every YITH plugin. Gates both RSS
-			// dashboard widgets and their asset enqueue.
-			// docs/plugins/yith-plugin-fw.md
+			// YITH plugin-fw 4.7.8. docs/plugins/yith-plugin-fw.md
 			add_filter( 'yith_plugin_fw_show_dashboard_widgets', '__return_false' );
 
-			// WP Desk ltv-dashboard-widget 1.x, bundled in every WP Desk plugin.
-			// Verified against Flexible Invoices 6.2.27.
-			// docs/plugins/flexible-invoices.md
+			// WP Desk ltv-dashboard-widget 1.x. docs/plugins/flexible-invoices.md
 			add_filter( 'wpdesk/ltvdashboard/disable', '__return_true' );
 
-			// WP Desk wp-wpdesk-tracker, bundled in every WP Desk plugin. Gates the
-			// usage-tracking opt-in notice, the deactivation survey and the payload send.
-			// Verified against Flexible Invoices 6.2.27.
-			// docs/plugins/flexible-invoices.md
-			//
-			// Priority 999: UsageDataTracker::hooks() adds its own callback returning
-			// true at priority 10, so a default-priority opt-out here is overwritten.
+			// WP Desk wp-wpdesk-tracker, Flexible Invoices 6.2.27. docs/plugins/flexible-invoices.md
+			// Priority 999: UsageDataTracker adds its own callback returning true at 10.
 			add_filter( 'wpdesk_tracker_enabled', '__return_false', 999 );
 
-			// Brainstorm Force bsf-analytics, bundled in Astra Pro, Spectra and others.
-			// The vendor documents this in-code as a kill switch for hosting providers.
-			// Verified against Astra Pro 4.13.8 and Spectra 2.20.3.
-			// docs/plugins/brainstorm-force.md
+			// Brainstorm Force bsf-analytics, Astra Pro 4.13.8. docs/plugins/brainstorm-force.md
 			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
 
-			// BSF licence-activation and database-migration notices are deliberately
-			// untouched; BSF_PRODUCTS_NOTICES would take both. See the doc.
-
-			// EmbedPress needs no rule; its promo framework is never instantiated.
-			// docs/plugins/embedpress.md
+			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
 			$this->log( 'vendor-optouts', 'Registered vendor opt-out filters.' );
 		}
@@ -154,15 +130,10 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Remove the single callback that prints Elementor's $plain_notices.
 		 *
-		 * Takes api_upgrade_plugin and local_google_fonts_disabled with it as accepted
-		 * collateral. Database upgrade notices use separate callbacks and survive.
-		 * Rationale and withdrawal conditions: docs/plugins/elementor.md
+		 * Collateral and withdrawal conditions: docs/plugins/elementor.md
 		 */
 		public function unhook_elementor_notices() : void {
 			if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
-				// Not installed or not active. Silent: this is the common case, and a
-				// line here would fire on every admin request of every site without
-				// Elementor, burying the lines that record an actual suppression.
 				return;
 			}
 
@@ -179,14 +150,9 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Remove WPB Product Slider's five-star review notice.
 		 *
-		 * WPB Product Slider for WooCommerce 2.4. docs/plugins/wpb-woocommerce-product-slider.md
-		 *
-		 * The vendor creates the notice object with a bare `new WPB_WPS_Review_Notice()`
-		 * and discards it, so the callback cannot be named for remove_action() the way
-		 * every other mechanism 2 rule names one. Reading $wp_filter to recover the
-		 * instance is the documented exception to the no-$wp_filter rule, and it is
-		 * narrow by construction: it matches one class and one method, never content.
-		 * Nothing else in this file may read $wp_filter without the same write-up.
+		 * The vendor discards the notice instance, so $wp_filter is read to find it.
+		 * The only sanctioned such read in this file.
+		 * docs/plugins/wpb-woocommerce-product-slider.md
 		 */
 		public function unhook_wpb_product_slider_review_notice() : void {
 			global $wp_filter;
@@ -195,13 +161,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$review_notice_priority = null;
 
 			if ( ! class_exists( 'WPB_WPS_Review_Notice' ) ) {
-				// Plugin not installed, not active, or its bootstrap did not run.
+				// Not installed.
 			} elseif ( ! isset( $wp_filter['admin_notices'] ) || ! $wp_filter['admin_notices'] instanceof \WP_Hook ) {
-				// Nothing on the hook, or $wp_filter is not the WP_Hook shape used since 4.7.
+				// Not the WP_Hook shape used since 4.7.
 				$this->log( 'wpb-product-slider', 'admin_notices is not a WP_Hook; no action taken.' );
 			} else {
-				// Every priority is scanned rather than just the vendor's current 10, so
-				// the rule survives the vendor changing it.
 				foreach ( $wp_filter['admin_notices']->callbacks as $priority => $callbacks_at_priority ) {
 					foreach ( $callbacks_at_priority as $callback ) {
 						if ( $this->is_wpb_review_notice_callback( $callback ) ) {
@@ -245,17 +209,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Remove core's Welcome panel from the dashboard, when the site owner opts in.
 		 *
-		 * Core documents this exact removal at wp-admin/index.php:194. Verified
-		 * against WordPress 7.1.
-		 *
-		 * Must run on admin_init: wp-admin/admin.php loads wp-load.php, and so this
-		 * plugin, at line 35, but does not register wp_welcome_panel until it includes
-		 * admin-filters.php at line 102. At file scope there is nothing to remove.
+		 * Runs on admin_init: admin.php registers wp_welcome_panel after it loads
+		 * mu-plugins, so at file scope there is nothing to remove.
 		 */
 		public function remove_core_welcome_panel() : void {
 			if ( $this->is_constant_enabled( 'HEADWALL_NAG_CLEANUP_REMOVE_WELCOME_PANEL' ) ) {
-				// Dropping the only callback also makes has_action() false, so core
-				// skips the panel wrapper and its Screen Options checkbox entirely.
+				// Leaving the hook empty also drops the Screen Options checkbox, which
+				// core gates on has_action().
 				remove_action( 'welcome_panel', 'wp_welcome_panel' );
 				$this->log( 'wordpress-core', 'Removed wp_welcome_panel from welcome_panel.' );
 			} else {
@@ -265,9 +225,6 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 		/**
 		 * Elementor's Admin_Notices component, or null if it cannot be reached.
-		 *
-		 * Callers guarantee \Elementor\Plugin exists, so every null here means the
-		 * vendor moved something and the rule needs revisiting.
 		 */
 		private function get_elementor_admin_notices_component() : ?object {
 			$component = null;
@@ -304,8 +261,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			}
 
 			foreach ( $widgets_to_remove as $widget ) {
-				// A null screen resolves to the current one, covering the site, network
-				// and user dashboards from this one method.
+				// A null screen resolves to the current one, covering all three dashboards.
 				remove_meta_box( $widget['widget_id'], null, $widget['context'] );
 
 				$this->log(
@@ -334,9 +290,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 	}
 
-	// Declared global explicitly: the file is normally included at global scope, but a
-	// plugin including it from inside a function would otherwise get a local variable
-	// and the instance would be unreachable to remove_filter().
+	// Declared global so an include from inside a function still leaves the instance
+	// reachable to remove_filter().
 	global $headwall_nag_cleanup;
 
 	$headwall_nag_cleanup = new Plugin();

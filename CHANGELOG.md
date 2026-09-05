@@ -5,6 +5,29 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] — 2026-09-05
+
+### Changed
+
+- **Comments cut back to the house rule.** 341 lines to 299, with no behaviour change.
+  The file had drifted into explaining *why* decisions were taken, which is what
+  `docs/plugins/` is for
+
+  - Each mechanism 1 rule had a three or four line block restating its rationale. Each
+    is now one line: vendor, version verified against, doc path. The only surviving
+    second line is the WP Desk priority 999 note, because a load-order trap is exactly
+    what an inline comment is for
+  - `register_vendor_optouts()` lost a five-line docblock arguing about logging policy;
+    that argument lives in `CLAUDE.md`
+  - The `class_exists()` guard in `unhook_elementor_notices()` lost its three-line
+    explanation. `if ( ! class_exists( '\Elementor\Plugin' ) ) { return; }` needs none
+  - Docblocks on `unhook_wpb_product_slider_review_notice()`,
+    `remove_core_welcome_panel()` and `get_elementor_admin_notices_component()` trimmed
+    to a sentence plus, where it earns its place, the load-order or collateral note
+
+  Both harnesses still pass and the bench shows zero fatals. Terse no-op branch
+  comments are kept — they are required by the house style, not incidental.
+
 ## [1.4.2] — 2026-09-05
 
 ### Changed
