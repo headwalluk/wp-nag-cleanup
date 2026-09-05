@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.12.0
+ * Version:     1.12.1
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,18 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.12.0';
+		const VERSION = '1.12.1';
+
+		/**
+		 * Priority for our own unhooking and for overriding vendor filter values.
+		 *
+		 * Not PHP_INT_MAX: WooCommerce already occupies it on admin_notices and
+		 * in_admin_header, and a tie resolves in registration order — an mu-plugin
+		 * registers first, so we would run before the vendor we tied with. 999 only
+		 * has to beat the vendor's own registration, which it does for every audited
+		 * rule; see docs/plugins/ for the per-vendor priorities.
+		 */
+		const LATE_PRIORITY = 999;
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -86,12 +97,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			if ( $this->is_admin_page_request() ) {
 				$this->register_vendor_optouts();
 
-				add_action( 'admin_init', [ $this, 'unhook_vendor_notices' ], 999 );
-				add_action( 'admin_init', [ $this, 'remove_core_welcome_panel' ], 999 );
-				add_action( 'current_screen', [ $this, 'unhook_late_vendor_notices' ], 999 );
-				add_action( 'wp_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
-				add_action( 'wp_network_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
-				add_action( 'wp_user_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
+				add_action( 'admin_init', [ $this, 'unhook_vendor_notices' ], self::LATE_PRIORITY );
+				add_action( 'admin_init', [ $this, 'remove_core_welcome_panel' ], self::LATE_PRIORITY );
+				add_action( 'current_screen', [ $this, 'unhook_late_vendor_notices' ], self::LATE_PRIORITY );
+				add_action( 'wp_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
+				add_action( 'wp_network_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
+				add_action( 'wp_user_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
 			} else {
 				// No notice area and no dashboard on this request type.
 			}
@@ -134,8 +145,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			add_filter( 'wpdesk/ltvdashboard/disable', '__return_true' );
 
 			// WP Desk wp-wpdesk-tracker, Flexible Invoices 6.2.27. docs/plugins/flexible-invoices.md
-			// Priority 999: UsageDataTracker adds its own callback returning true at 10.
-			add_filter( 'wpdesk_tracker_enabled', '__return_false', 999 );
+			// Late priority: UsageDataTracker adds its own callback returning true at 10.
+			add_filter( 'wpdesk_tracker_enabled', '__return_false', self::LATE_PRIORITY );
 
 			// Brainstorm Force bsf-analytics, Astra Pro 4.13.8. docs/plugins/brainstorm-force.md
 			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
@@ -312,7 +323,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				);
 			}
 
-			add_action( 'admin_enqueue_scripts', [ $this, 'dequeue_elementor_promotion_assets' ], 999 );
+			add_action( 'admin_enqueue_scripts', [ $this, 'dequeue_elementor_promotion_assets' ], self::LATE_PRIORITY );
 		}
 
 		/**

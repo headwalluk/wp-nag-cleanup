@@ -5,6 +5,34 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1] — 2026-09-05
+
+### Changed
+
+- **The repeated `999` priority is now `self::LATE_PRIORITY`**, a documented class
+  constant. No behaviour change; the number is unchanged and now explained in one place
+
+  The question that prompted it was whether `PHP_INT_MAX` would be better. **It would be
+  worse**, and the evidence is recorded in `CLAUDE.md`: WooCommerce already occupies
+  `PHP_INT_MAX` on `admin_notices` (`Loader::inject_after_notices`) and on
+  `in_admin_header` (`WC_Settings_Payment_Gateways::suppress_admin_notices`). WordPress
+  resolves a tie in registration order, and an mu-plugin registers **first** — so tying
+  would make us run *before* the vendor we tied with, the opposite of the intent.
+
+  Surveyed on a 20-plugin bench: `admin_notices` carries callbacks at 999, 1000 and
+  `PHP_INT_MAX`; `admin_init` at 999, 1000, 99999 and 999999999. **There is no priority
+  that guarantees being last**, so the rule is now stated as "beat the vendor's own
+  registration", which 999 does for every audited rule.
+
+- `CLAUDE.md` also gains the `current_screen` timing note from 1.12.0: `admin.php` fires
+  `admin_init` at line 180 but calls `set_current_screen()` at line 217, so a vendor that
+  registers from a `current_screen` handler is invisible at `admin_init`.
+
+### Verified
+
+All sixteen rules still fire on the bench, both harnesses pass, `e-conversion-banner`,
+`pa-stories` and `themeisle` all still 0, zero PHP fatals.
+
 ## [1.12.0] — 2026-09-05
 
 ### Added

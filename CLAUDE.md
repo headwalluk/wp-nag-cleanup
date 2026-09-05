@@ -156,6 +156,22 @@ exist yet.
 
 A rule that "does nothing" is nearly always a phase problem, not a wrong hook name.
 
+**Use `self::LATE_PRIORITY`, not `PHP_INT_MAX`.** The priority only has to beat the
+vendor's own registration, not be last. `PHP_INT_MAX` looks like the safe choice and is
+not: WooCommerce already occupies it on `admin_notices`
+(`Loader::inject_after_notices`) and on `in_admin_header`
+(`WC_Settings_Payment_Gateways::suppress_admin_notices`). WordPress resolves a tie in
+registration order, and an mu-plugin registers *first* — so tying would make us run
+**before** the vendor we tied with, which is the opposite of the intent. Observed on a
+20-plugin bench: `admin_notices` carries callbacks at 999, 1000 and `PHP_INT_MAX`;
+`admin_init` at 999, 1000, 99999 and 999999999. There is no priority that guarantees
+being last, so do not chase one.
+
+**Some vendors only register once the screen is known.** `wp-admin/admin.php` fires
+`admin_init` at line 180 but calls `set_current_screen()` at line 217. A vendor that
+adds its notice from a `current_screen` handler is invisible at `admin_init` — hook
+`current_screen` instead. Elementor's conversion banner is the worked example.
+
 Note that `REST_REQUEST` is not defined at mu-plugin load time, so an early bail
 cannot test it — use `wp_is_json_request()`. `is_admin()` is true during AJAX, so
 test `wp_doing_ajax()` explicitly.
