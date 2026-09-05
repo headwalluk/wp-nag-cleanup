@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.14.0
+ * Version:     1.15.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.14.0';
+		const VERSION = '1.15.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -192,6 +192,34 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_premium_addons_promos();
 			$this->unhook_wp_swings_offer_banners();
 			$this->unhook_quadlayers_promote_notice();
+			$this->unhook_essential_blocks_campaigns();
+		}
+
+		/**
+		 * Remove Essential Blocks' campaign notices.
+		 *
+		 * Its bundled PriyoMukul\WPNotice bank holds only promotional notices — two
+		 * seasonal upsells, a review request and a tracking opt-in — so removing the
+		 * renderer takes nothing operational. The Facebook token expiry notice is a
+		 * separate callback and survives.
+		 * Essential Blocks 6.4.3. docs/plugins/essential-blocks.md
+		 */
+		public function unhook_essential_blocks_campaigns() : void {
+			$cache_bank_class = '\\PriyoMukul\\WPNotice\\Utils\\CacheBank';
+
+			if ( ! class_exists( $cache_bank_class ) || ! method_exists( $cache_bank_class, 'get_instance' ) ) {
+				return;
+			}
+
+			$cache_bank = $cache_bank_class::get_instance();
+
+			if ( ! is_object( $cache_bank ) ) {
+				$this->log( 'essential-blocks', 'CacheBank not reachable; no action taken.' );
+			} else {
+				remove_action( 'admin_notices', [ $cache_bank, 'notices' ] );
+				remove_action( 'admin_footer', [ $cache_bank, 'scripts' ] );
+				$this->log( 'essential-blocks', 'Removed CacheBank::notices from admin_notices.' );
+			}
 		}
 
 		/**

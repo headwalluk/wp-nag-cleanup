@@ -5,6 +5,61 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] — 2026-09-05
+
+### Added
+
+- **Essential Blocks' campaign notice bank removed** — its bundled
+  `PriyoMukul\WPNotice` bank holds four notices and **all four are promotional**: a
+  seasonal *"Summer Savings … up to $150 OFF"* upsell, an *"Essential Blocks PRO"* early
+  bird, a review request and a usage-tracking opt-in
+
+  `review` and `opt_in` are independently on the suppress list, so every notice in the
+  bank qualifies even judged individually.
+
+### No `$wp_filter` exception needed — worth recording why
+
+The obvious read is that this needs the reader: `Admin::notices()` does
+`$notices = new Notices( … )` into a **discarded local**. But the object actually on
+`admin_notices` is not that one — it is the `CacheBank` singleton the library creates
+internally, and `CacheBank::get_instance()` is public.
+
+So this is ordinary mechanism 2. **Check what is really on the hook before reaching for
+the exception**, which is now the third habit recorded in `CLAUDE.md` alongside checking
+method visibility and looking for a singleton.
+
+`CacheBank::scripts` is removed from `admin_footer` alongside, since it exists only to
+drive the notices.
+
+### Deliberately not done
+
+- **The Facebook token expiry notice** is a separate callback on the same hook and
+  reports a real credential problem — a connected feed about to stop updating. Verified
+  still hooked with the rule active
+- **`promotion_message_on_admin_screen`** only registers when the current screen is
+  `toplevel_page_essential-blocks` — the vendor's own page
+
+### Vendor scope
+
+WPDeveloper also publish Essential Addons for Elementor and EmbedPress, both already
+audited. **Neither bundles `PriyoMukul\WPNotice`**, so this rule covers Essential Blocks
+alone and the existing `eael/disable_promotions` rule is unaffected.
+
+### Verified
+
+Structurally, not by rendered output — none of the four notices is eligible on a freshly
+installed bench (`summer_campaign2026` expired 25 June 2026; the others start 1, 2 and 7
+days after registration):
+
+| Check | Rule off | Rule on |
+|---|---|---|
+| `CacheBank::notices` on `admin_notices` | hooked | **gone** |
+| `CacheBank::scripts` on `admin_footer` | hooked | **gone** |
+| `Facebook::render_expiry_notice` | present p10 | **present p10** |
+
+A first attempt to A/B by page content was discarded as invalid: activating the plugin
+redirects to its "Quick Setup Page", so the two captures were of different screens.
+
 ## [1.14.0] — 2026-09-05
 
 ### Added

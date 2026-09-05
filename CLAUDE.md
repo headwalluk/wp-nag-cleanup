@@ -90,6 +90,9 @@ Two habits that have repeatedly avoided needing it:
   (Premium Addons, 1.9.0)
 - **Check for a singleton accessor.** `get_instance()` on the vendor's own class is
   common and beats reading `$wp_filter` outright (Forminator, Yoast, CookieYes)
+- **Check what is really on the hook.** A discarded outer object often delegates to a
+  library singleton that *is* reachable — Essential Blocks discards its `Notices` object,
+  but the callback belongs to `CacheBank::get_instance()` (1.15.0)
 
 ### Double-include guard — verified behaviour, get this right
 

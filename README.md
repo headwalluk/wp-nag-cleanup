@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.14.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.15.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -179,7 +179,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.14.0. Every vendor rule below was verified against that vendor's real source
+Version 1.15.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -200,6 +200,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | WP Swings — Gift Cards Lite, Subscriptions | 3.2.10, 2.0.2 | 2 | Remotely-driven seasonal offer banners (`wps-offer-notice`) |
 | ElementsKit Lite (Wpmet) | 4.0.2 | 2, 3 | "Wpmet Stories" widget, rating nag, Go Pro notice, remote banner, EmailKit cross-sell |
 | QuadLayers — all plugins, via their Composer packages | Insta Gallery 5.0.8 | 2, 3 | "QuadLayers News" widget, review nag and cross-install promos |
+| Essential Blocks (WPDeveloper) | 6.4.3 | 2 | Seasonal campaign notices, review request and tracking opt-in |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 
