@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-09-05
+
+### Added
+
+- **`HEADWALL_NAG_CLEANUP_REMOVE_WELCOME_PANEL`** removes core's dashboard "Welcome"
+  panel via `remove_action( 'welcome_panel', 'wp_welcome_panel' )` — the removal core
+  documents at `wp-admin/index.php:194`. Verified against WordPress 7.1
+
+  **Off by default**, and a separate constant from
+  `HEADWALL_NAG_CLEANUP_REMOVE_CORE_DASHBOARD_WIDGETS`. The panel is core output, and
+  the boundary rule does not permit suppressing core out of the box; it is also not a
+  dashboard widget, so it does not belong behind the widget constant. Someone may
+  reasonably want one and not the other
+
+  Two things worth knowing before setting it. Removing the only callback makes core's
+  `has_action( 'welcome_panel' )` guard false, which drops the panel wrapper *and* the
+  "Welcome" checkbox in Screen Options — so it cannot be toggled back from the UI
+  while the constant is set. And it must run on `admin_init`, not at file scope:
+  `wp-admin/admin.php` loads mu-plugins at line 35 but does not register
+  `wp_welcome_panel` until it includes `admin-filters.php` at line 102. A file-scope
+  `remove_action()` would silently do nothing
+
 ## [1.1.0] — 2026-09-05
 
 Two rules covering the whole WP Desk range. Both nags come from shared Composer

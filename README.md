@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.1.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.2.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -150,7 +150,7 @@ answer for a vendor that offers no switch.
 
 ## What it suppresses today
 
-Version 1.1.0. Every vendor rule below was verified against that vendor's real source
+Version 1.2.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -161,10 +161,11 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | WP Desk — all plugins, via `wp-wpdesk-tracker` | Flexible Invoices 6.2.27 | 1 | Usage-tracking opt-in notice, deactivation survey, activation redirect, weekly payload |
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
+| WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 
-The core widget is the one entry that is not a vendor nag. It is off unless you turn
-it on, and it is documented under [Configuration](#configuration) rather than in
-`docs/plugins/`, which covers third-party plugins.
+The two core entries are the ones that are not vendor nags. Both are off unless you
+turn them on, and both are documented under [Configuration](#configuration) rather
+than in `docs/plugins/`, which covers third-party plugins.
 
 The YITH and WP Desk rules are worth singling out. `plugin-fw` is a framework bundled
 inside every YITH plugin, free and premium, and `ltv-dashboard-widget` and
@@ -231,7 +232,25 @@ define( 'HEADWALL_NAG_CLEANUP_DEBUG', true );
 // from api.wordpress.org on every dashboard load. Off by default, because it is
 // core output rather than a vendor nag.
 define( 'HEADWALL_NAG_CLEANUP_REMOVE_CORE_DASHBOARD_WIDGETS', true );
+
+// Also remove core's dashboard "Welcome" panel. Off by default, because it is core
+// output rather than a vendor nag. Worth setting on client sites: it takes the full
+// width at the top of the dashboard, and site operators reliably do not realise the
+// Dismiss link is there.
+define( 'HEADWALL_NAG_CLEANUP_REMOVE_WELCOME_PANEL', true );
 ```
+
+Both core constants are off by default on purpose. The boundary rule says core output
+is never suppressed, and a fire-and-forget drop-in has to honour that without being
+told. Turning one on is the site owner overriding that for their own site, which is a
+different thing from the plugin deciding to.
+
+The Welcome panel is removed with `remove_action( 'welcome_panel', 'wp_welcome_panel' )`
+— the removal core itself documents at `wp-admin/index.php:194`. Because that leaves
+no callback on the hook, core's `has_action()` guard also drops the panel wrapper and
+the **"Welcome" checkbox in Screen Options**. Nobody can toggle it back from the UI
+while the constant is set; unset the constant and the checkbox returns. A plugin that
+hooks `welcome_panel` itself is unaffected — only core's callback is removed.
 
 ## Adding a rule
 

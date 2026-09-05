@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -14,6 +14,7 @@
  * Optional constants, set in wp-config.php:
  *   HEADWALL_NAG_CLEANUP_DEBUG                          Log suppressions to error_log().
  *   HEADWALL_NAG_CLEANUP_REMOVE_CORE_DASHBOARD_WIDGETS  Also remove core's Events and News widget.
+ *   HEADWALL_NAG_CLEANUP_REMOVE_WELCOME_PANEL           Also remove core's dashboard Welcome panel.
  *
  * Per-rule provenance is in docs/plugins/. Design and boundary rule: README.md.
  *
@@ -33,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.1.0';
+		const VERSION = '1.2.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -77,6 +78,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				$this->register_vendor_optouts();
 
 				add_action( 'admin_init', [ $this, 'unhook_vendor_notices' ], 999 );
+				add_action( 'admin_init', [ $this, 'remove_core_welcome_panel' ], 999 );
 				add_action( 'wp_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
 				add_action( 'wp_network_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
 				add_action( 'wp_user_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
@@ -165,6 +167,27 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			} else {
 				remove_action( 'admin_notices', [ $admin_notices_component, 'admin_notices' ], 20 );
 				$this->log( 'elementor', 'Removed Admin_Notices::admin_notices from admin_notices priority 20.' );
+			}
+		}
+
+		/**
+		 * Remove core's Welcome panel from the dashboard, when the site owner opts in.
+		 *
+		 * Core documents this exact removal at wp-admin/index.php:194. Verified
+		 * against WordPress 7.1.
+		 *
+		 * Must run on admin_init: wp-admin/admin.php loads wp-load.php, and so this
+		 * plugin, at line 35, but does not register wp_welcome_panel until it includes
+		 * admin-filters.php at line 102. At file scope there is nothing to remove.
+		 */
+		public function remove_core_welcome_panel() : void {
+			if ( $this->is_constant_enabled( 'HEADWALL_NAG_CLEANUP_REMOVE_WELCOME_PANEL' ) ) {
+				// Dropping the only callback also makes has_action() false, so core
+				// skips the panel wrapper and its Screen Options checkbox entirely.
+				remove_action( 'welcome_panel', 'wp_welcome_panel' );
+				$this->log( 'wordpress-core', 'Removed wp_welcome_panel from welcome_panel.' );
+			} else {
+				// Core output stays unless the site owner opts in.
 			}
 		}
 
