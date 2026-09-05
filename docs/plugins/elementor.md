@@ -171,6 +171,63 @@ Re-check when a new Elementor version appears in the vault:
 
 Point 4 is the one that matters. Check it first.
 
+## The promotions module — added in 1.12.0
+
+`modules/promotions/` is a separate surface from `core/admin/admin-notices.php`, and the
+1.0.0 rule does not touch it. It holds three banner classes, each constructed and
+discarded by `modules/promotions/module.php`:
+
+| Class | Hook | Where it renders |
+|---|---|---|
+| `Conversion_Banner` | `in_admin_header` priority 11 | **WordPress dashboard** and Elementor's own pages |
+| `Pointers\Black_Friday` | `admin_print_footer_scripts-index.php` | Dashboard |
+| `Pointers\Birthday` | `admin_print_footer_scripts-index.php` | Dashboard |
+
+`Conversion_Banner` renders *"Build more with Elementor Pro — Add the theme builder,
+popup builder, and 85+ advanced widgets"* with an **Upgrade now** button linking to
+`go.elementor.com/go-pro-wp-admin-upgrade-notice/`. `Black_Friday` is a seasonal sale
+banner, which is this project's canonical example of what to remove.
+
+### Why this needed the `$wp_filter` reader
+
+All three mechanisms were established as unavailable before the exception was used:
+
+- **Mechanism 1 — no filter.** `modules/promotions/` contains exactly two
+  `apply_filters` calls, both in `admin-menu-items/go-pro-promotion-item.php`, for the
+  admin *menu* item's text and URL. `Conversion_Banner::should_display_banner()` reads
+  `Utils::has_pro()` and a user-meta dismissal flag; neither is filterable, and faking
+  the flag would be a database write
+- **Mechanism 2 — instance discarded.** `module.php:90` is `new Conversion_Banner();`
+  with no assignment. Nothing retains it, and there is no singleton accessor. The two
+  pointer classes are the same
+- **Mechanism 3 — not a dashboard widget.** It is `in_admin_header` output
+
+### The timing trap
+
+`wp-admin/admin.php` calls `do_action( 'admin_init' )` at line 180 and
+`set_current_screen()` at line **217**. `Conversion_Banner` only adds its
+`in_admin_header` callback from a `current_screen` handler, so **at `admin_init`
+priority 999 the callback does not yet exist**. This rule runs on `current_screen`
+priority 999 instead — the first rule in the project to need a phase other than
+`admin_init` or `wp_dashboard_setup`.
+
+### The assets are dequeued separately
+
+Removing `render_banner_container` stops the markup, but the banner's stylesheet and
+script are enqueued by an **anonymous** callback added in the same method, which nothing
+can unhook by name. They are dropped with `wp_dequeue_style()` and `wp_dequeue_script()`
+on handle `e-conversion-banner`, at `admin_enqueue_scripts` priority 999.
+
+Without that, the page still carried a stylesheet and two script tags for a banner that
+no longer renders. Verified: `e-conversion-banner` occurrences went 12 → 4 with the
+unhook alone, and 12 → **0** once the assets were dequeued.
+
+### Collateral
+
+The banner also renders on Elementor's own admin pages, and this removes it there too.
+That is beyond the project's remit rather than against it — nothing operational is lost,
+and there is no way to separate the dashboard occurrence from the vendor-screen ones.
+
 ## Mechanism 3 — the dashboard widget
 
 - tier: 3 (dashboard widget removal)

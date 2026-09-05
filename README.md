@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.11.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.12.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -141,7 +141,8 @@ new WPB_WPS_Review_Notice();   // return value discarded
 nothing to name — an instance you construct yourself will not match. The only way to
 reach it is to read `$wp_filter`.
 
-Exactly one rule does this, for WPB Product Slider, and it is bounded:
+**One** private method reads `$wp_filter` — `remove_discarded_instance_callback()`,
+which takes a hook, a class and a method. It is bounded:
 
 - It matches **one class and one method** by `instanceof`, and inspects no content.
   That is categorically different from the banned pattern, which removes callbacks
@@ -151,10 +152,11 @@ Exactly one rule does this, for WPB Product Slider, and it is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Adding a second such rule requires the same write-up in `docs/plugins/`, and the
-first question has to be whether mechanisms 1 to 3 really are all unavailable. See
+Two rules use it: WPB Product Slider's review notice, and Elementor's promotions
+module. Each has its own write-up, and each had to establish that mechanisms 1 to 3
+were all unavailable first — a bar that has failed more often than it has passed. See
 [`docs/plugins/wpb-woocommerce-product-slider.md`](docs/plugins/wpb-woocommerce-product-slider.md)
-for the full reasoning, including the approach that was rejected.
+and [`docs/plugins/elementor.md`](docs/plugins/elementor.md).
 
 ### 3. Dashboard widget removal
 
@@ -177,7 +179,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.11.0. Every vendor rule below was verified against that vendor's real source
+Version 1.12.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -189,7 +191,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Brainstorm Force — Astra, Spectra et al, via `bsf-analytics` | Astra Pro 4.13.8, Spectra 2.20.3 | 1 | Usage-tracking payload. Licence and database-migration notices deliberately preserved |
 | ThemeIsle — all plugins, via `themeisle-sdk` | Menu Icons 0.13.24 | 1 | "WordPress Guides/Tutorials" dashboard widget, and its two RSS feed fetches |
 | CookieYes | 3.5.5 | 1 | Review request, web-app connect banner, and the WebToffee AccessiYes cross-promotion banner |
-| Elementor | 4.2.4 | 2, 3 | Nine promotional notices, and the "Elementor Overview" dashboard widget |
+| Elementor | 4.2.4 | 2, 3 | Nine promotional notices, the "Elementor Overview" dashboard widget, and the promotions module (Go Pro banner, Black Friday, Birthday) |
 | WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | Forminator | 1.57.2 | 2 | "Pro Form Templates" dashboard promo, review request |
 | Premium Addons for Elementor | 4.11.102 | 2, 3 | Review nag, Angie and Connect-AI upsells, "Premium Addons News" widget and its `premiumaddons.com` fetch |

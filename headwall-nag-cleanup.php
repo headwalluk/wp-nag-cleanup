@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.11.0
+ * Version:     1.12.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.11.0';
+		const VERSION = '1.12.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -88,6 +88,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 				add_action( 'admin_init', [ $this, 'unhook_vendor_notices' ], 999 );
 				add_action( 'admin_init', [ $this, 'remove_core_welcome_panel' ], 999 );
+				add_action( 'current_screen', [ $this, 'unhook_late_vendor_notices' ], 999 );
 				add_action( 'wp_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
 				add_action( 'wp_network_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
 				add_action( 'wp_user_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], 999 );
@@ -167,6 +168,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_forminator_dashboard_promo();
 			$this->unhook_premium_addons_promos();
 			$this->unhook_wp_swings_offer_banners();
+		}
+
+		/**
+		 * Mechanism 2, for vendors that only register once the screen is known.
+		 */
+		public function unhook_late_vendor_notices() : void {
+			$this->unhook_elementor_promotion_banners();
 		}
 
 		/**
@@ -268,60 +276,111 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Remove WPB Product Slider's five-star review notice.
 		 *
-		 * The vendor discards the notice instance, so $wp_filter is read to find it.
-		 * The only sanctioned such read in this file.
 		 * docs/plugins/wpb-woocommerce-product-slider.md
 		 */
 		public function unhook_wpb_product_slider_review_notice() : void {
+			$this->remove_discarded_instance_callback(
+				'admin_notices',
+				'WPB_WPS_Review_Notice',
+				'maybe_show_notice',
+				'wpb-product-slider'
+			);
+		}
+
+		/**
+		 * Remove Elementor's promotional banners from the promotions module.
+		 *
+		 * Runs on current_screen, not admin_init: wp-admin/admin.php calls
+		 * set_current_screen() after admin_init, and Conversion_Banner only adds its
+		 * in_admin_header callback once the screen is known.
+		 * docs/plugins/elementor.md
+		 */
+		public function unhook_elementor_promotion_banners() : void {
+			$this->remove_discarded_instance_callback(
+				'in_admin_header',
+				'\\Elementor\\Modules\\Promotions\\Conversion_Banner',
+				'render_banner_container',
+				'elementor-promotions'
+			);
+
+			foreach ( [ 'Black_Friday', 'Birthday' ] as $pointer_class ) {
+				$this->remove_discarded_instance_callback(
+					'admin_print_footer_scripts-index.php',
+					'\\Elementor\\Modules\\Promotions\\Pointers\\' . $pointer_class,
+					'enqueue_notice',
+					'elementor-promotions'
+				);
+			}
+
+			add_action( 'admin_enqueue_scripts', [ $this, 'dequeue_elementor_promotion_assets' ], 999 );
+		}
+
+		/**
+		 * Drop the conversion banner's stylesheet and script.
+		 *
+		 * An anonymous callback enqueues them, so there is nothing to unhook by name;
+		 * dequeuing by handle is the supported route. Harmless when nothing is enqueued.
+		 */
+		public function dequeue_elementor_promotion_assets() : void {
+			wp_dequeue_style( 'e-conversion-banner' );
+			wp_dequeue_script( 'e-conversion-banner' );
+		}
+
+		/**
+		 * Remove one hooked callback belonging to a vendor object we cannot otherwise reach.
+		 *
+		 * The only place in this file permitted to read $wp_filter. It matches one class
+		 * and one method and never inspects content, which is what separates it from the
+		 * banned pattern. Every use needs its own write-up in docs/plugins/, and the first
+		 * question is always whether mechanisms 1 to 3 really are all unavailable.
+		 */
+		private function remove_discarded_instance_callback( string $hook_name, string $class_name, string $method_name, string $rule_id ) : void {
 			global $wp_filter;
 
-			$review_notice_callback = null;
-			$review_notice_priority = null;
+			$found_callback = null;
+			$found_priority = null;
 
-			if ( ! class_exists( 'WPB_WPS_Review_Notice' ) ) {
+			if ( ! class_exists( $class_name ) ) {
 				// Not installed.
-			} elseif ( ! isset( $wp_filter['admin_notices'] ) || ! $wp_filter['admin_notices'] instanceof \WP_Hook ) {
+			} elseif ( ! isset( $wp_filter[ $hook_name ] ) || ! $wp_filter[ $hook_name ] instanceof \WP_Hook ) {
 				// Not the WP_Hook shape used since 4.7.
-				$this->log( 'wpb-product-slider', 'admin_notices is not a WP_Hook; no action taken.' );
+				$this->log( $rule_id, sprintf( '%s is not a WP_Hook; no action taken.', $hook_name ) );
 			} else {
-				foreach ( $wp_filter['admin_notices']->callbacks as $priority => $callbacks_at_priority ) {
+				foreach ( $wp_filter[ $hook_name ]->callbacks as $priority => $callbacks_at_priority ) {
 					foreach ( $callbacks_at_priority as $callback ) {
-						if ( $this->is_wpb_review_notice_callback( $callback ) ) {
-							$review_notice_callback = $callback['function'];
-							$review_notice_priority = $priority;
+						if ( $this->is_instance_callback( $callback, $class_name, $method_name ) ) {
+							$found_callback = $callback['function'];
+							$found_priority = $priority;
 							break 2;
 						}
 					}
 				}
 
-				if ( null === $review_notice_callback ) {
-					$this->log( 'wpb-product-slider', 'Review notice callback not registered; no action taken.' );
+				if ( null === $found_callback ) {
+					$this->log( $rule_id, sprintf( '%s::%s not registered on %s; no action taken.', $class_name, $method_name, $hook_name ) );
 				} else {
-					remove_action( 'admin_notices', $review_notice_callback, $review_notice_priority );
-					$this->log(
-						'wpb-product-slider',
-						sprintf( 'Removed WPB_WPS_Review_Notice::maybe_show_notice from admin_notices priority %d.', $review_notice_priority )
-					);
+					remove_action( $hook_name, $found_callback, $found_priority );
+					$this->log( $rule_id, sprintf( 'Removed %s::%s from %s priority %d.', $class_name, $method_name, $hook_name, $found_priority ) );
 				}
 			}
 		}
 
 		/**
-		 * Is this hook entry WPB_WPS_Review_Notice::maybe_show_notice?
+		 * Is this hook entry the named method on an instance of the named class?
 		 */
-		private function is_wpb_review_notice_callback( array $callback ) : bool {
-			$is_review_notice = false;
+		private function is_instance_callback( array $callback, string $class_name, string $method_name ) : bool {
+			$is_match = false;
 
 			if ( ! isset( $callback['function'] ) || ! is_array( $callback['function'] ) ) {
-				// Named function, closure or static call; never this rule's target.
+				// Named function, closure or static call; never a target.
 			} elseif ( 2 !== count( $callback['function'] ) || ! is_object( $callback['function'][0] ) ) {
 				// Class-name-and-method array rather than an instance method.
 			} else {
-				$is_review_notice = $callback['function'][0] instanceof \WPB_WPS_Review_Notice
-					&& 'maybe_show_notice' === $callback['function'][1];
+				$is_match = $callback['function'][0] instanceof $class_name
+					&& $method_name === $callback['function'][1];
 			}
 
-			return $is_review_notice;
+			return $is_match;
 		}
 
 		/**

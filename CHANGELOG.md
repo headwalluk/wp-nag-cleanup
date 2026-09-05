@@ -5,6 +5,61 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] — 2026-09-05
+
+### Added
+
+- **Elementor's promotions module suppressed** — the "Build more with Elementor Pro"
+  conversion banner, plus the **Black Friday** and **Birthday** pointer banners in the
+  same module. All three render on the WordPress dashboard; the conversion banner also
+  appears on Elementor's own screens
+
+- **The banner's stylesheet and script are dequeued** by handle
+  (`e-conversion-banner`). An anonymous callback enqueues them, so nothing can unhook it
+  by name. Without this the page still carried a stylesheet and two script tags for a
+  banner that no longer renders: occurrences went 12 → 4 with the unhook alone, and
+  12 → **0** once the assets were dequeued
+
+### Changed
+
+- **The `$wp_filter` walk is now one shared reader.** `remove_discarded_instance_callback(
+  $hook, $class, $method, $rule_id )` replaces the bespoke walk written for WPB Product
+  Slider in 1.3.0, which is now a four-line call into it
+
+  When the first exception was granted, a reusable helper was deliberately *not* built —
+  on the grounds that a helper invites reuse. That was right with one case. With a second
+  legitimate case, two hand-rolled walks is worse than one audited reader: `$wp_filter`
+  now appears in exactly one method in the file. `CLAUDE.md` and `README.md` are rewritten
+  to say **one reader, not a licence** — never add a second, extend this one.
+
+  The WPB harness still passes unchanged against the shared reader, including the decoy
+  case where a different class exposes a method of the same name.
+
+### Why the exception was justified here
+
+Established before it was used, and recorded in `docs/plugins/elementor.md`:
+
+- **No filter.** `modules/promotions/` has two `apply_filters` calls, both for the admin
+  *menu* item's text and URL. `should_display_banner()` reads `Utils::has_pro()` and a
+  user-meta dismissal flag — neither filterable, and faking the flag is a database write
+- **Instance discarded.** `module.php:90` is `new Conversion_Banner();` with no
+  assignment, no singleton accessor. Both pointer classes are the same
+- **Not a dashboard widget**
+
+### A new timing trap
+
+`wp-admin/admin.php` fires `admin_init` at line 180 but calls `set_current_screen()` at
+line **217**. `Conversion_Banner` only adds its `in_admin_header` callback from a
+`current_screen` handler, so at `admin_init` priority 999 there is nothing to remove.
+This is the first rule to need a phase other than `admin_init` or `wp_dashboard_setup` —
+it runs on `current_screen` priority 999.
+
+### Verified
+
+A/B on WP 7.1 with Elementor 4.2.4 active, using separate capture files and a settle
+delay after each deploy: `e-conversion-banner` **12 → 0**, "Build more with Elementor Pro"
+**1 → 0**, zero PHP fatals, front page 200. Both harnesses pass.
+
 ## [1.11.0] — 2026-09-05
 
 ### Added

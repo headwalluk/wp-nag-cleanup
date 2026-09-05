@@ -188,6 +188,14 @@ Re-check when a new version appears in the vault:
   version reuses that function name for an actual cross-sell, re-read it before
   assuming the classification still holds
 
+## Note on the 1.12.0 refactor
+
+The bespoke `$wp_filter` walk written for this rule was generalised in 1.12.0 into
+`remove_discarded_instance_callback( $hook, $class, $method, $rule_id )`, when Elementor's
+promotions module turned out to need the same technique. The behaviour is unchanged and
+the harness covering this rule — including the decoy-class case — still passes against the
+shared reader. There is still exactly **one** method in the file that reads `$wp_filter`.
+
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2 with the `$wp_filter` exception
 
 Called from `unhook_vendor_notices()` on `admin_init` priority 999.
