@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.3.0
+ * Version:     1.4.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.3.0';
+		const VERSION = '1.4.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -140,6 +140,16 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// true at priority 10, so a default-priority opt-out here is overwritten.
 			add_filter( 'wpdesk_tracker_enabled', '__return_false', 999 );
 			$this->log( 'wpdesk-tracker', 'Registered wpdesk_tracker_enabled opt-out.' );
+
+			// Brainstorm Force bsf-analytics, bundled in Astra Pro, Spectra and others.
+			// The vendor documents this in-code as a kill switch for hosting providers.
+			// Verified against Astra Pro 4.13.8 and Spectra 2.20.3.
+			// docs/plugins/brainstorm-force.md
+			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
+			$this->log( 'brainstorm-force', 'Registered bsf_usage_tracking_enabled opt-out.' );
+
+			// BSF licence-activation and database-migration notices are deliberately
+			// untouched; BSF_PRODUCTS_NOTICES would take both. See the doc.
 
 			// EmbedPress needs no rule; its promo framework is never instantiated.
 			// docs/plugins/embedpress.md

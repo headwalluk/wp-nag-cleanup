@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.3.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.4.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -177,7 +177,7 @@ answer for a vendor that offers no switch.
 
 ## What it suppresses today
 
-Version 1.3.0. Every vendor rule below was verified against that vendor's real source
+Version 1.4.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -186,6 +186,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | YITH — all plugins, via `plugin-fw` | 4.7.8 | 1 | Two `yithemes.com` RSS dashboard widgets, and their script and style enqueue |
 | WP Desk — all plugins, via `ltv-dashboard-widget` | Flexible Invoices 6.2.27 | 1 | "Grow your business with WP Desk" dashboard widget, and its `wpdesk.net` catalogue fetch |
 | WP Desk — all plugins, via `wp-wpdesk-tracker` | Flexible Invoices 6.2.27 | 1 | Usage-tracking opt-in notice, deactivation survey, activation redirect, weekly payload |
+| Brainstorm Force — Astra, Spectra et al, via `bsf-analytics` | Astra Pro 4.13.8, Spectra 2.20.3 | 1 | Usage-tracking payload. Licence and database-migration notices deliberately preserved |
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |

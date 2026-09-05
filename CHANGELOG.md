@@ -5,6 +5,56 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-09-05
+
+One filter covering the Brainstorm Force range — Astra Pro, Spectra, Spectra Pro,
+Astra Widgets and Custom Typekit Fonts, ~128 installs on the fleet.
+
+### Added
+
+- **`bsf_usage_tracking_enabled`** disables Brainstorm Force usage tracking across every
+  plugin bundling `bsf-analytics`. The vendor documents it in-code as a *"global kill
+  switch — allows hosting providers, compliance plugins, or agency developers to disable
+  all BSF tracking with one filter"*. Verified against Astra Pro 4.13.8 and Spectra 2.20.3
+- `docs/plugins/brainstorm-force.md` — one document covering all five plugins and the
+  three shared libraries, in the manner of the YITH framework audit
+
+  The filter stops the outbound payload but **not** the opt-in notice: `option_notice()`
+  returns early when tracking is *enabled*, so a `false` here leaves the notice showing.
+  That is stated plainly in the doc rather than glossed. It does not make the notice
+  worse either — where the opt-in option is unset the notice appears either way.
+
+### Deliberately not done
+
+The largest available win in this vendor's code is the one that must not be taken:
+
+- **`BSF_PRODUCTS_NOTICES`** silences all `bsf_notices` output with one constant. What
+  it silences is *"Please activate your copy of [Product] to get update notifications"* —
+  a licence activation notice. Using it would leave ~53 Astra Pro and Spectra Pro sites
+  quietly not receiving updates. The per-product `BSF_<PRODUCT>_NAG` and
+  `BSF_<PRODUCT>_NOTICES` constants are rejected for the same reason
+- **`astra_notices_user_cap_check` / `bsf_admin_notices_user_cap_check`** would disable
+  the whole `BSF_Admin_Notices` framework. Spectra queues five notices through it and
+  four are operational — including **"Spectra Legacy database update required"**.
+  Suppressing the framework would destroy a database migration prompt, the exact failure
+  the blanket-suppression ban exists to prevent
+- **`UAGB_Admin::register_notices`** holds the one real upsell found ("Want to do more
+  with Popup Builder? … Upgrade Now") but queues it from the same callback as the
+  migration prompt and the "Block Editor required" dependency notice. Mixed output, so
+  no rule
+- **The `bsf-analytics` opt-in notice** is a genuine target but unreachable:
+  `BSF_Analytics_Loader::load_analytics` discards the instance, exactly as WPB Product
+  Slider does. Removing it would need a second `$wp_filter` exception, which is left as
+  a deliberate decision rather than taken
+
+### Verified on a live site
+
+Tested on WP 7.1 with Astra Pro, Spectra, Astra Widgets and Spectra Pro active, over an
+authenticated admin request — `wp-cli` is not a valid harness, since it runs with
+`is_admin()` false and this plugin correctly bails. The licence notice (`bsf_notices`)
+and Astra's theme-dependency notice both remain hooked, 25 callbacks remain on
+`admin_notices`, and `error.log` shows zero fatals.
+
 ## [1.3.0] — 2026-09-05
 
 Removes WPB Product Slider for WooCommerce's five-star review notice, and in doing so
