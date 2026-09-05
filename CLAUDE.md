@@ -97,12 +97,26 @@ top-level functions at all:
 ```php
 if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	class Plugin { /* ... */ }
-	Plugin::boot();
+
+	global $headwall_nag_cleanup;
+
+	$headwall_nag_cleanup = new Plugin();
+	$headwall_nag_cleanup->run();
 }
 ```
 
 Use `__NAMESPACE__ . '\\Plugin'` rather than a hand-written string — a typo in a
 literal class name makes the guard silently never match.
+
+The class is instantiated from **outside** itself; there is no static `boot()`. The
+`class_exists` wrapper is what makes the second include a no-op, so a further
+"already booted" check inside the class would be dead code. Do not reintroduce one.
+
+`global $headwall_nag_cleanup;` is declared explicitly rather than relying on file
+scope. `wp-settings.php` includes mu-plugins at global scope, so a bare assignment
+would usually work — but a plugin including this file from inside a function would
+create a local, and the instance has to stay globally reachable so that
+`remove_filter()` can name it.
 
 ### The three mechanisms
 
@@ -189,13 +203,16 @@ PHP, matching the wider Headwall house style:
 - Enumerate no-op branches explicitly with a comment saying why no action is taken,
   rather than letting conditions fall through invisibly
 - **Descriptive names, no single-character identifiers**, anywhere, ever
-- **Hook callbacks are named functions or named static methods. Never closures.**
+- **Hook callbacks are named methods or named functions. Never closures.**
   Beyond being the house style, this is load-bearing: an anonymous function cannot
   be passed to `remove_filter()`, so a closure makes this plugin's own hooks
   unremovable by anyone debugging a site. WordPress core's `__return_false` /
   `__return_true` / `__return_empty_array` and friends cover nearly every
-  mechanism 1 rule; anything more goes in the plugin class as a public static
-  method
+  mechanism 1 rule; anything more goes in the plugin class as a **public instance
+  method**, registered as `[ $this, 'method_name' ]`. That stays removable because
+  `$headwall_nag_cleanup` holds the instance globally. Prefer an instance method to a
+  static one — the class is instantiated from outside and its work belongs on the
+  object, not on the class
 - Data-driven output over long strings of concatenation
 - Lean on nothing. A dependency must earn its place against the code it saves;
   in this project nothing has earned it

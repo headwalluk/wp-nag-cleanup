@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.4.0
+ * Version:     1.4.1
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.4.0';
+		const VERSION = '1.4.1';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -55,20 +55,6 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'reason'    => 'WordPress Events and News; fetches api.wordpress.org on render',
 			],
 		];
-
-		/**
-		 * Create the instance and run it, unless an earlier include already did.
-		 */
-		public static function boot() : void {
-			global $headwall_nag_cleanup;
-
-			if ( isset( $headwall_nag_cleanup ) && $headwall_nag_cleanup instanceof self ) {
-				// Already booted by an earlier include.
-			} else {
-				$headwall_nag_cleanup = new self();
-				$headwall_nag_cleanup->run();
-			}
-		}
 
 		/**
 		 * Register everything this plugin does.
@@ -338,5 +324,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 	}
 
-	Plugin::boot();
+	// Declared global explicitly: the file is normally included at global scope, but a
+	// plugin including it from inside a function would otherwise get a local variable
+	// and the instance would be unreachable to remove_filter().
+	global $headwall_nag_cleanup;
+
+	$headwall_nag_cleanup = new Plugin();
+	$headwall_nag_cleanup->run();
 }

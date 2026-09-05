@@ -5,6 +5,32 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] — 2026-09-05
+
+### Changed
+
+- **Boot logic moved outside the class.** `Plugin::boot()` is gone; the file now ends
+  with `$headwall_nag_cleanup = new Plugin(); $headwall_nag_cleanup->run();`. A class
+  should not contain its own instantiation ceremony — that belongs to the caller
+
+  The `class_exists` wrapper is what makes a second include a no-op, so `boot()`'s
+  internal "already booted" check was dead code and is not replaced. `global
+  $headwall_nag_cleanup;` is now declared explicitly: `wp-settings.php` includes
+  mu-plugins at global scope so a bare assignment usually works, but a plugin including
+  this file from inside a function would create a local, and the instance must stay
+  globally reachable for `remove_filter()`
+
+  Verified against WordPress 7.1's real hook API: class declared once, instance created
+  once, second include from global scope is a clean no-op, a **third include via a
+  different file path from inside a function** is also a no-op (proving `class_exists`
+  rather than `include_once`'s realpath dedupe is doing the work), and the instance's
+  hooks remain findable and removable by a third party
+
+- **House style clarified.** Hook callbacks are public **instance** methods registered
+  as `[ $this, 'method_name' ]`, not static methods. This is what the code already did;
+  `CLAUDE.md` said "public static method" and now matches. The load-bearing rule is
+  unchanged — never a closure, because a closure cannot be passed to `remove_filter()`
+
 ## [1.4.0] — 2026-09-05
 
 One filter covering the Brainstorm Force range — Astra Pro, Spectra, Spectra Pro,
