@@ -228,10 +228,25 @@ bails and none of its filters register.
 | PHP fatals / parse errors in `error.log` | 0 |
 | Front page | HTTP 200 |
 
-**Not testable on an unlicensed bench:** the licence activation notice itself only
-renders for a registered-but-unactivated product. We can confirm `bsf_notices` remains
-hooked, which is the part our rule could have broken, but not observe its output.
-Licences were deliberately not sourced for testing.
+### Confirmed in the browser
+
+Checked by Paul on 5 Sep 2026 on the same bench, in two stages. This closes what was
+initially recorded here as untestable — the licence path **is** observable on an
+unlicensed install, because the notice fires for an unregistered product:
+
+- **Astra theme absent.** Astra Pro's dependency notice rendered normally: *"Astra Pro
+  requires Astra to be your active theme. Install and activate now."*
+- **Astra theme activated**, so `bsf-core` fully loads. The licence activation notices
+  rendered for **both** Astra Pro and Spectra Legacy Pro, on the dashboard and on the
+  Plugins screen: *"Please activate your license to enable premium features, automatic
+  updates, and access to support."*
+- Paul's assessment of the resulting notice area: *"important notices only. Things the
+  site operator should see, and that require action and/or acknowledgement. There's no
+  additional noise."*
+
+That is the rule behaving exactly as intended — telemetry gone, every operational
+notice intact. No licences were sourced or activated for this; the notices appear
+precisely *because* the products are unregistered.
 
 ## Drift check
 
