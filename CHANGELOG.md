@@ -5,6 +5,44 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] — 2026-09-05
+
+### Added
+
+- **QuadLayers' review nag, cross-install promos and "QuadLayers News" dashboard widget**
+  removed — covering **five fleet plugins across 8 sites** from two rules
+
+  QuadLayers split their admin surfaces into six separate Composer packages under
+  `jetpack_vendor/quadlayers/`. The wiring guards with `class_exists()`, so whichever
+  plugin loads first owns the package: `insta-gallery`,
+  `autocomplete-woocommerce-orders`, `quadmenu`, `search-exclude` and
+  `woocommerce-checkout-manager` are all covered, as is anything of theirs installed later
+
+### The cleanest vendor separation found so far
+
+The promotional notice lives in `wp-notice-plugin-promote` and the dependency notice
+(*"The %1$s is not working because you need to activate the %2$s plugin"*) lives in
+`wp-notice-plugin-required` — **different packages, different classes, different
+callbacks**. Removing one cannot affect the other. No mixed output, no collateral,
+nothing to weigh.
+
+Every other vendor this week required an argument about what would be lost. This one
+required none, because QuadLayers had already drawn the line themselves.
+
+### Deliberately not done
+
+- **`wp-plugin-install-tab`** and **`wp-plugin-suggestions`** are promotional and sit on a
+  core screen, but they are the **plugin installer**, not the notice area or the dashboard
+- **`wp-plugin-table-links`** adds links to the plugin list row — out of scope
+- **`Load::remove_all_data`** only registers when `$this->developer_mode` is true, so it
+  never fires on a normal install
+
+### Verified
+
+A/B on WP 7.1 with Insta Gallery 5.0.8 active: `id="wp-dashboard-widget-news"` **1 → 0**,
+`quadlayers.com` occurrences **5 → 0**, the *"Enjoying Social Feed Gallery?"* review nag
+**1 → 0**, notice divs **19 → 15**, zero PHP fatals, front page 200.
+
 ## [1.13.0] — 2026-09-05
 
 ### Added

@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.13.0
+ * Version:     1.14.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.13.0';
+		const VERSION = '1.14.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -68,6 +68,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'normal',
 				'vendor'    => 'WooCommerce Lottery 1.1.21',
 				'reason'    => 'wpgenie.org latest themes and plugins; RSS feed fetched on render',
+			],
+			[
+				'widget_id' => 'wp-dashboard-widget-news',
+				'context'   => 'normal',
+				'vendor'    => 'QuadLayers wp-dashboard-widget-news, Insta Gallery 5.0.8',
+				'reason'    => 'QuadLayers News; vendor feed and shop links',
 			],
 			[
 				'widget_id' => 'wpmet-stories',
@@ -185,6 +191,24 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_forminator_dashboard_promo();
 			$this->unhook_premium_addons_promos();
 			$this->unhook_wp_swings_offer_banners();
+			$this->unhook_quadlayers_promote_notice();
+		}
+
+		/**
+		 * Remove QuadLayers' cross-sell and review notice.
+		 *
+		 * Their wp-notice-plugin-promote package is bundled in every QuadLayers plugin
+		 * and guarded with class_exists, so one removal covers the range. The separate
+		 * wp-notice-plugin-required package, which prints dependency notices, is
+		 * untouched. Insta Gallery 5.0.8. docs/plugins/quadlayers.md
+		 */
+		public function unhook_quadlayers_promote_notice() : void {
+			$this->remove_discarded_instance_callback(
+				'admin_notices',
+				'\\QuadLayers\\WP_Notice_Plugin_Promote\\Load',
+				'admin_notices',
+				'quadlayers'
+			);
 		}
 
 		/**
