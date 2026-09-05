@@ -5,6 +5,67 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] — 2026-09-05
+
+Three rules from real nags observed on live client sites, rather than from install-count
+ranking. Both vendors put promotional output on **core** admin screens, unlike the large
+vendors audited earlier the same day.
+
+### Added
+
+- **`themeisle_sdk_hide_dashboard_widget`** removes ThemeIsle's "WordPress Guides/Tutorials"
+  dashboard widget, and with it two RSS fetches on every dashboard render
+  (`themeisle.com/blog/feed`, `wpshout.com/feed`) plus `api.wordpress.org` queries listing
+  the vendor's other products with Install links
+
+  `themeisle-sdk` is a shared Composer package. Found by opening the newest vault release
+  of all 1,129 distinct fleet slugs and testing for a `themeisle-sdk/` path: it is bundled
+  in `menu-icons` (8 sites), `wpcf7-redirect` (7) and `robin-image-optimizer` (1), and any
+  future ThemeIsle plugin is covered automatically
+
+  The filter is read at the top of `Dashboard_Widget::load()`, so the widget is never
+  registered and the feeds are never fetched. Preferred over `remove_meta_box()` because
+  the widget guards itself with a `$wp_meta_boxes` mutex — on a multi-ThemeIsle site only
+  one plugin registers it, the same trap that ruled out an ID-based rule for WP Desk
+
+- **`cky_is_module_active_review_feedback`** removes CookieYes's review request. CookieYes
+  loads every module through a base class whose constructor calls `init()` only
+  `if ( true === $this->is_active() )`, and `is_active()` is a per-module filter — so the
+  `admin_notices` hook is never registered at all. Also takes the module's
+  `admin_footer_text` review link, part of the same nag
+
+- **`CYA11Y_ACCESSYES_BANNER_DISPLAYED`** removes the WebToffee "AccessiYes" cross-promotion
+  banner. The vendor uses this constant as a first-loader mutex across their range, so
+  defining it from an mu-plugin means the banner's file is never required — in CookieYes
+  and in any other WebToffee plugin using the same package, which the vendor's own file
+  header names as including WT Smart Coupons
+
+### Deliberately not done
+
+- **CookieYes's connect banner** (*"Unlock advanced features for seamless compliance"*)
+  is left alone as ambiguous. It promotes a paid SaaS, but connecting is what enables the
+  cookie scanner, and a stale cookie list is a real compliance problem.
+  `cky_is_module_active_connect_banner` is there if the judgement changes
+- **CookieYes's dashboard widget** is mixed output: consent-rate trends when connected,
+  a sign-up CTA when not. One switch governs both, so no rule
+- **`affiliate_banner`** is in CookieYes's module list but has no directory in 3.5.5, so
+  it never loads. A rule would target something that does not run
+
+### Verified on a live site
+
+A/B tested on WP 7.1 with both plugins active, over authenticated admin requests:
+
+| Check | Rules off | Rules on |
+|---|---|---|
+| `id="themeisle"` on the dashboard | 1 | **0** |
+| AccessiYes banner on the dashboard | 1 | **0** |
+| CookieYes review nag on `plugins.php` | 1 | **0** |
+| CookieYes connect banner (left alone) | present | **still present** |
+| PHP fatals | 0 | 0 |
+
+The connect banner surviving is the important line — it shows the rules are targeted
+rather than a blanket suppression of the vendor.
+
 ## [1.4.3] — 2026-09-05
 
 ### Changed

@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.4.3
+ * Version:     1.5.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.4.3';
+		const VERSION = '1.5.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -113,6 +113,18 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 			// Brainstorm Force bsf-analytics, Astra Pro 4.13.8. docs/plugins/brainstorm-force.md
 			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
+
+			// ThemeIsle SDK, bundled in Menu Icons, WPCF7 Redirect and others.
+			// Menu Icons 0.13.24. docs/plugins/themeisle-sdk.md
+			add_filter( 'themeisle_sdk_hide_dashboard_widget', '__return_true' );
+
+			// CookieYes 3.5.5 review request module. docs/plugins/cookie-law-info.md
+			add_filter( 'cky_is_module_active_review_feedback', '__return_false' );
+
+			// WebToffee cross-promotion banner, shared across their range. The vendor
+			// uses this constant as a first-loader mutex, so defining it here skips the
+			// banner everywhere. CookieYes 3.5.5. docs/plugins/cookie-law-info.md
+			defined( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED' ) || define( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED', true );
 
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
