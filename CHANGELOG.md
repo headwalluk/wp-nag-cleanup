@@ -5,6 +5,51 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] — 2026-09-05
+
+### Added
+
+- **Elementor's "Elementor Overview" dashboard widget removed** (`e-dashboard-overview`),
+  and with it the "News & Updates" remote feed. Elementor is on 81 fleet sites, the widest
+  reach of any widget rule so far
+
+### A documented decline, reversed by the site owner
+
+`docs/plugins/elementor.md` recorded this widget as *"not removed, ambiguous … left alone
+until there is a way to drop only the news section"*. **There is no such way.** Every
+filter in both relevant files was checked — three in `core/admin/admin.php`
+(`footer_actions`, `create_new_post/meta`, `localize_settings`) and three in
+`includes/api.php`, all for library templates. `Api::get_feed_data()` reads its option
+directly with no filter, and the widget registration is unconditional.
+
+Two facts found while confirming that tipped the decision:
+
+- **Rendering the widget makes an outbound call** — `get_feed_data()` → `get_info_data()`
+  → `wp_remote_get( self::$api_info_url )` when the transient is cold
+- **It forces itself to the top of the dashboard**, reordering `$wp_meta_boxes` under the
+  comment `// Move our widget to top.` — the same behaviour that made the WP Desk widget
+  this project's first target
+
+**The collateral is named, not glossed:** the "Recently Edited" list goes with it. It
+duplicates what the Pages screen already shows, and the decision was taken by the site
+owner on the grounds that fleet clients do not read the dashboard panel.
+
+If Elementor ever adds a filter around the feed section, **withdraw this rule** and use
+the filter instead — that restores Recently Edited at no cost. Recorded in the doc's drift
+check.
+
+### Verified
+
+A/B on WP 7.1 with Elementor 4.2.4 active: `id="e-dashboard-overview"` 1 → **0**, "News &
+Updates" 1 → **0**, zero PHP fatals, front page 200. "Recently Edited" showed 0 in both
+runs because the bench has no Elementor-edited pages, so that section renders empty
+regardless — its loss is established from the source, not observed.
+
+This release also **exercised the Elementor notices rule on a live install for the first
+time**. That rule shipped in 1.0.0 but Elementor had never been installed on the bench;
+the debug log now confirms `Removed Admin_Notices::admin_notices from admin_notices
+priority 20`.
+
 ## [1.10.0] — 2026-09-05
 
 ### Added

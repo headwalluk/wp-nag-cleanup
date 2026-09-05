@@ -54,6 +54,7 @@ printed by `Admin_Notices::admin_notices()`, registered in the constructor at
 | `ally_pages_promotion` | `admin_notices` p20 | suppress | Cross-sell |
 | `api_upgrade_plugin` | `admin_notices` p20 | **keep, lost as collateral** | Genuine update notice — see below |
 | `local_google_fonts_disabled` | `admin_notices` p20 | **keep, lost as collateral** | Privacy/GDPR configuration state |
+| `e-dashboard-overview` widget | `wp_dashboard_setup` | **suppress** (since 1.11.0) | News & Updates remote feed; takes Recently Edited as collateral — see below |
 
 ## Deliberately left alone
 
@@ -70,12 +71,41 @@ warnings, on their own registrations. Untouched.
 a separate `admin_notices` registration carrying account and licence state.
 Untouched, per the boundary rule.
 
-**`e-dashboard-overview` dashboard widget** (`core/admin/admin.php:456`) —
-**not removed, ambiguous.** It fetches a remote feed via `Api::get_feed_data()`,
-which is a legitimate reason to want it gone, but the same widget also renders a
-"recently edited" list built from real site data. Mixed output: removing it would
-take a genuinely useful panel with it. Left alone until there is a way to drop only
-the news section, per "when a rule is ambiguous, it does not go in".
+**`e-dashboard-overview` dashboard widget** — *originally left alone as ambiguous;
+**removed in 1.11.0** on the site owner's decision.* The original reasoning is kept
+below, followed by what changed.
+
+> Not removed, ambiguous. It fetches a remote feed via `Api::get_feed_data()`, which is
+> a legitimate reason to want it gone, but the same widget also renders a "recently
+> edited" list built from real site data. Mixed output: removing it would take a
+> genuinely useful panel with it. Left alone until there is a way to drop only the news
+> section.
+
+**There is no way to drop only the news section.** Every filter in the two relevant files
+was checked: `core/admin/admin.php` exposes
+`elementor/admin/dashboard_overview_widget/footer_actions`,
+`elementor/admin/create_new_post/meta` and `elementor/admin/localize_settings`;
+`includes/api.php` exposes three filters, all for library templates.
+`Api::get_feed_data()` reads `get_option( 'elementor_remote_info_feed_data' )` directly
+with no filter, and the widget registration on `wp_dashboard_setup` is unconditional —
+no filter, constant or option gates it.
+
+Two facts found while confirming that tipped the decision:
+
+- **Rendering the widget makes an outbound call.** `get_feed_data()` → `get_info_data()`
+  → `wp_remote_get( self::$api_info_url )` whenever the transient is cold
+- **It forces itself to the top of the dashboard.** `register_dashboard_widgets()`
+  reorders `$wp_meta_boxes` with the comment `// Move our widget to top.` — the same
+  behaviour that made the WP Desk widget the first target of this project
+
+**The collateral is accepted and named:** the "Recently Edited" list goes too. It is a
+convenience panel duplicating what the Pages screen already shows, and unlike a notice
+nothing is lost that the site owner cannot reach in two clicks. The decision was taken
+by the site owner on 5 Sep 2026, on the grounds that fleet clients do not read the
+dashboard panel at all.
+
+If Elementor ever adds a filter around the feed section, **withdraw this rule** and use
+the filter instead — that restores Recently Edited at no cost.
 
 **`elementor/announcements/raw_announcements`** (`modules/announcements/module.php:98`)
 and **`elementor/admin/homescreen_promotion_tier`**
@@ -141,7 +171,35 @@ Re-check when a new Elementor version appears in the vault:
 
 Point 4 is the one that matters. Check it first.
 
-## Additions to `headwall-nag-cleanup.php`: Elementor promotional notices
+## Mechanism 3 — the dashboard widget
+
+- tier: 3 (dashboard widget removal)
+- phase: `wp_dashboard_setup`, priority 999
+- vendor registers at: `Admin::register_dashboard_widgets` on `wp_dashboard_setup` at
+  default priority 10, so our 999 runs after both the registration and the reorder
+- context: `normal`. `wp_add_dashboard_widget()` is called with three arguments and the
+  widget is then moved within `$wp_meta_boxes['dashboard']['normal']['core']`
+
+Removing the meta box means `elementor_dashboard_overview_widget()` never runs, so the
+`Api::get_feed_data()` call — and the `wp_remote_get` behind it — never happens.
+
+### Widget drift check
+
+- `core/admin/admin.php` — the `e-dashboard-overview` widget ID and the `normal` context
+- **Any new filter around the News & Updates section**: if one appears, withdraw this rule
+  and use it, restoring the Recently Edited list
+
+## Additions to `headwall-nag-cleanup.php`: Elementor promotional notices, and the overview widget
+
+```php
+[
+	'widget_id' => 'e-dashboard-overview',
+	'context'   => 'normal',
+	'vendor'    => 'Elementor 4.2.4',
+	'reason'    => 'Elementor Overview; News & Updates feed, and takes Recently Edited with it',
+],
+```
+
 
 ```php
 // Elementor 4.2.4 — remove the single callback that prints all eleven

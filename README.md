@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.10.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.11.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -177,7 +177,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.10.0. Every vendor rule below was verified against that vendor's real source
+Version 1.11.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -189,7 +189,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Brainstorm Force — Astra, Spectra et al, via `bsf-analytics` | Astra Pro 4.13.8, Spectra 2.20.3 | 1 | Usage-tracking payload. Licence and database-migration notices deliberately preserved |
 | ThemeIsle — all plugins, via `themeisle-sdk` | Menu Icons 0.13.24 | 1 | "WordPress Guides/Tutorials" dashboard widget, and its two RSS feed fetches |
 | CookieYes | 3.5.5 | 1 | Review request, web-app connect banner, and the WebToffee AccessiYes cross-promotion banner |
-| Elementor | 4.2.4 | 2 | Nine promotional notices |
+| Elementor | 4.2.4 | 2, 3 | Nine promotional notices, and the "Elementor Overview" dashboard widget |
 | WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | Forminator | 1.57.2 | 2 | "Pro Form Templates" dashboard promo, review request |
 | Premium Addons for Elementor | 4.11.102 | 2, 3 | Review nag, Angie and Connect-AI upsells, "Premium Addons News" widget and its `premiumaddons.com` fetch |
