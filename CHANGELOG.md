@@ -5,6 +5,35 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-09-05
+
+Two rules covering the whole WP Desk range. Both nags come from shared Composer
+packages that WP Desk bundles into every plugin they ship, so a single pair of
+filters covers Flexible Invoices, Flexible Shipping, Flexible Checkout Fields and
+everything else of theirs on a site — including plugins installed in future.
+
+### Added
+
+- **`wpdesk/ltvdashboard/disable`** removes the "Grow your business with WP Desk"
+  dashboard widget. It registers at `'normal'` context with `'high'` priority, so it
+  takes the top-left slot and pushes Site Health and analytics widgets down the page.
+  Suppressing it also drops the `wpdesk.net` catalogue fetch the widget makes on
+  render — a request that runs with `sslverify` disabled
+- **`wpdesk_tracker_enabled`** turns off the usage-data opt-in notice, the
+  deactivation survey, the post-activation redirect to the consent screen, and the
+  weekly payload carrying store settings, order counts, plugin list, theme, server
+  details and licence emails. Registered at **priority 999**: WP Desk's own
+  `UsageDataTracker` adds a callback returning `true` unconditionally at priority 10,
+  which would otherwise overwrite an opt-out registered from an mu-plugin
+- `docs/plugins/flexible-invoices.md`. Records why `remove_meta_box()` was rejected
+  for the widget — each WP Desk plugin sets the widget ID to its own slug and a mutex
+  filter means only one of them registers it, so a rule naming an ID would be inert
+  on any site where a different WP Desk plugin won the race
+
+Left alone: settings-saved and bulk-action notices, the PHP version warning, the
+tracker opt-out confirmation, and every marketing box and "Upgrade to PRO" link on
+WP Desk's own Support and settings screens.
+
 ## [1.0.0] — 2026-09-04
 
 First stable release. Every rule in the plugin now has a source audit behind it, and

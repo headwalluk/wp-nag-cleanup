@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.0.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.1.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -150,13 +150,15 @@ answer for a vendor that offers no switch.
 
 ## What it suppresses today
 
-Version 1.0.0. Every vendor rule below was verified against that vendor's real source
+Version 1.1.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
 |---|---|---|---|
 | Essential Addons for Elementor | 6.8.3 | 1 | Promo banner, two dashboard widgets, seasonal pointer |
 | YITH — all plugins, via `plugin-fw` | 4.7.8 | 1 | Two `yithemes.com` RSS dashboard widgets, and their script and style enqueue |
+| WP Desk — all plugins, via `ltv-dashboard-widget` | Flexible Invoices 6.2.27 | 1 | "Grow your business with WP Desk" dashboard widget, and its `wpdesk.net` catalogue fetch |
+| WP Desk — all plugins, via `wp-wpdesk-tracker` | Flexible Invoices 6.2.27 | 1 | Usage-tracking opt-in notice, deactivation survey, activation redirect, weekly payload |
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 
@@ -164,9 +166,11 @@ The core widget is the one entry that is not a vendor nag. It is off unless you 
 it on, and it is documented under [Configuration](#configuration) rather than in
 `docs/plugins/`, which covers third-party plugins.
 
-The YITH rule is worth singling out: `plugin-fw` is a framework bundled inside every
-YITH plugin, free and premium, so a single filter covers the whole vendor — including
-YITH plugins you install in future.
+The YITH and WP Desk rules are worth singling out. `plugin-fw` is a framework bundled
+inside every YITH plugin, free and premium, and `ltv-dashboard-widget` and
+`wp-wpdesk-tracker` are Composer packages bundled inside every WP Desk plugin. In
+both cases a single filter covers the whole vendor — including plugins from that
+vendor you install in future.
 
 The list is short on purpose. A rule that has not been read out of the vendor's own
 source does not go in — and one that has been read out and found wanting comes back

@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -33,7 +33,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.0.0';
+		const VERSION = '1.1.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -122,6 +122,22 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/yith-plugin-fw.md
 			add_filter( 'yith_plugin_fw_show_dashboard_widgets', '__return_false' );
 			$this->log( 'yith-plugin-fw', 'Registered yith_plugin_fw_show_dashboard_widgets opt-out.' );
+
+			// WP Desk ltv-dashboard-widget 1.x, bundled in every WP Desk plugin.
+			// Verified against Flexible Invoices 6.2.27.
+			// docs/plugins/flexible-invoices.md
+			add_filter( 'wpdesk/ltvdashboard/disable', '__return_true' );
+			$this->log( 'wpdesk-ltv-dashboard', 'Registered wpdesk/ltvdashboard/disable opt-out.' );
+
+			// WP Desk wp-wpdesk-tracker, bundled in every WP Desk plugin. Gates the
+			// usage-tracking opt-in notice, the deactivation survey and the payload send.
+			// Verified against Flexible Invoices 6.2.27.
+			// docs/plugins/flexible-invoices.md
+			//
+			// Priority 999: UsageDataTracker::hooks() adds its own callback returning
+			// true at priority 10, so a default-priority opt-out here is overwritten.
+			add_filter( 'wpdesk_tracker_enabled', '__return_false', 999 );
+			$this->log( 'wpdesk-tracker', 'Registered wpdesk_tracker_enabled opt-out.' );
 
 			// EmbedPress needs no rule; its promo framework is never instantiated.
 			// docs/plugins/embedpress.md
