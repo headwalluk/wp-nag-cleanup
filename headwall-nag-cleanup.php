@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.19.0
+ * Version:     1.20.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.19.0';
+		const VERSION = '1.20.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -107,6 +107,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'normal',
 				'vendor'    => 'Elementor 4.2.4',
 				'reason'    => 'Elementor Overview; News & Updates feed, and takes Recently Edited with it',
+			],
+			[
+				'widget_id' => 'themefusion-news',
+				'context'   => 'normal',
+				'vendor'    => 'Avada Core (fusion-core) 5.16.1',
+				'reason'    => 'Avada News; avada.com feed and a Buy Now licence button',
 			],
 		];
 
@@ -193,6 +199,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/cookie-law-info.md
 			add_filter( 'cky_is_module_active_review_feedback', '__return_false' );
 			add_filter( 'cky_is_module_active_connect_banner', '__return_false' );
+
+			// All in One SEO "What's New in AIOSEO" dashboard widget. Same filter in Lite
+			// and Pro. AIOSEO 5.0.1.1, AIOSEO Pro 4.3.4.1.
+			// docs/plugins/all-in-one-seo-pack.md
+			add_filter( 'aioseo_show_seo_news', '__return_false' );
 
 			// WebToffee cross-promotion banner, shared across their range. The vendor
 			// uses this constant as a first-loader mutex, so defining it here skips the

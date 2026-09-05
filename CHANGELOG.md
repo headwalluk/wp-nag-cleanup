@@ -5,6 +5,60 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] — 2026-09-05
+
+### Added
+
+- **Avada Core's "Avada News" dashboard widget** removed — 4 fleet sites
+- **All in One SEO's "What's New in AIOSEO" dashboard widget** removed — 10 fleet sites,
+  Lite and Pro
+
+Two short audits, and between them a neat illustration of how much the vendor's own
+structure decides the shape of a rule.
+
+### Avada Core — the sixth vendor to reorder `$wp_meta_boxes`
+
+`themefusion-news` is not merely added, it is promoted: `add_dashboard_widget()` unsets its
+own entry, `array_merge()`s it back at the front, and writes
+`$wp_meta_boxes['dashboard']['normal']['core']` back out. That is the sixth vendor found
+doing this after WP Desk, Elementor, Wpmet, HasThemes and HappyMonster, and it is why the
+widget pushes Site Health and At a Glance down the page.
+
+The widget carries four items from `avada.com/feed/`, a **"Buy Another License"** button
+pointing at `1.envato.market` — becoming **"On Sale - Only $X"** when the vendor's data
+says so — and Blog/Docs/Ticket links. A purchase CTA, not a licence-state warning.
+
+No usable opt-out: `avada_dashboard_widget_title` renames the widget, it does not remove it.
+So mechanism 3, at 999 against the vendor's `wp_dashboard_setup` 100.
+
+**Left alone:** the plugin's only `admin_notices` callback is a WordPress and PHP
+minimum-version warning, which is on the never-suppress list — and the `all_admin_notices`
+one is a navigation header screen-gated to Avada's own slider screens.
+
+### AIOSEO — the best-behaved vendor audited so far
+
+Every one of AIOSEO's four dashboard widgets is gated behind its own documented filter, so
+the news feed could be removed while leaving the three that carry the site's own SEO data —
+TruSEO Overview, Checklist, and the Setup widget — completely intact. One line, mechanism
+1, and it takes the `plugin-cdn.aioseo.com/newsroom.json` fetch with it.
+
+Verified in **both** Lite 5.0.1.1 and Pro 4.3.4.1 — the fleet runs both, on overlapping
+sites, and Pro carries its own copy of `Dashboard.php` with the same filter and widget ID.
+
+**Left alone**, and the reasons are the point of the audit:
+
+- **The notice system.** `Notices::notices()` dispatches over `Review`, `Migration`,
+  `Import`, `DeprecatedWordPress` and `ConflictingPlugins`. Three of those five are named
+  on the never-suppress list, and there is no public method holding the operational half to
+  re-hook. One surviving review nag beats a suppressed migration prompt
+- **In-plugin feature callouts.** `aioseo_show_newsroom_callouts` exists and works, but
+  `getScreenSlug()` returns empty unless `$_GET['page']` starts with `aioseo-`, so they only
+  appear on the vendor's own screens. Out of scope by construction
+- **The "what's new" update modal.** Ambiguous, so it does not go in. It does render on core
+  screens, but it reports what changed in software the site runs, and it is self-limiting at
+  once per user per version. Recorded in full, with the case for suppressing it, in case the
+  feed's character changes
+
 ## [1.19.0] — 2026-09-05
 
 ### Added
