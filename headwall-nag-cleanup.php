@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.20.0
+ * Version:     1.21.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.20.0';
+		const VERSION = '1.21.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -229,6 +229,19 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_happy_addons_promos();
 			$this->unhook_easy_fancybox_review_request();
 			$this->unhook_webp_converter_promos();
+			$this->unhook_mail_bank_review_notice();
+		}
+
+		/**
+		 * Remove WP Mail Bank's "Leave a 5 Star Review" notice.
+		 *
+		 * Mail_Bank_Admin_Notices is declared and instantiated inside a function hooked to
+		 * init, so the instance is a local with nothing holding it. The vendor's database
+		 * upgrade prompt and its plugin-conflict notice are separate callbacks and are
+		 * untouched. WP Mail Bank 4.0.14. docs/plugins/wp-mail-bank.md
+		 */
+		public function unhook_mail_bank_review_notice() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Mail_Bank_Admin_Notices', 'mb_display_admin_notices', 'wp-mail-bank' );
 		}
 
 		/**

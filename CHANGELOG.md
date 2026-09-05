@@ -5,6 +5,45 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0] — 2026-09-05
+
+### Added
+
+- **WP Mail Bank's "Leave a 5 Star Review" notice** removed — 1 fleet site
+
+The smallest reach of any rule so far, and it goes in anyway. The nag renders as
+`<div class="update-nag mb-admin-notice">` — `update-nag` being **core's own class** for
+"please update WordPress" prompts. Borrowing it gives a review request the visual weight of
+a system notice. That has no bearing on the mechanism, which targets the callback rather
+than the markup, but it is the clearest example yet of promotion dressed as system output.
+
+### A discarded instance, but an unusually clean one
+
+`Mail_Bank_Admin_Notices` is declared **inside a function** hooked to `init`, and
+instantiated into a local that goes out of scope immediately — no singleton, no registry, so
+the sanctioned `$wp_filter` reader is the only route. Unlike Converter for Media no
+disambiguation was needed: one instance, one method on the hook.
+
+What made this a three-line rule is that Tech Banker put each notice in its own callback.
+`mb_display_admin_notices()` builds exactly one thing, the review nag, so removing it costs
+nothing operational.
+
+### Left alone
+
+- **The database upgrade prompt** (`upgrade_database_admin_notice`) — *"You would need to
+  update the Database to view prior Email Reports"* with an Update Database button. A data
+  migration prompt, and it wears the same `update-nag` class. Untouched
+- **The SMTP conflict warning** (`display_admin_notice_mail_bank`) — checks fifteen named
+  SMTP plugins and offers to deactivate the ones it finds. Two SMTP plugins fighting over
+  `phpmailer_init` is a real way to stop a site sending mail, so on a hosting fleet this one
+  matters. **Verified still rendering with the rules on**, on the same request that dropped
+  the review nag
+- **The "Mail Bank Statistics" widget** — Sent/Not Sent counts for today, this week, last
+  month and this year, with a single "Upgrade Now to Premium Editions" row appended. Mixed
+  output; the delivery figures are worth more than the upsell row costs
+- **`disable_admin_notices`** — the vendor's own switch exists, but it is an option write,
+  which this project does not do, and it would disable the notice system wholesale
+
 ## [1.20.0] — 2026-09-05
 
 ### Added
