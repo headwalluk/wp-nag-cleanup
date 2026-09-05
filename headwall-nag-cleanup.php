@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.7.0
+ * Version:     1.8.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.7.0';
+		const VERSION = '1.8.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -51,6 +51,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'normal',
 				'vendor'    => 'CSS Hero 5.1.0',
 				'reason'    => 'From the CSS Hero world; RSS feed fetched on render',
+			],
+			[
+				'widget_id' => 'wpgenie_dashboard_products_news',
+				'context'   => 'normal',
+				'vendor'    => 'WooCommerce Lottery 1.1.21',
+				'reason'    => 'wpgenie.org latest themes and plugins; RSS feed fetched on render',
 			],
 		];
 

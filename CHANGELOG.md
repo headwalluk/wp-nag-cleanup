@@ -5,6 +5,39 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] — 2026-09-05
+
+### Added
+
+- **WooCommerce Lottery's "wpgenie.org - Our latest themes and plugins" dashboard widget**
+  (`wpgenie_dashboard_products_news`) removed with `remove_meta_box()`, taking with it an
+  RSS fetch of `wpgenie.org/tag/dashboard/feed/` on every dashboard render
+
+### Framework hypothesis tested and negative
+
+This audit was run mainly to test whether `wpgenie` is a shared framework, the way
+`themeisle-sdk`, `plugin-fw`, `bsf-analytics` and the WP Desk packages turned out to be.
+**It is not.** All 1,129 distinct fleet slugs were checked by opening their newest vault
+release and testing the file list for `wpgenie`; exactly one matched. Even
+`woocommerce-lottery-pick-number`, from the same vendor, does not bundle the dashboard
+class.
+
+So this rule covers one site, not a range. Recorded in
+`docs/plugins/woocommerce-lottery.md` so the question is not re-opened.
+
+### Deliberately not done
+
+Both of the plugin's `admin_notices` are operational and stay. The cron-job notice looks
+like a nag — it reappears until dismissed — but *"recommends that you set up a cron job to
+check for finished lotteries"* reports a real gap: without it, finished lotteries are
+never closed. On a hosting fleet that is precisely the kind of notice that must survive.
+
+### Verified
+
+A/B on WP 7.1: the widget goes 1 → 0 and `wpgenie.org` occurrences on the dashboard go
+10 → 0, confirming the render callback and its outbound fetch never run. The cron-job
+notice still renders. Zero PHP fatals.
+
 ## [1.7.0] — 2026-09-05
 
 ### Added
