@@ -16,7 +16,7 @@ Autoptimize — CookieYes puts promotional output on **core WordPress screens**,
 its own. The review request and a WebToffee cross-promotion banner both appear in the
 global admin notice area, which is squarely in scope.
 
-**Two rules added**, both mechanism 1. Three further promotional-looking surfaces are
+**Three rules added**, all mechanism 1. Two further promotional-looking surfaces are
 left alone, and the reasons are recorded.
 
 ### Search checklist
@@ -39,26 +39,39 @@ left alone, and the reasons are recorded.
 | Migration notice | `admin_notices` → `migration_notice` | keep | **Data migration prompt. Never suppressed** |
 | Update banner | `admin_notices` 1 → `render_update_banner` | keep | Reports plugin state after an update |
 | Legacy review request | `admin_notices` → legacy `show_banner` | keep (moot) | Superseded by the `review_feedback` module; the legacy class is not the live path |
-| Connect banner | `admin_notices` → `Connect_Banner::show_banner` | keep — **ambiguous** | See below |
+| Connect banner | `admin_notices` → `Connect_Banner::show_banner` | **suppress** | *"Unlock advanced features for seamless compliance"* — a pitch for the paid web app. Renders on `plugins.php` |
 | `cookieyes_dashboard_widget` | `wp_dashboard_setup` | keep — **mixed** | See below |
 
 ## Deliberately left alone
 
-### The connect banner is ambiguous, so it stays
+### The connect banner — first kept as ambiguous, then suppressed
+
+This one was classified **keep** on the first pass and reversed the same day, so the
+reasoning on both sides is recorded.
 
 `Connect_Banner::show_banner` renders on `plugins.php`:
 
-> **Unlock advanced features for seamless compliance** — Connect to CookieYes Web App
+> **Unlock advanced features for seamless compliance** — Automate your cookie scan,
+> record consent logs, and access analytics to streamline consent management and enhance
+> compliance by connecting to the web app. → *Connect to CookieYes Web App*
 
-It is a prompt to sign up for a paid SaaS, which reads as promotional. But CookieYes's
-entire purpose is consent compliance, and connecting is what enables the cookie scanner
-that keeps the banner's categories accurate. A site owner running a stale, unscanned
-cookie list has a real compliance problem, and this notice is the plugin's only route to
-telling them so.
+**The case for keeping it**, made first: CookieYes exists to manage consent, and
+connecting enables the cookie scanner that keeps the banner's categories accurate. A
+stale, unscanned cookie list is a genuine compliance problem, and this is the plugin's
+only route to saying so.
 
-That is close enough to operational that the ambiguity rule applies: **when a rule is
-ambiguous, it does not go in.** It would be trivial to add later —
-`cky_is_module_active_connect_banner` — if the judgement changes.
+**The case for suppressing it**, which won once the full copy was read on a live
+install: the framing is *"Unlock advanced features"*, the call to action is signing up
+for a paid SaaS, and the plugin manages consent perfectly well unconnected. The scanner
+is a convenience, not a compliance requirement — the notice does not report a problem
+with the site, it offers a product. It also persists on `plugins.php`, a core screen, on
+every visit.
+
+Reversed to **suppress**. `cky_is_module_active_connect_banner` is the same per-module
+filter used for the review request, so the rule costs one line.
+
+If a future version changes this notice to report an actual scan failure or a stale
+cookie list — a statement about the site rather than an offer — it should come back.
 
 ### The dashboard widget is mixed output
 
@@ -85,9 +98,9 @@ notice area. Not this project's territory.
 
 ## Mechanism
 
-Two rules, both tier 1, both at file scope.
+Three rules, all tier 1, all at file scope.
 
-### Review request — `cky_is_module_active_review_feedback`
+### Review request and connect banner — `cky_is_module_active_*`
 
 CookieYes loads every module through a base class whose constructor gates on a filter:
 
@@ -107,6 +120,8 @@ public function is_active() {
 `Review_Feedback::init()` is what calls `add_action( 'admin_notices', … )`, so returning
 false means the hook is never registered at all — cleaner than unhooking. The module id
 is `review_feedback`, from `Admin::$modules`.
+
+The connect banner uses the same mechanism with the module id `connect_banner`.
 
 Note the constructor tests `true === $this->is_active()`, so `__return_false` works and
 any truthy-but-not-true value would not.
@@ -160,19 +175,23 @@ requests, A/B with the rules enabled and disabled:
 |---|---|---|
 | Review nag on `plugins.php` | **1** | **0** |
 | AccessiYes banner on dashboard | **1** | **0** |
-| Connect banner on `plugins.php` (left alone) | present | **still present** |
+| Connect banner on `plugins.php` | **1** | **0** |
 | CookieYes plugin row on `plugins.php` | present | present |
 | PHP fatals | 0 | 0 |
 | Front page | HTTP 200 | HTTP 200 |
 
-The connect banner surviving is the important line: it shows the rules are targeted
-rather than a blanket suppression of the vendor.
+Re-verified after the connect banner was added to the rule set: six operational notices
+on the same screen — the Elementor dependency prompt, Yoast's robots warning, and four
+licence activation notices — all still render. The rules are targeted, not a blanket
+suppression of the vendor.
 
-## Additions to `headwall-nag-cleanup.php`: 2 rules, both mechanism 1
+## Additions to `headwall-nag-cleanup.php`: 3 rules, all mechanism 1
 
 ```php
-// CookieYes 3.5.5 review request module. docs/plugins/cookie-law-info.md
+// CookieYes 3.5.5 review request and web-app connect banner.
+// docs/plugins/cookie-law-info.md
 add_filter( 'cky_is_module_active_review_feedback', '__return_false' );
+add_filter( 'cky_is_module_active_connect_banner', '__return_false' );
 
 // WebToffee cross-promotion banner, shared across their range. The vendor
 // uses this constant as a first-loader mutex, so defining it here skips the

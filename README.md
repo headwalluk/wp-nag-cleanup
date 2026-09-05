@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.6.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.7.0. The machinery is complete, all three mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -177,7 +177,7 @@ preference working as intended.
 
 ## What it suppresses today
 
-Version 1.6.0. Every vendor rule below was verified against that vendor's real source
+Version 1.7.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -188,7 +188,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | WP Desk — all plugins, via `wp-wpdesk-tracker` | Flexible Invoices 6.2.27 | 1 | Usage-tracking opt-in notice, deactivation survey, activation redirect, weekly payload |
 | Brainstorm Force — Astra, Spectra et al, via `bsf-analytics` | Astra Pro 4.13.8, Spectra 2.20.3 | 1 | Usage-tracking payload. Licence and database-migration notices deliberately preserved |
 | ThemeIsle — all plugins, via `themeisle-sdk` | Menu Icons 0.13.24 | 1 | "WordPress Guides/Tutorials" dashboard widget, and its two RSS feed fetches |
-| CookieYes | 3.5.5 | 1 | Review request, and the WebToffee AccessiYes cross-promotion banner |
+| CookieYes | 3.5.5 | 1 | Review request, web-app connect banner, and the WebToffee AccessiYes cross-promotion banner |
 | Elementor | 4.2.4 | 2 | Nine promotional notices |
 | WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | Forminator | 1.57.2 | 2 | "Pro Form Templates" dashboard promo, review request |

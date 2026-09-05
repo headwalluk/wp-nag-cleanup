@@ -5,6 +5,35 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] — 2026-09-05
+
+### Added
+
+- **`cky_is_module_active_connect_banner`** removes CookieYes's *"Unlock advanced features
+  for seamless compliance — Connect to CookieYes Web App"* banner from `plugins.php`
+
+### Changed
+
+- **A classification reversed.** The connect banner was recorded as `keep` earlier the
+  same day on the grounds that connecting enables CookieYes's cookie scanner, and a stale
+  cookie list is a genuine compliance problem. Reading the full copy on a live install
+  changed that: the framing is *"Unlock advanced features"*, the call to action is signing
+  up for a paid SaaS, and the plugin manages consent perfectly well unconnected. The
+  notice does not report a problem with the site, it offers a product
+
+  Both sides of the argument are recorded in `docs/plugins/cookie-law-info.md`, along with
+  the condition for reversing it again: if a future version reports an actual scan failure
+  or a stale cookie list — a statement about the site rather than an offer — it should
+  come back.
+
+### Verified
+
+Full regression on WP 7.1 with sixteen plugins active, five admin screens, all HTTP 200,
+zero PHP fatals, both harnesses passing. On `plugins.php` the connect banner goes 1 → 0
+while six operational notices on the same screen still render: the Elementor dependency
+prompt, Yoast's search-engines-discouraged warning, and four licence activation notices
+for unlicensed premium plugins.
+
 ## [1.6.0] — 2026-09-05
 
 The rest of Paul's live-site list. Four rules across three vendors, and mechanism 3 gets

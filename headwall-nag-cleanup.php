@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.6.0
+ * Version:     1.7.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.6.0';
+		const VERSION = '1.7.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -131,8 +131,10 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// Menu Icons 0.13.24. docs/plugins/themeisle-sdk.md
 			add_filter( 'themeisle_sdk_hide_dashboard_widget', '__return_true' );
 
-			// CookieYes 3.5.5 review request module. docs/plugins/cookie-law-info.md
+			// CookieYes 3.5.5 review request and web-app connect banner.
+			// docs/plugins/cookie-law-info.md
 			add_filter( 'cky_is_module_active_review_feedback', '__return_false' );
+			add_filter( 'cky_is_module_active_connect_banner', '__return_false' );
 
 			// WebToffee cross-promotion banner, shared across their range. The vendor
 			// uses this constant as a first-loader mutex, so defining it here skips the
