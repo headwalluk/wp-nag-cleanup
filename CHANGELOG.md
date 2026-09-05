@@ -5,6 +5,57 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] — 2026-09-05
+
+The rest of Paul's live-site list. Four rules across three vendors, and mechanism 3 gets
+its first real occupants since YITH vacated it in 1.0.0.
+
+### Added
+
+- **Forminator's "Pro Form Templates—Now Free for Everyone!" dashboard promo and its
+  review request**, both unhooked via `\Forminator_Core::get_instance()->admin` — a
+  documented singleton with a public `$admin` property, so no `$wp_filter` needed. The
+  promo is gated on `'dashboard' === $screen->id`, putting it squarely on the WordPress
+  dashboard. `promote_free_plan_scripts` goes with it
+- **Premium Addons' "Premium Addons News" dashboard widget** (`pa-stories`), removed with
+  `remove_meta_box()`. Note the context is **`column3`**, not the default `normal`. Also
+  stops an outbound call to `premiumaddons.com/wp-json/stories/v2/get` on every render
+- **CSS Hero's "From the CSS Hero world" RSS widget** (`widget_cssheronews`), and with it
+  an RSS fetch per dashboard render
+
+### Deliberately not done
+
+- **Premium Addons' `pa-new-feature-notice` upsells** — the notice Paul actually
+  reported — are **left alone**. The plugin registers one `admin_notices` callback that
+  runs `required_plugins_check()` first and unconditionally, printing an *install
+  Elementor* dependency prompt, before reaching the review and AI upsells. Mixed output,
+  and the collateral is a dependency notice on a plugin that cannot function without
+  Elementor. The vendor's own `check_hide_notifications()` gate is a Pro white-labelling
+  feature, not an opt-out available to us. If the vendor ever splits that dispatcher this
+  becomes a clean mechanism 2 target
+- **Forminator's `show_pro_available_notice`** is an upsell, but gated on `$_GET['page']`
+  starting `forminator` — the vendor's own screens
+- **CSS Hero's `wpcss_hidedashnews` option** would suppress the widget at source, and was
+  rejected: writing to a vendor's options leaves residue that removing this plugin would
+  not undo
+
+### Verified on a live site
+
+A/B tested on WP 7.1 with all three plugins active, over authenticated admin requests:
+
+| Check | Rules off | Rules on |
+|---|---|---|
+| `id="pa-stories"` on the dashboard | 1 | **0** |
+| `id="widget_cssheronews"` on the dashboard | 1 | **0** |
+| "Pro Form Templates" on the dashboard | 1 | **0** |
+| Forminator rating notice | 1 | **0** |
+| CSS Hero licence notice (unlicensed bench) | present | **still present** |
+| Notice divs remaining on the dashboard | — | 17 |
+| PHP fatals | 0 | 0 |
+
+CSS Hero's licence notice surviving is the check that matters: the bench is unlicensed,
+which is exactly the state in which that notice must reach the site owner.
+
 ## [1.5.0] — 2026-09-05
 
 Three rules from real nags observed on live client sites, rather than from install-count

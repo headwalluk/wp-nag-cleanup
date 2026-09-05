@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.5.0
+ * Version:     1.6.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,12 +34,25 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.5.0';
+		const VERSION = '1.6.0';
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
 		 */
-		const PROMOTIONAL_DASHBOARD_WIDGETS = [];
+		const PROMOTIONAL_DASHBOARD_WIDGETS = [
+			[
+				'widget_id' => 'pa-stories',
+				'context'   => 'column3',
+				'vendor'    => 'Premium Addons for Elementor 4.11.102',
+				'reason'    => 'Premium Addons News; fetches premiumaddons.com on render',
+			],
+			[
+				'widget_id' => 'widget_cssheronews',
+				'context'   => 'normal',
+				'vendor'    => 'CSS Hero 5.1.0',
+				'reason'    => 'From the CSS Hero world; RSS feed fetched on render',
+			],
+		];
 
 		/**
 		 * Core widgets, removed only when HEADWALL_NAG_CLEANUP_REMOVE_CORE_DASHBOARD_WIDGETS is set.
@@ -137,6 +150,29 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		public function unhook_vendor_notices() : void {
 			$this->unhook_elementor_notices();
 			$this->unhook_wpb_product_slider_review_notice();
+			$this->unhook_forminator_dashboard_promo();
+		}
+
+		/**
+		 * Remove Forminator's dashboard promo and its review request.
+		 *
+		 * Forminator 1.57.2. docs/plugins/forminator.md
+		 */
+		public function unhook_forminator_dashboard_promo() : void {
+			if ( ! class_exists( 'Forminator_Core' ) || ! method_exists( '\\Forminator_Core', 'get_instance' ) ) {
+				return;
+			}
+
+			$forminator_core = \Forminator_Core::get_instance();
+
+			if ( ! is_object( $forminator_core ) || ! isset( $forminator_core->admin ) || ! is_object( $forminator_core->admin ) ) {
+				$this->log( 'forminator', 'Installed, but the admin object is not reachable; no action taken.' );
+			} else {
+				remove_action( 'admin_notices', [ $forminator_core->admin, 'promote_free_plan' ] );
+				remove_action( 'admin_enqueue_scripts', [ $forminator_core->admin, 'promote_free_plan_scripts' ] );
+				remove_action( 'admin_notices', [ $forminator_core->admin, 'show_rating_notice' ] );
+				$this->log( 'forminator', 'Removed promote_free_plan and show_rating_notice from admin_notices.' );
+			}
 		}
 
 		/**
