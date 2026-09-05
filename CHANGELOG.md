@@ -5,6 +5,53 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] — 2026-09-05
+
+### Added
+
+- **Easy FancyBox's review request removed** (`easyFancyBox_Admin::show_review_request`),
+  which also carries the plugin's email opt-in
+
+### A trap worth recording — static callback removal is case-sensitive
+
+The class is declared `class easyFancyBox_Admin`, with a **lowercase `e`**. PHP class
+names are case-insensitive, so `class_exists( 'EasyFancyBox_Admin' )` returns true and a
+mis-cased rule looks fine. It is not:
+`_wp_filter_build_unique_id()` keys a static array callback by literal string
+concatenation —
+
+```php
+} elseif ( is_string( $callback[0] ) ) {
+    return $callback[0] . '::' . $callback[1];   // wp-includes/plugin.php
+}
+```
+
+— so the wrong case produces a different key and `remove_action()` removes nothing,
+silently. Demonstrated on the bench: with the callback registered, `has_action()` returned
+`false` for the mis-cased form and a priority for the correct one.
+
+`CLAUDE.md` gains the rule: **copy static class names from the source, case included.**
+
+### Deliberately not done
+
+**`easyFancyBox_Admin::admin_notice` is a version-compatibility warning**, despite the
+generic name. It renders only when the Pro plugin is installed below `$compat_pro_min` —
+a genuine "your two halves are incompatible" notice. Suppressing it would leave a site
+with a broken lightbox and no explanation. Verified still hooked.
+
+### Vendor scope
+
+No shared framework. The other `easy-*` plugins on the fleet are unrelated vendors, and
+three of them are Headwall's own.
+
+### Verified
+
+| Check | Rule off | Rule on |
+|---|---|---|
+| `easyFancyBox_Admin::show_review_request` (correct case) | **HOOKED** | **gone** |
+| `EasyFancyBox_Admin::show_review_request` (wrong case) | gone | gone |
+| `easyFancyBox_Admin::admin_notice` (must survive) | present | **present** |
+
 ## [1.16.0] — 2026-09-05
 
 ### Added

@@ -93,6 +93,11 @@ Two habits that have repeatedly avoided needing it:
 - **Check what is really on the hook.** A discarded outer object often delegates to a
   library singleton that *is* reachable — Essential Blocks discards its `Notices` object,
   but the callback belongs to `CacheBank::get_instance()` (1.15.0)
+- **Copy static class names from the source, case included.** PHP class names are
+  case-insensitive but `_wp_filter_build_unique_id()` keys a static callback by literal
+  string concatenation (`$callback[0] . '::' . $callback[1]`), so `remove_action()` with
+  the wrong case removes nothing and looks like success. Easy FancyBox declares
+  `easyFancyBox_Admin`, lowercase `e` (1.17.0)
 
 ### Double-include guard — verified behaviour, get this right
 

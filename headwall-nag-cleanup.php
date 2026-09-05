@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.16.0
+ * Version:     1.17.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.16.0';
+		const VERSION = '1.17.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -206,6 +206,23 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_quadlayers_promote_notice();
 			$this->unhook_essential_blocks_campaigns();
 			$this->unhook_happy_addons_promos();
+			$this->unhook_easy_fancybox_review_request();
+		}
+
+		/**
+		 * Remove Easy FancyBox's review request.
+		 *
+		 * A static callback, so it is named directly. The sibling admin_notice callback
+		 * is a Pro version-compatibility warning and is left alone.
+		 * Easy FancyBox 2.3.22. docs/plugins/easy-fancybox.md
+		 */
+		public function unhook_easy_fancybox_review_request() : void {
+			$review_callback = [ 'easyFancyBox_Admin', 'show_review_request' ];
+
+			if ( false !== has_action( 'admin_notices', $review_callback ) ) {
+				remove_action( 'admin_notices', $review_callback );
+				$this->log( 'easy-fancybox', 'Removed easyFancyBox_Admin::show_review_request from admin_notices.' );
+			}
 		}
 
 		/**
