@@ -28,6 +28,7 @@ left alone.
 | Dashboard widgets | **1**: `mb_dashboard_widget`, "Mail Bank Statistics". **Mixed output — left alone** |
 | Outbound calls from widgets | None. The widget queries local tables only |
 | Freemius | Not bundled |
+| Shared vendor framework | **None.** A sweep of every vault zip for "Tech Banker" matched only `wp-mail-bank`, and the fleet carries no other Tech Banker slug. Unlike YITH's `plugin-fw` or the WP Desk Composer packages, this rule buys exactly one plugin |
 
 ## Findings
 
