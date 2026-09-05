@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.12.1
+ * Version:     1.13.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.12.1';
+		const VERSION = '1.13.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -68,6 +68,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'normal',
 				'vendor'    => 'WooCommerce Lottery 1.1.21',
 				'reason'    => 'wpgenie.org latest themes and plugins; RSS feed fetched on render',
+			],
+			[
+				'widget_id' => 'wpmet-stories',
+				'context'   => 'normal',
+				'vendor'    => 'ElementsKit Lite 4.0.2',
+				'reason'    => 'Wpmet Stories; fetches wpmet.com on render',
 			],
 			[
 				'widget_id' => 'e-dashboard-overview',
@@ -186,6 +192,32 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		public function unhook_late_vendor_notices() : void {
 			$this->unhook_elementor_promotion_banners();
+			$this->unhook_elementskit_promos();
+		}
+
+		/**
+		 * Remove Wpmet's promotional notices from ElementsKit's shared libs.
+		 *
+		 * Each lib builds its notice from a separate admin_head callback, so removing
+		 * those leaves the version and dependency notices — which the plugin creates
+		 * directly — untouched. ElementsKit Lite 4.0.2. docs/plugins/elementskit-lite.md
+		 */
+		public function unhook_elementskit_promos() : void {
+			$promo_callbacks = [
+				[ '\\Wpmet\\Libs\\Rating', 'fire' ],
+				[ '\\Wpmet\\Libs\\Banner', 'display_content' ],
+				[ '\\Wpmet\\Libs\\Emailkit', 'emailkit_admin_head' ],
+				[ '\\ElementsKit_Lite\\Libs\\Pro_Label\\Init', 'show_go_pro_notice' ],
+			];
+
+			foreach ( $promo_callbacks as $promo_callback ) {
+				$this->remove_discarded_instance_callback(
+					'admin_head',
+					$promo_callback[0],
+					$promo_callback[1],
+					'elementskit'
+				);
+			}
 		}
 
 		/**

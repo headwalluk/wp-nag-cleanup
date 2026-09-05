@@ -5,6 +5,57 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] — 2026-09-05
+
+### Added
+
+- **Five ElementsKit Lite rules** (10 fleet sites), from a nag spotted on a client site.
+  Wpmet ship shared libraries under `libs/`, four of which exist only to put promotional
+  content in the admin:
+
+  - `wpmet-stories` dashboard widget — "Wpmet Stories", fetching `api.wpmet.com` on
+    render, and **reordering `$wp_meta_boxes` to force itself to the top**. Third vendor
+    found doing that, after WP Desk and Elementor
+  - `Wpmet\Libs\Rating::fire` — review nag
+  - `ElementsKit_Lite\Libs\Pro_Label\Init::show_go_pro_notice` — upsell to
+    `wpmet.com/elementskit-pricing`
+  - `Wpmet\Libs\Banner::display_content` — remotely-driven banner
+  - `Wpmet\Libs\Emailkit::emailkit_admin_head` — cross-sell of another Wpmet product
+
+### Why the producers, not the framework
+
+`Oxaim\Libs\Notice::instance()` does `self::$instance = new self();` — it overwrites the
+static each time, so it is **not** a keyed registry. Every notice on `admin_notices` is
+the same class with the same `get_notice` method and they cannot be told apart by class
+and method.
+
+So the rules remove the four **producers** on `admin_head` instead, each a distinct class.
+That leaves `unsupported-elementor-version` and `unsupported-php-version` — created
+directly in `elementskit-lite.php`, not through a lib — completely untouched.
+
+Third use of `remove_discarded_instance_callback()`, and it qualifies: no filter, no
+constant, no singleton accessor, and `plugin.php` discards every instance.
+
+### Deliberately not done
+
+- **The auto-install / email prompt** is scoped to `page=elementskit` and the Get Help
+  page — the vendor's own screens
+- **The admin menu "Go Pro" link** survives. Promotional, but the admin menu is not the
+  notice area or the dashboard
+- **`ekit_user_consent_for_banner`** — Wpmet ship a user-facing consent toggle gating the
+  banner, widget and prompt, which is better behaviour than most vendors audited here. It
+  is a stored setting rather than a filter, so using it would mean a database write
+
+### Verified
+
+A/B on WP 7.1: `id="wpmet-stories"` **1 → 0**, `wpmet.com` occurrences **11 → 3** (the
+remainder being the admin menu link), notice divs **22 → 15**, zero PHP fatals.
+
+`Rating::fire` and `Banner::display_content` were observed being removed. `Pro_Label` and
+`Emailkit` were **not registered on the bench** — `Pro_Label` requires more than ten days
+since activation — so their removal is structural rather than observed, and both logged
+the intended "not registered … no action taken" drift signal.
+
 ## [1.12.1] — 2026-09-05
 
 ### Changed

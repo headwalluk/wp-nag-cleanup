@@ -81,7 +81,7 @@ It is **one reader, not a licence**. Every use needs its own write-up in
 `docs/plugins/`, and the first question is always whether mechanisms 1 to 3 really are
 all unavailable — twice now a route was found on a second look that the first pass had
 declared impossible. Current uses: WPB Product Slider (1.3.0) and Elementor's promotions
-module (1.12.0). Never add a second reader; extend this one.
+module (1.12.0) and ElementsKit's Wpmet libs (1.13.0). Never add a second reader; extend this one.
 
 Two habits that have repeatedly avoided needing it:
 
