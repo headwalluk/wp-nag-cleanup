@@ -5,6 +5,52 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0] — 2026-09-07
+
+### Added
+
+- **Freemius trial promotion and affiliate-program notices** suppressed for
+  Featured Images in RSS (5 Star Plugins) 1.7.3, Freemius SDK 2.13.4
+
+The first Freemius rule in the project, and the first mechanism 1 rule against the SDK.
+`docs/plugins/independent-analytics.md` declined the Freemius opt-in notice and said the
+decision should be revisited if a filter ever appeared on a Freemius promotion. Two exist,
+on a module that Independent Analytics's configuration never reaches:
+
+```php
+add_filter( 'fs_show_trial_featured-images-for-rss-feeds', '__return_false' );
+add_filter( 'fs_show_affiliate_program_notice_featured-images-for-rss-feeds', '__return_false' );
+```
+
+`Freemius::apply_filters()` namespaces every filter per module as `fs_{tag}_{slug}`, so
+there is no SDK-wide switch and the rule is necessarily **per slug**. It applies here
+because this module declares `has_paid_plans`, a 14-day `trial` and
+`has_affiliation => 'all'`; Independent Analytics declares none of the latter two.
+
+The pair is complete rather than partial: `add_sticky( …, 'promotion' )` appears exactly
+twice in the whole SDK, and these two filters gate both. Neither filter is read anywhere
+near a licence, update or error notice. Because each is read *before* `add_sticky()`,
+suppression also skips the vendor's `trial_promotion_shown` storage write — the objection
+that ruled out the `remove_sticky()` route for Independent Analytics.
+
+The trial nag re-shows **every 30 days**, which is what separates it from the opt-in
+prompt that was declined: that one fires once and a click on "Skip" ends it.
+
+### Left alone
+
+- **The Freemius opt-in / connect notice** — declined again, on the reasoning already set
+  out in `docs/plugins/independent-analytics.md`. No filter, and the only unhook target
+  renders every Freemius notice for the module
+- **The plugin's own 30-day review nag** — found, and it needs no rule because it **cannot
+  render**. `featured_images_in_rss.php:351` registers it on `admin_notices` from inside
+  `firss_settings_page()`, the `add_menu_page()` render callback. Core fires
+  `admin_notices` in `admin-header.php` (line 313), included at `admin.php:244` — twenty
+  lines before `do_action( $page_hook )` at 264. The hook has already fired. It has been
+  in that position in every version since 1.7, it is gated to the vendor's own settings
+  screen, and it is an anonymous closure that `remove_action()` could not name anyway
+- **The settings-screen upgrade copy and "Rate and review" row link** — the vendor's own
+  screen and the plugin list, not the notice area
+
 ## [1.21.0] — 2026-09-05
 
 ### Added

@@ -97,6 +97,14 @@ Freemius-bundling plugins on the fleet grows enough that a per-slug list starts 
 its place. As of this survey it is one plugin — Autoptimize's apparent Freemius
 bundling turned out to be a false positive.
 
+**Update, 7 Sep 2026.** A second Freemius plugin has since been audited —
+[`featured-images-for-rss-feeds.md`](featured-images-for-rss-feeds.md), same SDK 2.13.4 —
+and it *did* produce a mechanism 1 rule. That does **not** overturn the decision here. The
+filters it uses, `fs_show_trial_{slug}` and `fs_show_affiliate_program_notice_{slug}`, gate
+the trial and affiliate notices, not the opt-in notice; and they only come into play
+because that module declares a `trial` and `has_affiliation`, which Independent Analytics
+does not. The opt-in prompt analysed above still has no filter, and is still declined.
+
 ### Note on what suppressing it would and would not achieve
 
 Hiding the prompt does not opt the site in or out. Freemius stays in its un-opted-in

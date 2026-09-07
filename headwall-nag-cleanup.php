@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.21.0
+ * Version:     1.22.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.21.0';
+		const VERSION = '1.22.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -209,6 +209,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// uses this constant as a first-loader mutex, so defining it here skips the
 			// banner everywhere. CookieYes 3.5.5. docs/plugins/cookie-law-info.md
 			defined( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED' ) || define( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED', true );
+
+			// Freemius SDK 2.13.4 trial and affiliate promos, bundled in Featured Images in
+			// RSS 1.7.3. Freemius namespaces its filters per module as fs_{tag}_{slug}, so
+			// there is no SDK-wide switch and the rule is necessarily per slug.
+			// docs/plugins/featured-images-for-rss-feeds.md
+			add_filter( 'fs_show_trial_featured-images-for-rss-feeds', '__return_false' );
+			add_filter( 'fs_show_affiliate_program_notice_featured-images-for-rss-feeds', '__return_false' );
 
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 

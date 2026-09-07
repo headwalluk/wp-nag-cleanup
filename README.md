@@ -179,7 +179,7 @@ which is the order of preference working as intended.
 
 ## What it suppresses today
 
-Version 1.21.0. Every vendor rule below was verified against that vendor's real source
+Version 1.22.0. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -209,6 +209,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | All in One SEO (AIOSEO) | Lite 5.0.1.1, Pro 4.3.4.1 | 1 | "What's New in AIOSEO" feed widget. Overview, Checklist and Setup widgets preserved |
 | Avada Core (fusion-core) | 5.16.1 | 3 | "Avada News" widget — `avada.com` feed and a Buy Now button. WP/PHP version warning preserved |
 | WP Mail Bank (Tech Banker) | 4.0.14 | 2 | "Leave a 5 Star Review" notice. Database upgrade prompt, SMTP conflict warning and statistics widget preserved |
+| Featured Images in RSS (5 Star Plugins), via Freemius | 1.7.3, SDK 2.13.4 | 1 | Freemius trial promotion and affiliate-program notices. Opt-in prompt, licence and update notices preserved |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 
