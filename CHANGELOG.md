@@ -5,12 +5,81 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.1] — 2026-09-07
+
+### Fixed
+
+- **The 1.22.0 Freemius rule did not work.** Confirmed still nagging on a live site
+  after deployment. Replaced with a working pair of rules
+
+1.22.0 filtered the *producer* — `fs_show_trial_{slug}`, read inside
+`Freemius::_add_trial_notice()`. Both filter names were correct, and the rule was still
+useless on the site it was written for, because **Freemius persists a sticky notice when
+it adds it and renders it from storage on every subsequent request.** The notice on
+`footballinberkshire.co.uk` had been stored for weeks, so nothing on the add path could
+reach it:
+
+```html
+<div class="fs-notice updated promotion fs-sticky … " data-id="trial_promotion" …>
+```
+
+The fix is two rules, because there are two surfaces:
+
+**1. Unhook the producers** (mechanism 2, `admin_init` at `EARLY_PRIORITY`):
+
+```php
+remove_action( 'admin_init', [ $freemius_module, '_add_trial_notice' ] );
+remove_action( 'admin_init', [ $freemius_module, '_add_affiliate_program_notice' ] );
+```
+
+Reached through `Freemius::get_instance_by_id( 195 )` — the SDK's own static registry,
+which returns `false` rather than constructing an instance. No `$wp_filter` walk.
+
+This is mechanism 2 in the presence of a mechanism 1 filter, deliberately.
+`_add_trial_notice()` checks `is_in_trial_promotion()` and adds a `count-1` badge to the
+plugin's menu item **before** it consults `show_trial`, so the filter cannot stop the
+badge. Hiding only the notice would have left a badge the site owner could never clear,
+because the notice they would click "Dismiss" on is the one we hid.
+
+**2. Filter the render path** (mechanism 1, file scope), which is what reaches the
+already-stored sticky:
+
+```php
+add_filter( 'fs_show_admin_notice_' . self::FIRSS_FREEMIUS_SLUG,
+    [ $this, 'hide_freemius_promo_notice' ], self::LATE_PRIORITY, 2 );
+```
+
+`FS_Admin_Notice_Manager::_admin_notices_hook()` applies this per notice, passing the
+message array. The callback matches `$msg['id']` against `trial_promotion` and
+`affiliate_program` by name — not `type === 'promotion'`, which would be removal by
+appearance — and returns the incoming value untouched for everything else, since the
+SDK's gate is `true !== $show_notice` and it legitimately passes `false` on `about.php`
+and in the block editor. Freemius's own docblock documents this filter with
+`trial_promotion` as its worked example.
+
+`remove_sticky()` would clear the stored notice outright and is still **not** used: it
+writes to vendor storage, per the objection in `docs/plugins/independent-analytics.md`.
+The stored sticky stays in the database, invisible; remove this plugin and the nag
+returns, dismissable as normal.
+
+### The lesson, recorded because it generalises
+
+**For a notice that is stored rather than generated per request, find the render path
+before choosing the mechanism.** A producer-side filter only ever governs new
+installations. The 1.22.0 audit had actually written this down as a caveat — that a
+filter "does not retract" an existing sticky — and shipped the rule as the fix anyway.
+Both `docs/plugins/featured-images-for-rss-feeds.md` and this entry keep the wrong
+version rather than quietly replacing it.
+
 ## [1.22.0] — 2026-09-07
 
 ### Added
 
 - **Freemius trial promotion and affiliate-program notices** suppressed for
   Featured Images in RSS (5 Star Plugins) 1.7.3, Freemius SDK 2.13.4
+
+> **Superseded by 1.22.1.** The rule below does not work on a site where the notice was
+> already stored, which is most of them. Kept for the record; read the 1.22.1 entry.
 
 The first Freemius rule in the project, and the first mechanism 1 rule against the SDK.
 `docs/plugins/independent-analytics.md` declined the Freemius opt-in notice and said the

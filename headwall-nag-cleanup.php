@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.22.0
+ * Version:     1.22.1
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.22.0';
+		const VERSION = '1.22.1';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -59,6 +59,23 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
 		 */
+		/**
+		 * Featured Images in RSS's Freemius module. The id keys Freemius's instance
+		 * registry; the slug forms its per-module filter tags.
+		 * docs/plugins/featured-images-for-rss-feeds.md
+		 */
+		const FIRSS_FREEMIUS_MODULE_ID = 195;
+		const FIRSS_FREEMIUS_SLUG      = 'featured-images-for-rss-feeds';
+
+		/**
+		 * Freemius sticky ids that carry promotion only. These are the sole two notices
+		 * the SDK types 'promotion'; licence, update and opt-in stickies are not listed.
+		 */
+		const FREEMIUS_PROMO_NOTICE_IDS = [
+			'trial_promotion',
+			'affiliate_program',
+		];
+
 		const PROMOTIONAL_DASHBOARD_WIDGETS = [
 			[
 				'widget_id' => 'pa-stories',
@@ -210,12 +227,17 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// banner everywhere. CookieYes 3.5.5. docs/plugins/cookie-law-info.md
 			defined( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED' ) || define( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED', true );
 
-			// Freemius SDK 2.13.4 trial and affiliate promos, bundled in Featured Images in
-			// RSS 1.7.3. Freemius namespaces its filters per module as fs_{tag}_{slug}, so
-			// there is no SDK-wide switch and the rule is necessarily per slug.
+			// Freemius promotional stickies, bundled in Featured Images in RSS 1.7.3
+			// (SDK 2.13.4). Filters are namespaced per module as fs_{tag}_{slug}, so this
+			// is necessarily per slug. Read at render, which is what reaches a sticky the
+			// vendor stored before this plugin arrived.
 			// docs/plugins/featured-images-for-rss-feeds.md
-			add_filter( 'fs_show_trial_featured-images-for-rss-feeds', '__return_false' );
-			add_filter( 'fs_show_affiliate_program_notice_featured-images-for-rss-feeds', '__return_false' );
+			add_filter(
+				'fs_show_admin_notice_' . self::FIRSS_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
 
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
@@ -403,6 +425,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		public function unhook_early_vendor_notices() : void {
 			$this->unhook_wpcode_promos();
+			$this->unhook_freemius_promos();
 		}
 
 		/**
@@ -422,6 +445,78 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				remove_action( 'admin_init', 'wpcode_maybe_add_library_connect_notice' );
 				$this->log( 'wpcode', 'Removed wpcode_maybe_add_library_connect_notice from admin_init.' );
 			}
+		}
+
+		/**
+		 * Remove Freemius's trial and affiliate notice producers for Featured Images in RSS.
+		 *
+		 * Both run from admin_init at the default priority, so they are removed before
+		 * those run. Unhooking rather than using the SDK's own show_trial filter is
+		 * deliberate: _add_trial_notice() tests for an already-stored sticky and adds a
+		 * menu counter bubble *before* it consults that filter, so the filter alone would
+		 * leave a badge the site owner could never clear.
+		 * Featured Images in RSS 1.7.3, Freemius SDK 2.13.4.
+		 * docs/plugins/featured-images-for-rss-feeds.md
+		 */
+		public function unhook_freemius_promos() : void {
+			$freemius_module = $this->get_freemius_module( self::FIRSS_FREEMIUS_MODULE_ID );
+
+			if ( null === $freemius_module ) {
+				// Freemius has not booted, or this module is not installed.
+				$this->log( 'firss-freemius', 'Freemius module 195 not present; nothing to unhook.' );
+			} else {
+				remove_action( 'admin_init', [ $freemius_module, '_add_trial_notice' ] );
+				remove_action( 'admin_init', [ $freemius_module, '_add_affiliate_program_notice' ] );
+				$this->log( 'firss-freemius', 'Removed Freemius trial and affiliate notice producers from admin_init.' );
+			}
+		}
+
+		/**
+		 * Hide Freemius's promotional stickies at render, leaving its other notices alone.
+		 *
+		 * Freemius suppresses a notice on any value that is not exactly true, so the
+		 * incoming value is passed straight back for ids we do not claim.
+		 *
+		 * @param mixed $show_notice Whether Freemius intends to render this notice.
+		 * @param array $notice      Freemius message, keyed id, type, manager_id, plugin.
+		 * @return mixed
+		 */
+		public function hide_freemius_promo_notice( $show_notice, $notice ) {
+			$notice_id = ( is_array( $notice ) && isset( $notice['id'] ) ) ? $notice['id'] : '';
+
+			if ( in_array( $notice_id, self::FREEMIUS_PROMO_NOTICE_IDS, true ) ) {
+				$this->log( 'firss-freemius', sprintf( 'Hid Freemius sticky notice "%s".', $notice_id ) );
+				$show_notice = false;
+			} else {
+				// Every other Freemius notice renders on the vendor's own terms.
+			}
+
+			return $show_notice;
+		}
+
+		/**
+		 * Freemius module instance by id, or null when it has not booted.
+		 *
+		 * get_instance_by_id() reads the SDK's existing registry and returns false when
+		 * the module is absent. Freemius::instance() would construct one, so it is not
+		 * used here.
+		 */
+		private function get_freemius_module( int $module_id ) : ?object {
+			$freemius_module = null;
+
+			if ( class_exists( 'Freemius' ) && method_exists( 'Freemius', 'get_instance_by_id' ) ) {
+				$found_module = \Freemius::get_instance_by_id( $module_id );
+
+				if ( is_object( $found_module ) ) {
+					$freemius_module = $found_module;
+				} else {
+					// Freemius is loaded by another plugin, but not for this module.
+				}
+			} else {
+				// No Freemius on this site.
+			}
+
+			return $freemius_module;
 		}
 
 		/**
