@@ -296,11 +296,12 @@ about:
   the same hook stays on. The absent-module path was exercised and does not fatal
 - **Double include** — the file was included twice; the two rules register once
 
-Not exercised end-to-end on a live WordPress request. The site the nag was found on is
-high-traffic and read-only for this work, so the fix has not yet been confirmed rendering
-on it. The remaining check is one authenticated admin request there after deployment,
-asserting the `data-id="trial_promotion"` block is gone **and** that the plugin's menu
-item carries no `count-1` badge.
+**Confirmed on the live site.** 1.22.1 was deployed to `footballinberkshire.co.uk` by
+Paul on 7 Sep 2026 and the trial nag is gone — the same screen that produced the capture
+above. That is the end-to-end confirmation the two rules work together against a sticky
+that was already in storage, which is the case 1.22.0 failed.
+
+Deployed to the wider fleet through the `headwall-hosting` mu-plugin.
 
 ## Additions to `headwall-nag-cleanup.php`
 

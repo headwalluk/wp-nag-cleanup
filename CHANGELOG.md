@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **The 1.22.0 Freemius rule did not work.** Confirmed still nagging on a live site
-  after deployment. Replaced with a working pair of rules
+  after deployment. Replaced with a working pair of rules, **verified gone** on the same
+  site on 7 Sep 2026
 
 1.22.0 filtered the *producer* — `fs_show_trial_{slug}`, read inside
 `Freemius::_add_trial_notice()`. Both filter names were correct, and the rule was still
