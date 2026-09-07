@@ -263,6 +263,14 @@ Re-check when a new version appears in the vault:
 - `lib/astra-notices/class-bsf-admin-notices.php` — if a per-notice filter is added
   (something like `bsf_admin_notices_show_{id}`), both the upsell and the opt-in notice
   become mechanism 1 rules and this document's two blocked findings can be closed
+- **`bsf_usage_tracking_enabled` is already gone from Spectra's 3.0 beta.** Checked
+  7 Sep 2026: Astra Pro 4.13.8 and Spectra 2.20.3 both honour the filter, but
+  `ultimate-addons-for-gutenberg` 3.0.0-beta.1 still ships `lib/bsf-analytics/` with the
+  filter **absent** and `class-bsf-analytics-events.php` dropped. The rule is a
+  `__return_false` on a filter nobody reads, so it fails silently and harmlessly — but if
+   3.0 ships that way, the opt-out for Spectra is gone and this needs re-deriving against
+  the new `bsf-analytics`. Astra is unaffected so far. **Re-check on the first non-beta
+  3.x in the vault**
 
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 1
 

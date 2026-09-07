@@ -84,9 +84,10 @@ callbacks via a sibling hook, then names that object's own entry (1.19.0).
 It is **one reader, not a licence**. Every use needs its own write-up in
 `docs/plugins/`, and the first question is always whether mechanisms 1 to 3 really are
 all unavailable — twice now a route was found on a second look that the first pass had
-declared impossible. Current uses: WPB Product Slider (1.3.0) and Elementor's promotions
-module (1.12.0), ElementsKit's Wpmet libs (1.13.0), QuadLayers (1.14.0) and Converter for
-Media (1.19.0). Never add a second reader; extend this one.
+declared impossible. Current uses: WPB Product Slider (1.3.0), Elementor's promotions
+module (1.12.0, the conversion banner and both seasonal pointers), ElementsKit's Wpmet
+libs (1.13.0), QuadLayers (1.14.0), Converter for Media (1.19.0), WPCode (three
+callbacks) and WP Mail Bank (1.21.0). Never add a second reader; extend this one.
 
 Two habits that have repeatedly avoided needing it:
 

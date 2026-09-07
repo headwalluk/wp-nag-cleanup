@@ -76,6 +76,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			'affiliate_program',
 		];
 
+		/**
+		 * Mechanism 3: promotional dashboard widgets, removed by id on wp_dashboard_setup.
+		 *
+		 * Write-ups in docs/plugins/: premium-addons-for-elementor, css-hero,
+		 * woocommerce-lottery, ht-mega-and-happy-addons, quadlayers, elementskit-lite,
+		 * elementor, fusion-core.
+		 */
 		const PROMOTIONAL_DASHBOARD_WIDGETS = [
 			[
 				'widget_id' => 'pa-stories',
@@ -340,7 +347,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 *
 		 * The two review callbacks are static, so they are named directly. The Appsero
 		 * opt-in is reached through the plugin's own singleton.
-		 * Happy Elementor Addons 3.23.1. docs/plugins/happy-elementor-addons.md
+		 * Happy Elementor Addons 3.23.1. docs/plugins/ht-mega-and-happy-addons.md
 		 */
 		public function unhook_happy_addons_promos() : void {
 			// The sibling Classes\Notice carries a campaign window that closed in March

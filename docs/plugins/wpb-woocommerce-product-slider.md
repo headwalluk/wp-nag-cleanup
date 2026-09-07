@@ -135,9 +135,14 @@ method is `maybe_show_notice`, and `remove_action()` that one entry.
 
 This is narrower than the pattern `CLAUDE.md` bans. That rule prohibits walking
 `$wp_filter` "removing whatever looks promotional" — heuristic removal by appearance.
-This names one class and one method and inspects no content at all. It is still an
-exception, and it is the only one: **nothing else in `headwall-nag-cleanup.php` may
-read `$wp_filter` without an equivalent write-up here.**
+This names one class and one method and inspects no content at all.
+
+It was the **first** use of the exception and, at the time, the only one. It is now the
+shared `find_instance_callback()` reader, used by five rules — this one, Elementor's
+promotions module, ElementsKit's Wpmet libs, QuadLayers and Converter for Media. The
+constraint that matters is unchanged and is the reason this section exists:
+**nothing may read `$wp_filter` without an equivalent write-up in its own document, and
+there is one reader, never a second.**
 
 Costs accepted:
 

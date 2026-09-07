@@ -10,10 +10,14 @@
 
 Analysed on 5 Sep 2026 by Claude Code (Claude Opus 5).
 
-54 fleet sites. This is the only plugin audited so far whose promotional output actually
-lands in the global admin notice area on core WordPress screens — everything else this
-week kept its nagging to its own settings pages. It comes from the bundled **Freemius
-SDK**, not from the plugin's own code.
+54 fleet sites. At the time of this audit it was the only plugin whose promotional
+output actually landed in the global admin notice area on core WordPress screens —
+everything else that week kept its nagging to its own settings pages. It comes from the
+bundled **Freemius SDK**, not from the plugin's own code.
+
+*(No longer unique: Featured Images in RSS does the same, from the same SDK, and did
+produce a rule — see [`featured-images-for-rss-feeds.md`](featured-images-for-rss-feeds.md)
+and the dated note further down.)*
 
 **No rule is added**, and unlike the previous three audits that is a close call rather
 than an obvious one. The reasoning is set out in full below because it is the strongest
