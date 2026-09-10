@@ -323,7 +323,7 @@ back per surface.
 |---|---|
 | `rank_math_review_plugin_notice` (mechanism 4) | **Confirmed gone.** This was the nag Paul was actually seeing — the "Rate Us" review request, not the PRO upsell |
 | `rank_math_pro_notice` (mechanism 4) | **Source-verified only.** The two IDs gate each other, so only the review nag was banked on this site. The rule ran and found nothing to remove, which is correct behaviour and not evidence |
-| `Dashboard_Widget::dashboard_widget_feed` (mechanism 2) | **Failed.** The "Latest Blog Posts from Rank Math" heading and its `rankmath.com` links were still on the dashboard widget after deploying. Diagnosed, fixed in 1.24.1, and **not yet re-confirmed** |
+| `Dashboard_Widget::dashboard_widget_feed` (mechanism 2) | **Failed under 1.24.0, confirmed under 1.24.1.** The "Latest Blog Posts from Rank Math" block and its `rankmath.com` links were still present after the first deploy; after the fix they are gone **and the Rank Math Overview widget is still there**. Both halves confirmed |
 
 ### What the confirmation is worth
 
@@ -333,6 +333,21 @@ mechanism 4**, and it exercised the whole path — the entry was already banked 
 priority 1, `remove_by_id()` blanked the id, and `update_storage()` dropped it on
 `shutdown`. That is precisely the case a producer-side unhook could not have reached, which
 is the argument mechanism 4 was introduced on.
+
+### The re-confirmation is two-sided, which is the point
+
+Paul reported the widget **present** and the blog feed **gone**. That is the assertion this
+rule was written to satisfy, and it confirms three separate things at once:
+
+- The surgical removal worked: one callback off `rank_math/dashboard/widget` at priority 98,
+  with the analytics, 404-monitor and redirection callbacks at 10, 11 and 12 untouched. Had
+  the removal been blunt — `remove_meta_box()` on the widget id — the widget would have gone
+  with the feed, and the site would have lost its own SEO figures
+- The `rest_api_init` registration fires. This is the project's **first working rule that
+  acts on a REST request**, so the exception to "admin only" is now demonstrated rather than
+  assumed
+- The reader's tenth use resolves correctly against `RankMath\Dashboard_Widget` — the
+  namespace that does not match its directory
 
 ### What the failure is worth more
 
@@ -350,18 +365,9 @@ diagnosis. Three things are worth carrying forward:
 
 ### Still to do
 
-Re-confirm the blog-feed rule under 1.24.1. It has no time gate, so this is cheap:
-
-- On the WP dashboard with the widget loaded, the **"Latest Blog Posts from Rank Math"**
-  heading and `class="rank-math-blog-list"` must both be absent
-- The 404, redirection and analytics figures in the same widget must still be present —
-  that is the half the surgical removal exists to preserve
-- Directly on the route, `GET /wp-json/rankmath/v1/dashboardWidget` with an authenticated
-  session returns the widget body as a string; probe that response rather than the
-  dashboard HTML if a cleaner assertion is wanted
-
-Also still source-verified only: `rank_math_pro_notice`, which needs a site where the PRO
-nag rather than the review nag is the banked one. Its gates, for a bench:
+One rule from this document remains unproven: **`rank_math_pro_notice`**. It needs a site
+where the PRO nag rather than the review nag is the banked one, which the mutual gate makes
+mutually exclusive — so the client site could never have tested both. Its gates, for a bench:
 
 | Target | Gate |
 |---|---|

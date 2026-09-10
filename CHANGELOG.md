@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | MonsterInsights menu tooltip | **Confirmed gone** |
   | Rank Math `rank_math_review_plugin_notice` | **Confirmed gone** — first live confirmation of **mechanism 4**, on a site where the entry was already banked |
   | Modula telemetry consent prompt | **Confirmed gone** |
-  | Rank Math dashboard blog feed | **Failed** — diagnosed and fixed above, not yet re-confirmed |
+  | Rank Math dashboard blog feed | **Failed under 1.24.0; confirmed under 1.24.1** — the feed is gone and the Overview widget is still present, so the surgical removal held and the `rest_api_init` registration fires. This is the project's first working rule that acts on a REST request |
   | MonsterInsights WPConsent cross-sell, review request; Rank Math `rank_math_pro_notice` | Source-verified only — none was observed rendering before the deploy, so absence afterwards is not evidence |
 
   The mechanism 4 result is the one worth having: the entry was already in
@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   producer-side unhook cannot reach and the argument the mechanism was introduced on.
 
   No PHP fatals, and no operational notice reported missing.
+
+  Of the seven rules in 1.24.0, four are now confirmed against a live site and three remain
+  source-verified: MonsterInsights' WPConsent cross-sell and review request, and Rank Math's
+  `rank_math_pro_notice`. None of those three was rendering before the deploy, and the two
+  Rank Math notification IDs gate each other, so that site could never have tested both.
 
 ## [1.24.0] — 2026-09-10
 

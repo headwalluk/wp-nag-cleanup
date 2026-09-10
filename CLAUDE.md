@@ -69,9 +69,10 @@ signal the rule is too clever and probably should not be written.
   it and bails on front end, AJAX, REST and cron
 - **One exception, and it is registered unconditionally:** `rest_api_init` fires only on a
   REST request, so it gates itself. `unhook_rest_rendered_promos()` is hooked to it on
-  every request, for vendors that render a dashboard surface from a REST route (Rank Math,
-  1.24.0). Do not put a request-shape test in front of it — see below. Do not add a rule
-  there for a vendor that has an admin-request route
+  every request, for vendors that render a dashboard surface from a REST route (Rank Math's
+  dashboard blog feed — added 1.24.0, working since 1.24.1, confirmed live). Do not put a
+  request-shape test in front of it — see below. Do not add a rule there for a vendor that
+  has an admin-request route
 - Never a blanket `remove_all_actions()` on any notice hook
 - Never walk `$wp_filter` removing whatever looks promotional
 - Keep it well under ~1000 lines
