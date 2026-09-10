@@ -38,7 +38,7 @@ it here with what made it ambiguous — that stops it being re-litigated later.>
 
 ## Mechanism
 
-- tier: 1 (vendor hook) | 2 (targeted unhook) | 3 (dashboard widget)
+- tier: 1 (vendor hook) | 2 (targeted unhook) | 3 (dashboard widget) | 4 (stored notification)
 - phase: file scope | `init` | `admin_init` | `wp_dashboard_setup`
 - vendor registers at: <where and when the vendor adds the hook>
 - instance reachable via: <exact expression, for mechanism 2; N/A otherwise>
@@ -47,6 +47,25 @@ it here with what made it ambiguous — that stops it being re-litigated later.>
 
 <How to tell this analysis has gone stale: the file and symbol to re-check when a
 new version appears in the vault.>
+
+## Verification
+
+<State plainly which of these each rule is, per rule — never for the set as a whole:
+
+- **Confirmed** — observed rendering before, and absent after. Say where and when
+- **Source-verified only** — read from the vendor's source, not yet seen to work
+- **Failed** — say so, diagnose it, and do not ship the rule as though it worked
+
+A rule that was never observed rendering before the change is source-verified, not
+confirmed: a rule that removes something already absent looks identical to one that works.
+
+Name the surface each rule renders on, and check that surface. A clean notice area says
+nothing about a dashboard widget, and nothing at all about anything rendered from a REST
+route or by JavaScript — that gap cost a rule in 1.24.0.
+
+Prefer structural probes to content greps: a meta box `id`, a `data-` attribute,
+`has_action()`. Record the time gates a bench would have to backdate, and the negative
+check — the operational notice that must still be there afterwards.>
 
 ## Additions to `headwall-nag-cleanup.php`: NONE | <summary>
 

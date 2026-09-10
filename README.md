@@ -7,7 +7,7 @@ notices that actually matter become visible again.
 Drop it in and forget about it. No settings page, no build step, no dependencies,
 no configuration required.
 
-> **Status: stable.** Version 1.18.0. The machinery is complete, all three mechanisms
+> **Status: stable.** Version 1.24.1. The machinery is complete, all four mechanisms
 > work end to end, and every rule has a source audit behind it. The rule set is
 > deliberately small and grows one audited vendor at a time.
 > See [`CHANGELOG.md`](CHANGELOG.md).
@@ -100,7 +100,7 @@ stay.
 
 ## How it works
 
-One file, one class. Three mechanisms, in order of preference.
+One file, one class. Four mechanisms, in order of preference.
 
 ### 1. Vendor opt-out hooks
 
@@ -152,11 +152,14 @@ which takes a hook, a class and a method. It is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Two rules use it: WPB Product Slider's review notice, and Elementor's promotions
-module. Each has its own write-up, and each had to establish that mechanisms 1 to 3
-were all unavailable first — a bar that has failed more often than it has passed. See
+Ten rules use it as of 1.24.0: WPB Product Slider, Elementor's promotions module,
+ElementsKit's Wpmet libs, QuadLayers, Converter for Media, WPCode, WP Mail Bank,
+BdThemes, MonsterInsights' review request and Rank Math's dashboard blog feed. Each has
+its own write-up, and each had to establish that the other mechanisms were all
+unavailable first — a bar that has failed more often than it has passed, and twice a
+route was found on a second look that the first pass had called impossible. See
 [`docs/plugins/wpb-woocommerce-product-slider.md`](docs/plugins/wpb-woocommerce-product-slider.md)
-and [`docs/plugins/elementor.md`](docs/plugins/elementor.md).
+and [`docs/plugins/elementor.md`](docs/plugins/elementor.md) for the worked examples.
 
 ### 3. Dashboard widget removal
 
@@ -177,9 +180,31 @@ Hero and WooCommerce Lottery, none of which offers a switch. YITH used it until 
 when the vendor's own opt-out filter was found and the rule moved up to mechanism 1 —
 which is the order of preference working as intended.
 
+### 4. Stored-notification removal
+
+Some vendors do not print a nag when it is due — they **bank** it in an option and
+render it later from a shared notification store. Unhooking the producer on such a
+plugin governs only sites that have never been nagged; a site already carrying the
+notice keeps it, because nothing runs the producer again.
+
+For those, the rule runs before the store's own renderer and asks the vendor to drop
+the entry, naming the notification ID.
+
+This is the last resort, and the only mechanism here that **writes to another plugin's
+data**. On Rank Math the vendor's removal call is its own dismiss path, so the entry
+leaves the option permanently — uninstalling this plugin does not bring it back. So it
+is used only for IDs read from source and confirmed to carry nothing operational, every
+ID is named in a constant, and no store is ever swept by pattern or message text.
+
+One vendor uses it as of 1.24.0: Rank Math, for its PRO upsell and its review request.
+The same store carries that plugin's redirection conflicts, 404 monitor, WPML data
+migration prompt, plugin-conflict warnings and its "reconnect Google" notice, all of
+which are left alone — which is why the two IDs are named rather than the renderer
+removed.
+
 ## What it suppresses today
 
-Version 1.22.1. Every vendor rule below was verified against that vendor's real source
+Version 1.24.1. Every vendor rule below was verified against that vendor's real source
 and has a written analysis in [`docs/plugins/`](docs/plugins/).
 
 | Vendor | Verified against | Mechanism | What goes |
@@ -209,7 +234,12 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | All in One SEO (AIOSEO) | Lite 5.0.1.1, Pro 4.3.4.1 | 1 | "What's New in AIOSEO" feed widget. Overview, Checklist and Setup widgets preserved |
 | Avada Core (fusion-core) | 5.16.1 | 3 | "Avada News" widget — `avada.com` feed and a Buy Now button. WP/PHP version warning preserved |
 | WP Mail Bank (Tech Banker) | 4.0.14 | 2 | "Leave a 5 Star Review" notice. Database upgrade prompt, SMTP conflict warning and statistics widget preserved |
+| Element Pack Pro (BdThemes) | 7.11.2 | 2 | Review request, and the `analytics.bdthemes.com` usage-tracking opt-in. Licence, template-library deprecation and mini-cart conflict notices preserved |
+| Ultimate Post Kit (BdThemes) | 4.5.3 | 2, 3 | "BdThemes News & Updates" widget, review request. Elementor-dependency and Pro-version notices preserved |
 | Featured Images in RSS (5 Star Plugins), via Freemius | 1.7.3, SDK 2.13.4 | 1, 2 | Freemius trial promotion and affiliate-program notices, and the trial menu counter bubble. Opt-in prompt, licence and update notices preserved |
+| Modula (WPChill) | 2.14.39 | 1 | Telemetry consent prompt, and the telemetry itself — weekly and hourly cron to `telemetry.wpchill.com` carrying the site URL and a full plugin inventory. Elementor and PHP-version warnings, Action Scheduler notices and the bulk-action result preserved |
+| MonsterInsights (Google Analytics for WordPress) | 11.2.0 | 2 | PRO upsell tooltip on the Insights menu, review request, WPConsent cross-sell. UA-sunset alert, licence, PHP-version, measurement-protocol and addon-deprecation notices preserved, as is the analytics dashboard widget |
+| Rank Math SEO | 1.0.278, Pro 3.0.95 | 2, 4 | Stored PRO upsell and review notifications, and the `rankmath.com` blog feed inside the Overview widget. The widget's own 404, redirection and analytics figures preserved, as is the whole notification store — redirection conflicts, WPML data migration, plugin conflicts, "reconnect Google" |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 

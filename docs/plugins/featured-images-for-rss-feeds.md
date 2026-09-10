@@ -177,7 +177,7 @@ add_filter( 'fs_show_admin_notice_featured-images-for-rss-feeds',
 
 Rule 1 stops the notice being *added*. It does nothing for the installed base, where
 `add_sticky()` already ran and the notice renders from stored state on every admin page
-— which is exactly what was observed on `footballinberkshire.co.uk`.
+— which is exactly what was observed on the fleet site above.
 
 `FS_Admin_Notice_Manager::_admin_notices_hook()` applies a per-notice filter at render:
 
@@ -272,8 +272,8 @@ Re-check when a new version appears in the vault:
 Filter names, gate conditions, hook registrations and the instance registry keying were
 read from the vault copy of 1.7.3 (Freemius SDK 2.13.4).
 
-**Observed live.** The trial nag was captured on `footballinberkshire.co.uk` (hhw5,
-Featured Images in RSS 1.7.3), rendering as:
+**Observed live.** The trial nag was captured on a fleet site running Featured Images in
+RSS 1.7.3 (see `dev-notes/` for which), rendering as:
 
 ```html
 <div class="fs-notice updated promotion fs-sticky … fs-slug-featured-images-for-rss-feeds"
@@ -296,9 +296,8 @@ about:
   the same hook stays on. The absent-module path was exercised and does not fatal
 - **Double include** — the file was included twice; the two rules register once
 
-**Confirmed on the live site.** 1.22.1 was deployed to `footballinberkshire.co.uk` by
-Paul on 7 Sep 2026 and the trial nag is gone — the same screen that produced the capture
-above. That is the end-to-end confirmation the two rules work together against a sticky
+**Confirmed on the live site.** 1.22.1 was deployed to that same site by Paul on
+7 Sep 2026 and the trial nag is gone — the same screen that produced the capture above. That is the end-to-end confirmation the two rules work together against a sticky
 that was already in storage, which is the case 1.22.0 failed.
 
 Deployed to the wider fleet through the `headwall-hosting` mu-plugin.

@@ -65,7 +65,13 @@ signal the rule is too clever and probably should not be written.
 - Namespace `Headwall_Nag_Cleanup`, constants `HEADWALL_NAG_CLEANUP_*`
 - Guard with `defined( 'ABSPATH' ) || die();` — check that spelling, it is easy to
   typo and the failure mode is a silent blank page on every request
-- Admin only. Bail early on front end, AJAX, REST and cron
+- Admin only for the notice and dashboard work. `is_admin_page_request()` gates all of
+  it and bails on front end, AJAX, REST and cron
+- **One exception, and it is registered unconditionally:** `rest_api_init` fires only on a
+  REST request, so it gates itself. `unhook_rest_rendered_promos()` is hooked to it on
+  every request, for vendors that render a dashboard surface from a REST route (Rank Math,
+  1.24.0). Do not put a request-shape test in front of it — see below. Do not add a rule
+  there for a vendor that has an admin-request route
 - Never a blanket `remove_all_actions()` on any notice hook
 - Never walk `$wp_filter` removing whatever looks promotional
 - Keep it well under ~1000 lines
@@ -87,7 +93,9 @@ all unavailable — twice now a route was found on a second look that the first 
 declared impossible. Current uses: WPB Product Slider (1.3.0), Elementor's promotions
 module (1.12.0, the conversion banner and both seasonal pointers), ElementsKit's Wpmet
 libs (1.13.0), QuadLayers (1.14.0), Converter for Media (1.19.0), WPCode (three
-callbacks) and WP Mail Bank (1.21.0). Never add a second reader; extend this one.
+callbacks), WP Mail Bank (1.21.0), BdThemes (1.23.0, the feedback-hub and DCI SDKs across
+Element Pack and Ultimate Post Kit), MonsterInsights (1.24.0, the review request) and
+Rank Math (1.24.0, the dashboard blog feed). Never add a second reader; extend this one.
 
 Two habits that have repeatedly avoided needing it:
 
@@ -144,9 +152,9 @@ would usually work — but a plugin including this file from inside a function w
 create a local, and the instance has to stay globally reachable so that
 `remove_filter()` can name it.
 
-### The three mechanisms
+### The four mechanisms
 
-Rules use one of three mechanisms. Always prefer the earliest one that works.
+Rules use one of four mechanisms. Always prefer the earliest one that works.
 
 1. **Vendor opt-out hook** — sanctioned and stable, nearly always
    `add_filter( 'vendor_hook', '__return_false' )`. Registers at file scope
@@ -155,6 +163,22 @@ Rules use one of three mechanisms. Always prefer the earliest one that works.
 3. **Dashboard widget removal** — `remove_meta_box()` on `wp_dashboard_setup`,
    naming the widget ID. This also prevents the outbound HTTP request the widget
    would have made on render, which is a large part of why the rule exists
+4. **Stored-notification removal** — for vendors that bank a notice in an option and
+   render it from a shared store, where unhooking the producer only ever governs sites
+   that have not been nagged yet. Run before the store's renderer and use the vendor's
+   own removal API, naming the notification ID
+
+**Mechanism 4 is the last resort, and it is the only one that writes to another
+vendor's data.** Rank Math is the worked example (1.24.0): `remove_by_id()` is its own
+dismiss path, so the entry is dropped from `rank_math_notifications` on shutdown and does
+not come back. That is irreversible — uninstalling this plugin does not restore it. So:
+
+- Only for IDs read from source and confirmed to carry **nothing** operational
+- Name every ID in a constant. Never sweep a store by pattern, type or message text
+- Check whether the IDs gate each other before removing one. Rank Math's PRO nag and
+  review nag each check for the other, so removing one alone lets the other appear
+- Prefer mechanisms 1 to 3 even when they only help sites that are not yet nagging, if
+  the store also holds anything operational under the same ID
 
 ### Load order
 
@@ -167,6 +191,8 @@ exist yet.
   vendor's own registration actually requires
 - Mechanism 3: `wp_dashboard_setup` (and `wp_network_dashboard_setup` on
   multisite), late
+- Mechanism 4: `all_admin_notices` at `self::EARLY_PRIORITY`, so it runs before the
+  store's own renderer, which sits at the default priority
 
 A rule that "does nothing" is nearly always a phase problem, not a wrong hook name.
 
@@ -193,8 +219,19 @@ adds its notice from a `current_screen` handler is invisible at `admin_init` —
 `current_screen` instead. Elementor's conversion banner is the worked example.
 
 Note that `REST_REQUEST` is not defined at mu-plugin load time, so an early bail
-cannot test it — use `wp_is_json_request()`. `is_admin()` is true during AJAX, so
-test `wp_doing_ajax()` explicitly.
+cannot test it. `is_admin()` is true during AJAX, so test `wp_doing_ajax()` explicitly.
+
+**`wp_is_json_request()` does not detect a REST request.** It is a *content-negotiation*
+test: it looks at the `Accept` and `Content-Type` headers and nothing else. A REST route
+fetched by jQuery `$.ajax` without `dataType: 'json'` arrives with `Accept: */*` and, on a
+GET, no `Content-Type` — so it returns **false** on a genuine REST request. Rank Math's
+dashboard widget is fetched exactly that way, and it silently cost a rule in 1.24.0: the
+rule was correct, its registration branch never ran, and the nag stayed on a live site
+while every source check said it should be gone (fixed in 1.24.1).
+
+It is still the right tool for *bailing out* of the notice work in `is_admin_page_request()`,
+which is a best-effort exclusion. It is the wrong tool for *deciding to act* on a REST
+request. For that, hook `rest_api_init` and let WordPress be the gate.
 
 ### Debug logging
 

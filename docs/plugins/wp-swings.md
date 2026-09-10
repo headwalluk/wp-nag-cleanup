@@ -8,8 +8,8 @@
 
 ## Analysis
 
-Analysed on 5 Sep 2026 by Claude Code (Claude Opus 5), from a nag Paul reported on
-`classicmotoringbooks.co.uk` — a **US Labor Day sale banner** with the `wps-offer-notice`
+Analysed on 5 Sep 2026 by Claude Code (Claude Opus 5), from a nag Paul reported on a
+fleet site (see `dev-notes/`) — a **US Labor Day sale banner** with the `wps-offer-notice`
 class.
 
 4 fleet sites across the two plugins. **One rule added**, removing three named callbacks

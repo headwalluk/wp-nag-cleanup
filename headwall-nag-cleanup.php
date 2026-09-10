@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.22.1
+ * Version:     1.24.1
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.22.1';
+		const VERSION = '1.24.1';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -77,11 +77,23 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		];
 
 		/**
+		 * Rank Math notification-centre IDs that hold nothing operational.
+		 *
+		 * The two gate each other — each producer checks for the other's notification
+		 * before adding its own — so they are removed together or not at all.
+		 * docs/plugins/seo-by-rank-math.md
+		 */
+		const RANK_MATH_PROMO_NOTIFICATION_IDS = [
+			'rank_math_pro_notice',
+			'rank_math_review_plugin_notice',
+		];
+
+		/**
 		 * Mechanism 3: promotional dashboard widgets, removed by id on wp_dashboard_setup.
 		 *
 		 * Write-ups in docs/plugins/: premium-addons-for-elementor, css-hero,
 		 * woocommerce-lottery, ht-mega-and-happy-addons, quadlayers, elementskit-lite,
-		 * elementor, fusion-core.
+		 * elementor, fusion-core, ultimate-post-kit.
 		 */
 		const PROMOTIONAL_DASHBOARD_WIDGETS = [
 			[
@@ -138,6 +150,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'vendor'    => 'Avada Core (fusion-core) 5.16.1',
 				'reason'    => 'Avada News; avada.com feed and a Buy Now licence button',
 			],
+			[
+				'widget_id' => 'bdt-dashboard-overview',
+				'context'   => 'column4',
+				'vendor'    => 'BdThemes admin-feeds, Ultimate Post Kit 4.5.3',
+				'reason'    => 'BdThemes News & Updates; fetches bdthemes.com/feed on render',
+			],
 		];
 
 		/**
@@ -157,6 +175,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Register everything this plugin does.
 		 */
 		public function run() : void {
+			// rest_api_init fires only on a REST request, so it needs no gate of its own.
+			// Testing the request shape here does not work: the one vendor that needs this
+			// is fetched with Accept: */*. docs/plugins/seo-by-rank-math.md
+			add_action( 'rest_api_init', [ $this, 'unhook_rest_rendered_promos' ], self::LATE_PRIORITY );
+
 			if ( $this->is_admin_page_request() ) {
 				$this->register_vendor_optouts();
 
@@ -167,6 +190,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				add_action( 'wp_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
 				add_action( 'wp_network_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
 				add_action( 'wp_user_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
+				add_action( 'all_admin_notices', [ $this, 'remove_stored_vendor_notifications' ], self::EARLY_PRIORITY );
 			} else {
 				// No notice area and no dashboard on this request type.
 			}
@@ -246,6 +270,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				2
 			);
 
+			// WPChill telemetry, in Modula only across the whole vault today. Setting
+			// enabled to false reaches the consent prompt, the cron schedule and every send
+			// path at once. Modula 2.14.39, unchanged since 2.14.1.
+			// docs/plugins/modula-best-grid-gallery.md
+			add_filter( 'wpchill_telemetry_config', [ $this, 'disable_wpchill_telemetry' ] );
+
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
 			$this->log( 'vendor-optouts', 'Registered vendor opt-out filters.' );
@@ -266,6 +296,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_easy_fancybox_review_request();
 			$this->unhook_webp_converter_promos();
 			$this->unhook_mail_bank_review_notice();
+			$this->unhook_bdthemes_review_and_tracking_notices();
+			$this->unhook_monsterinsights_promos();
 		}
 
 		/**
@@ -428,6 +460,148 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 
 		/**
+		 * Remove BdThemes' review requests and its usage-tracking opt-in.
+		 *
+		 * Both plugins bundle the same feedback-hub SDK, forked per plugin so the class
+		 * name differs; Element Pack also bundles the DCI insights SDK. All three objects
+		 * are constructed and discarded — each class declares a get_instance() its own
+		 * bootstrap never calls, so the static holder stays null and remove_action() has
+		 * nothing to name. Licence, Elementor-dependency and mini-cart-conflict notices
+		 * are separate callbacks and survive.
+		 * Element Pack Pro 7.11.2, Ultimate Post Kit 4.5.3.
+		 * docs/plugins/bdthemes-element-pack.md, docs/plugins/ultimate-post-kit.md
+		 */
+		public function unhook_bdthemes_review_and_tracking_notices() : void {
+			$this->remove_discarded_instance_callback(
+				'admin_notices',
+				'RC_Reviews_Collector',
+				'display_global_notice',
+				'bdthemes-element-pack'
+			);
+			$this->remove_discarded_instance_callback(
+				'admin_notices',
+				'Insights_SDK',
+				'display_global_notice',
+				'bdthemes-element-pack'
+			);
+			$this->remove_discarded_instance_callback(
+				'admin_notices',
+				'Ultimate_Post_Kit_Reviews_Collector',
+				'display_global_notice',
+				'ultimate-post-kit'
+			);
+		}
+
+		/**
+		 * Remove MonsterInsights' menu tooltip, review request and WPConsent cross-sell.
+		 *
+		 * The tooltip is a floating upsell bubble anchored to the Insights menu item rather
+		 * than a notice, so it hangs off adminmenu. It and the cross-sell are plain named
+		 * functions. MonsterInsights_Review is constructed and discarded at the foot of its
+		 * own file, so remove_action() has nothing to name.
+		 *
+		 * The vendor's own hide_am_notices switch is not used: its settings screen describes
+		 * it as also hiding deprecation and required-configuration notices.
+		 * MonsterInsights 11.2.0. docs/plugins/google-analytics-for-wordpress.md
+		 */
+		public function unhook_monsterinsights_promos() : void {
+			if ( ! defined( 'MONSTERINSIGHTS_VERSION' ) ) {
+				// Not installed.
+			} else {
+				if ( false === has_action( 'adminmenu', 'monsterinsights_get_admin_menu_tooltip' ) ) {
+					$this->log( 'monsterinsights', 'monsterinsights_get_admin_menu_tooltip not registered on adminmenu; no action taken.' );
+				} else {
+					remove_action( 'adminmenu', 'monsterinsights_get_admin_menu_tooltip' );
+					$this->log( 'monsterinsights', 'Removed monsterinsights_get_admin_menu_tooltip from adminmenu.' );
+				}
+
+				if ( false === has_action( 'admin_notices', 'monsterinsights_wpconsent_install_notice' ) ) {
+					$this->log( 'monsterinsights', 'monsterinsights_wpconsent_install_notice not registered on admin_notices; no action taken.' );
+				} else {
+					remove_action( 'admin_notices', 'monsterinsights_wpconsent_install_notice' );
+					$this->log( 'monsterinsights', 'Removed monsterinsights_wpconsent_install_notice from admin_notices.' );
+				}
+
+				$this->remove_discarded_instance_callback( 'admin_notices', 'MonsterInsights_Review', 'review_request', 'monsterinsights' );
+			}
+		}
+
+		/**
+		 * Mechanism 4: drop a stored notification the vendor has already banked.
+		 *
+		 * For vendors that write notices into an option and render them from a shared
+		 * store, unhooking the producer only ever governs sites that have not been nagged
+		 * yet. This runs before the store's own renderer and asks the vendor to drop the
+		 * entry, which is a durable change to the vendor's own data — so it is reserved for
+		 * IDs that carry nothing operational, and each one is named.
+		 */
+		public function remove_stored_vendor_notifications() : void {
+			$this->remove_rank_math_stored_promos();
+		}
+
+		/**
+		 * Remove Rank Math's stored PRO upsell and review request.
+		 *
+		 * Notification_Center::display() also renders redirection, 404-monitor,
+		 * plugin-conflict and database-migration notices, so the renderer cannot be
+		 * unhooked. remove_by_id() is the vendor's own dismiss path: it blanks the entry's
+		 * id, and update_storage() then drops it on shutdown.
+		 * Rank Math SEO 1.0.278. docs/plugins/seo-by-rank-math.md
+		 */
+		private function remove_rank_math_stored_promos() : void {
+			if ( ! function_exists( 'rank_math' ) ) {
+				// Not installed.
+			} else {
+				$notification_centre = rank_math()->notification;
+
+				if ( ! is_object( $notification_centre ) || ! method_exists( $notification_centre, 'remove_by_id' )
+					|| ! method_exists( $notification_centre, 'has_notification' ) ) {
+					$this->log( 'seo-by-rank-math', 'Notification centre not reachable; no action taken.' );
+				} else {
+					foreach ( self::RANK_MATH_PROMO_NOTIFICATION_IDS as $notification_id ) {
+						if ( ! $notification_centre->has_notification( $notification_id ) ) {
+							// Never banked on this site, or already removed by an earlier request.
+							continue;
+						}
+
+						$notification_centre->remove_by_id( $notification_id );
+						$this->log( 'seo-by-rank-math', sprintf( 'Removed stored notification %s.', $notification_id ) );
+					}
+				}
+			}
+		}
+
+		/**
+		 * Mechanism 2, for producers that only run inside a REST request.
+		 */
+		public function unhook_rest_rendered_promos() : void {
+			$this->unhook_rank_math_dashboard_feed();
+		}
+
+		/**
+		 * Remove the rankmath.com blog feed from Rank Math's dashboard widget.
+		 *
+		 * The widget mixes the site's own 404, redirection and analytics figures with a
+		 * vendor news feed, but the feed is a separate callback on the vendor's own
+		 * rank_math/dashboard/widget action, so the figures survive. This also drops the
+		 * wp_remote_get to rankmath.com made on render.
+		 *
+		 * Dashboard_Widget is constructed and discarded in Common::__construct(), which
+		 * RankMath::setup() reaches on every request. It declares namespace RankMath despite
+		 * living in includes/admin/, so the class is RankMath\Dashboard_Widget, not
+		 * RankMath\Admin\Dashboard_Widget.
+		 * Rank Math SEO 1.0.278. docs/plugins/seo-by-rank-math.md
+		 */
+		private function unhook_rank_math_dashboard_feed() : void {
+			$this->remove_discarded_instance_callback(
+				'rank_math/dashboard/widget',
+				'RankMath\\Dashboard_Widget',
+				'dashboard_widget_feed',
+				'seo-by-rank-math'
+			);
+		}
+
+		/**
 		 * Mechanism 2, for producers that themselves run on admin_init.
 		 */
 		public function unhook_early_vendor_notices() : void {
@@ -499,6 +673,23 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			}
 
 			return $show_notice;
+		}
+
+		/**
+		 * Turn WPChill's telemetry off before its core reads the config.
+		 *
+		 * enabled is tested twice: setup_hooks() returns before scheduling cron or adding
+		 * the consent script, and is_enabled() returns before it registers the consent
+		 * notice on admin_notices. One key reaches both.
+		 */
+		public function disable_wpchill_telemetry( $telemetry_config ) {
+			if ( is_array( $telemetry_config ) ) {
+				$telemetry_config['enabled'] = false;
+			} else {
+				// Vendor changed the config shape; pass it through rather than guess.
+			}
+
+			return $telemetry_config;
 		}
 
 		/**

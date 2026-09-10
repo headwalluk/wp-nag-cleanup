@@ -5,6 +5,309 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.24.1] — 2026-09-10
+
+### Fixed
+
+- **Rank Math's dashboard blog feed rule never registered.** Deployed to a live client
+  site, the "Latest Blog Posts from Rank Math" block and its `rankmath.com` links were
+  still on the dashboard widget. The rule was gated on `wp_is_json_request()`:
+
+  ```php
+  } elseif ( wp_is_json_request() ) {
+      add_action( 'rest_api_init', [ $this, 'unhook_rest_rendered_promos' ], self::LATE_PRIORITY );
+  }
+  ```
+
+  `wp_is_json_request()` is a **content-negotiation** test — it reads `Accept` and
+  `Content-Type` and nothing else. Rank Math fetches the widget with jQuery `$.ajax` and no
+  `dataType`, so the request arrives with `Accept: */*` and, being a GET, no
+  `Content-Type`. It returns **false on a genuine REST request**, the branch was skipped,
+  and the rule never registered.
+
+  **Fixed by registering on `rest_api_init` unconditionally.** That hook fires only on a
+  REST request, so it gates itself and no request-shape test is needed. Cost is one
+  `add_action()` on every request, where the hook never fires and the callback never runs.
+
+  Every source-level check had passed — hook name, class, namespace, priority, construction
+  site, load order. What was wrong was **when to register**, which `CLAUDE.md` already
+  names as the main source of bugs here: "a rule that does nothing is nearly always a phase
+  problem". Caught only because Paul looked at the dashboard widget after deploying; the
+  notice-area check was clean and covered none of it.
+
+- **Corrected in the same pass:** `Dashboard_Widget` is constructed in
+  `Common::__construct()`, not `Common::hooks()`. The distinction matters — `RankMath::setup()`
+  reaches it on **every** request, not just admin ones, which is why the callback is on the
+  hook during a REST request at all.
+
+### Changed
+
+- **`CLAUDE.md` now says `wp_is_json_request()` does not detect a REST request**, with the
+  evidence. It remains the right tool for *bailing out* of the notice work in
+  `is_admin_page_request()`, which is a best-effort exclusion; it is the wrong tool for
+  *deciding to act* on a REST request. Hook `rest_api_init` and let WordPress be the gate
+
+### Verified
+
+- **Live client site, 10 Sep 2026**, after deploying 1.24.0. Results per surface, recorded
+  in each audit document:
+
+  | Rule | Result |
+  |---|---|
+  | MonsterInsights menu tooltip | **Confirmed gone** |
+  | Rank Math `rank_math_review_plugin_notice` | **Confirmed gone** — first live confirmation of **mechanism 4**, on a site where the entry was already banked |
+  | Modula telemetry consent prompt | **Confirmed gone** |
+  | Rank Math dashboard blog feed | **Failed** — diagnosed and fixed above, not yet re-confirmed |
+  | MonsterInsights WPConsent cross-sell, review request; Rank Math `rank_math_pro_notice` | Source-verified only — none was observed rendering before the deploy, so absence afterwards is not evidence |
+
+  The mechanism 4 result is the one worth having: the entry was already in
+  `rank_math_notifications` on a long-running site, which is exactly the case a
+  producer-side unhook cannot reach and the argument the mechanism was introduced on.
+
+  No PHP fatals, and no operational notice reported missing.
+
+## [1.24.0] — 2026-09-10
+
+### Added
+
+- **MonsterInsights — Google Analytics for WordPress 11.2.0.** Audited after Paul hit an
+  upsell bubble on logging in to a client site. One audit document, three rules, all
+  mechanism 2, in `unhook_monsterinsights_promos()`
+
+**A nag that never touches the notice area.** `monsterinsights_get_admin_menu_tooltip()`
+registers on **`adminmenu`**, the hook core fires while painting the admin menu, and prints
+an absolutely-positioned upsell panel that JavaScript anchors to the Insights menu item.
+Nothing done to `admin_notices` would ever have reached it. The sweep for promotional
+output was widened to `adminmenu`, `in_admin_header`, `admin_head` and `admin_footer` as a
+result
+
+- `adminmenu` → `monsterinsights_get_admin_menu_tooltip` — "Grow Your Business with
+  MonsterInsights Pro". Plain named function, removed by name
+- `admin_notices` → `monsterinsights_wpconsent_install_notice` — cross-sell of the
+  vendor's WPConsent sister plugin. Plain named function. A judgement call, recorded in
+  full in the doc: it is gated on no consent-management plugin being active, which gives
+  it a compliance veneer, but it advertises software the site is not running and reports
+  no fault it detected
+- `admin_notices` → `MonsterInsights_Review::review_request` — review request, 14 days
+  after connecting. **Reader use nine**: `new MonsterInsights_Review()` at file scope,
+  discarded, no `get_instance()`, not held by `MonsterInsights()`
+
+- **Rank Math SEO 1.0.278.** Audited alongside MonsterInsights, from the same client
+  site. One audit document, three rules — and two changes to the plugin's architecture,
+  both put to Paul as decisions before being written
+
+**Mechanism 4 — stored-notification removal, new in this release.** Rank Math banks its
+promotional notices in the `rank_math_notifications` option and renders them later from a
+shared notification centre, so unhooking the producer governs only sites that have never
+been nagged — the 1.22.1 lesson. `rank_math()->notification->remove_by_id()` is the
+vendor's own dismiss path: it blanks the entry's id, and `update_storage()` drops it on
+`shutdown`. Two IDs, both carrying nothing operational:
+
+- `rank_math_pro_notice` — "Rank Your Content With the Power of PRO & A.I."
+- `rank_math_review_plugin_notice` — the review request
+
+**The two gate each other** — each producer checks for the other's notification before
+banking its own — so removing one alone would let the other appear. They are named
+together in `RANK_MATH_PROMO_NOTIFICATION_IDS` and must stay that way.
+
+**This is the only mechanism in the project that writes to another vendor's data, and it
+is irreversible**: removing this mu-plugin does not bring the notice back, because
+`rank_math_pro_notice_added` stays set. `CLAUDE.md` now carries mechanism 4 with the rules
+for when it is allowed.
+
+**Mechanism 2, on a REST request — the first sanctioned exception to "admin only".**
+`Dashboard_Widget::dashboard_widget_feed` prints "Latest Blog Posts from Rank Math" inside
+the Rank Math Overview widget and fetches `rankmath.com/wp-json/wp/v2/posts` on render.
+It is its own callback on the vendor's `rank_math/dashboard/widget` action, so removing it
+leaves the site's own 404, redirection and analytics figures intact — the AIOSEO outcome.
+But the widget body is rendered from `GET /wp-json/rankmath/v1/dashboardWidget`, not from
+the dashboard request, and this plugin bails on JSON requests by design. `run()` now has a
+`wp_is_json_request()` branch that registers **this one method and nothing else**.
+**Reader use ten**: `new Dashboard_Widget()` in `Common::hooks()`, discarded. Note the
+class is `RankMath\Dashboard_Widget` — `includes/admin/class-dashboard-widget.php`
+declares `namespace RankMath;` despite its directory
+
+- **Modula (WPChill) 2.14.39.** Audited after Paul hit its telemetry consent prompt on the
+  same client site. One audit document, **one rule, one line** — the cleanest of the three
+
+**Mechanism 1.** WPChill's telemetry core reads its whole configuration through
+`wpchill_telemetry_config`, and the `enabled` key is tested at both points that matter:
+`setup_hooks()` returns before scheduling cron, registering the AJAX handlers or adding the
+`admin_footer` script, and `is_enabled()` returns before it registers the consent notice.
+One key reaches the prompt, the weekly and hourly cron events, and every send path — and
+the payload it stops carries the site URL, WP and PHP versions, Modula's settings and a
+**full third-party plugin inventory** to `telemetry.wpchill.com`.
+
+The filter's return value **is** assigned — checked at the call site, having just been
+caught out by Rank Math's identically shaped filter that discards it.
+
+Why the whole feature rather than only the prompt: the prompt is the only opt-in surface, so
+with consent unset `is_enabled()` already returns false. Turning `enabled` off makes the
+site's existing default answer permanent and silent. Same shape as the existing
+`bsf_usage_tracking_enabled`, `wpdesk_tracker_enabled` and Appsero rules.
+
+**Arrived in 2.14.1.** Swept all 84 Modula releases in the vault: absent from 2.10.2–2.13.9,
+present from 2.14.1 onward, with the filter and both guards identical in 2.14.1, 2.14.20,
+2.14.30 and 2.14.39. That is why the prompt is newly visible on the fleet. A sweep of all
+~1,477 vault slugs found **Modula is the only plugin carrying the telemetry core** — Strong
+Testimonials 3.3.7 bundles WPChill's notification system but not telemetry. The component is
+named and structured to spread across WPChill's range, and the filter will cover it when it
+does
+
+### Not added
+
+- **`hide_am_notices` — the vendor's own opt-out switch was rejected, and this is the
+  finding worth keeping.** It is readable as a one-line mechanism 1 rule
+  (`monsterinsights_get_option_hide_am_notices`) and would have killed the review nag
+  outright. MonsterInsights' own settings screen describes it as: "Hides plugin
+  announcements and update details. **This includes critical notices we use to inform
+  about deprecations and important required configuration changes.**" The vendor is
+  stating in writing that the switch also suppresses deprecation and required-config
+  notices. **Read what an opt-out switch claims to cover before using it** — a documented
+  filter is the preferred mechanism, not an automatically safe one
+- **`monsterinsights_admin_setup_notices` is mixed and stays whole.** One 300-line
+  `if … return` chain carrying the UA-sunset alert, the not-connected prompt, Pro licence
+  expiry/invalid, PHP version warnings and a cross-domain **data migration** prompt —
+  alongside two Lite upsells that only render on `plugins.php`. Four items on the
+  never-suppress list in one callback, with no public method holding the promotional half
+- **The analytics dashboard widget stays.** `monsterinsights_reports_widget` makes an
+  outbound call to `app.monsterinsights.com` on render, which has been a reason to remove
+  a widget elsewhere in this project — but here it fetches the site's own analytics, not a
+  vendor news feed
+- **The promotional menu items stay.** A submenu entry rotating every 14 days between
+  UserFeedback, Privacy Compliance, SEO and RewardsWP, plus seasonal sale entries. Both
+  are `add_submenu_page()` inside the vendor's own menu, out of scope by construction —
+  and every seasonal window ends in 2023, so that code is dead
+- **The addon-deprecation notices stay**, including `monsterinsights_ads_addon_installed_notice`,
+  which carries an upsell for Lite users. It is gated on `class_exists( 'MonsterInsights_Ads' )`,
+  so it only reaches sites running that addon, and what it reports — the addon has been
+  superseded by PPC Tracking — is true and actionable
+- **`rank_math/admin/add_notification` is documented and does not work.** Its docblock
+  says "Pass a falsy value to stop the notification from getting added", but
+  `apply_filters()` is called as a statement and its return value discarded, so
+  `$notification` is never reassigned and the guard below always tests the unfiltered
+  value. A filter registered against it runs, does nothing, and reports nothing.
+  **A documented vendor filter is not evidence that it is wired up — read the call
+  site.** Between this and `hide_am_notices`, both plugins audited today offered a
+  mechanism 1 candidate that failed, for two different reasons
+- **Rank Math's notification centre renderer stays.** `Notification_Center::display` on
+  `all_admin_notices` is the channel for redirection conflicts, 404-monitor output, the
+  WPML **data migration** prompt, the plugin-conflict watcher, registration failures and
+  the Google **reconnect required** notice that means analytics have silently stopped
+- **The Rank Math Overview widget and its footer stay.** The widget reports this site's
+  own 404s, redirections and analytics; only the vendor news block inside it is removed.
+  The footer's Go Pro link shares a callback with its Help link
+- **No Rank Math PRO rule.** All 20+ notifications in `seo-by-rank-math-pro` 3.0.95 are
+  operational — CSV import results, GTIN migration, watermark validation, redirection
+  sync — and `Pro_Notice` is skipped outright when `RANK_MATH_PRO_FILE` is defined
+- **Modula's review nag is not an admin notice, and no rule was written for it.** It
+  registers `Modula_Review::five_star_wp_rate_notice` on `admin_notices`, and that callback
+  prints nothing — it writes an option consumed by WPChill's notification store, whose React
+  renderer is only enqueued behind `is_wpchill_admin_page()` (screen ids containing
+  `modula-gallery`, `modula-albums`, `dlm_download`, `wpm-testimonial`). The review request
+  appears **only on Modula's own screens** and never in the general notice area. Recorded
+  because a future pass that greps for `admin_notices` and stops at the hook name will write
+  a rule that removes nothing visible and looks like it worked
+- **Modula's remote upsell and notification channels stay.** Both pull vendor-controlled
+  content from `wp-modula.com` on cron, but one feeds `modula_upsell_buttons`, applied only
+  inside `includes/admin/templates/modal/*-upgrade.php`, and the other is behind the same
+  screen gate. The AIOSEO `ScreenCallout` decision again
+- **Modula registers no dashboard widget at all**, and its remaining notices are a
+  missing-Elementor warning, a PHP-version warning, three from the bundled Action Scheduler
+  (including a data-migration prompt) and a bulk-action result. All left alone
+
+### Verified
+
+- **Source only.** All three targets read from the 11.2.0 package in the vault and the
+  load order traced from `plugins_loaded` and `init` priority 0 through to registration.
+  No before/after bench capture yet: all three are time-gated, and the tooltip and review
+  nag additionally require a connected GA4 property, so proving the "before" needs a real
+  authentication against MonsterInsights' relay. The gates to backdate are tabulated in
+  `docs/plugins/google-analytics-for-wordpress.md`
+- **Rank Math: source only.** Both notification rules are time-gated; the blog-feed rule
+  is not and is the cheap one to test first, over an authenticated
+  `GET /wp-json/rankmath/v1/dashboardWidget`. The durable half of mechanism 4 — the promo
+  entry actually leaving the `rank_math_notifications` option — should be seen directly
+  before this goes near the fleet. Gates and probes are in `docs/plugins/seo-by-rank-math.md`
+- **Modula: source only, but it is the cheapest of the seven rules to prove.** No time gate,
+  no vendor authentication, and it renders on `dashboard`, `plugins` and
+  `toplevel_page_modula` — so capture `index.php`, assert the screen, and probe
+  `class="wpchill-telemetry-consent"`. Two further assertions distinguish this rule from one
+  that merely hides the prompt: `wpchill_telemetry_weekly_report` is never scheduled, and no
+  request to `telemetry.wpchill.com` appears outbound. Negative check: the Elementor and
+  PHP-version notices must still render
+
+### Changed
+
+- **`run()` now registers on `rest_api_init`.** Previously every request that was not an
+  admin page did nothing at all. It now hooks `unhook_rest_rendered_promos()` there — one
+  method, one rule — for vendors that render a dashboard surface from a REST route.
+  `is_admin_page_request()` is unchanged and still governs everything else. (Shipped in
+  1.24.0 gated on `wp_is_json_request()`, which did not work; see 1.24.1)
+- **`CLAUDE.md` documents a fourth mechanism** and the single exception to "admin only",
+  with the conditions under which each is allowed. The doc template gains tier 4
+
+## [1.23.0] — 2026-09-09
+
+### Added
+
+- **BdThemes — Element Pack Pro 7.11.2 and Ultimate Post Kit 4.5.3.** Audited together
+  after a report of a supply-chain attack on a BdThemes admin API call. Two audit
+  documents, four rules
+
+**Mechanism 2** — three `admin_notices` unhooks in one method, all through
+`find_instance_callback()`. Every one of these SDKs does `new …( $params )` and discards
+the object, and each declares a `get_instance()` its own bootstrap never calls, so the
+static holder stays null and `remove_action()` has nothing to name:
+
+- `RC_Reviews_Collector::display_global_notice` — Element Pack review request
+- `Insights_SDK::display_global_notice` — Element Pack usage-tracking opt-in, the SDK
+  that posts to `analytics.bdthemes.com`
+- `Ultimate_Post_Kit_Reviews_Collector::display_global_notice` — the same review SDK,
+  forked and renamed per plugin. **One class-name rule does not cover the BdThemes
+  range**; each plugin needs its name read from source
+
+**Mechanism 3** — `bdt-dashboard-overview` (context `column4`), the generic "BdThemes
+News & Updates" widget. Opt-in and default-off since Ultimate Post Kit 4.5.2, kept
+because the id is the one the rest of the range is likely to use.
+
+Licence, Elementor-dependency, Pro-version-mismatch, mini-cart-conflict and
+template-library deprecation notices are all left alone.
+
+### Verified
+
+- `Insights_SDK::display_global_notice` — **confirmed against a real render** on a live
+  fleet site on 9 Sep 2026. The vendor gate was cleared, the file removed, the notice
+  captured, the file restored and the notice gone. 0 PHP fatals either way
+- The other three rules are source-verified only. See
+  `docs/plugins/bdthemes-element-pack.md` for why the same A/B could not reach the review
+  nag: clearing `rc_allow_*` also clears `rc_date_<name>_installed`, which re-arms the
+  SDK's own 3-day gate instead of exposing it
+
+### Not added
+
+- **`bdt-ep-dashboard-overview` — Element Pack's news widget is dead code in 7.11.2.**
+  `admin-feeds.php` instantiates it behind
+  `if ( ! function_exists( 'element_pack_pro_activated' ) )`, and that function is defined
+  earlier in the same load, so the class never constructs and the widget never registers.
+  A first pass had recorded it as registering unconditionally and written the rule; it was
+  caught by inspecting a live site and removed. Written up with the exact guard, and the
+  entry to add if the vendor fixes it
+- **No rule for the `api.sigmative.io` remote banner channel.** Ultimate Post Kit
+  4.1.10–4.2.0 fetched admin banner HTML from that third-party host — server-side via
+  `wp_remote_get`, and client-side via a script that `fetch()`ed it from the
+  administrator's browser and injected the result into `#wpbody-content .wrap`. Both
+  routes are gone in 4.5.2: URL blanked, injector script deleted, news widget made
+  opt-in. No rule is written against a dead code path, and the client-side route could not
+  have been reached by any of the three mechanisms anyway — that is recorded in
+  `docs/plugins/ultimate-post-kit.md` as evidence for the question
+
+### Changed
+
+- Client site domains removed from committed files — `docs/plugins/wp-swings.md`,
+  `docs/plugins/featured-images-for-rss-feeds.md` and this changelog. Fleet identifiers
+  belong in `dev-notes/`, which is gitignored
+
 ## [1.22.1] — 2026-09-07
 
 ### Fixed
@@ -16,9 +319,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 1.22.0 filtered the *producer* — `fs_show_trial_{slug}`, read inside
 `Freemius::_add_trial_notice()`. Both filter names were correct, and the rule was still
 useless on the site it was written for, because **Freemius persists a sticky notice when
-it adds it and renders it from storage on every subsequent request.** The notice on
-`footballinberkshire.co.uk` had been stored for weeks, so nothing on the add path could
-reach it:
+it adds it and renders it from storage on every subsequent request.** The notice on that
+site had been stored for weeks, so nothing on the add path could reach it:
 
 ```html
 <div class="fs-notice updated promotion fs-sticky … " data-id="trial_promotion" …>
