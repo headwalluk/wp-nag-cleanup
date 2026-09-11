@@ -144,6 +144,19 @@ Structural probe on the notice's own wrapper class, not its copy.
 The premium build's suppression was verified by reading source only — no premium licence was
 used, and none is needed to read the `cmplz_premium` define.
 
+### Live fleet check — attempted, inconclusive
+
+Paul checked the fleet sites carrying this plugin on 11 Sep 2026, before 1.26.0 was
+deployed, and **no instance of this notice was showing**. That is neither confirmation nor
+refutation of the rule: the vendor's gates (free build only, single site only, activated over a month ago, not yet dismissed) are not met on those particular sites,
+so there was nothing to see either way.
+
+Status therefore stands as **bench-confirmed, not live-confirmed** — the notice was
+observed rendering before the rule and absent after on `bench2.local`, but has not yet been
+seen suppressed on a production site. Promote this to live-confirmed only when an actual
+instance is observed gone in the wild, and record the site and date as
+`docs/plugins/brainstorm-force.md` does.
+
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 
 ```php

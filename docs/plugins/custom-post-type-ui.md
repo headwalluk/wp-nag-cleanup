@@ -121,6 +121,19 @@ Content greps mislead; the structural probe is the one reported.
 | Other vendors' rules unaffected on the same bench | yes |
 | PHP fatals / parse errors | **0** |
 
+### Live fleet check — attempted, inconclusive
+
+Paul checked the fleet sites carrying this plugin on 11 Sep 2026, before 1.26.0 was
+deployed, and **no instance of this notice was showing**. That is neither confirmation nor
+refutation of the rule: the vendor's gates (a public non-builtin post type must exist and CPT UI Pro must not be installed) are not met on those particular sites,
+so there was nothing to see either way.
+
+Status therefore stands as **bench-confirmed, not live-confirmed** — the notice was
+observed rendering before the rule and absent after on `bench2.local`, but has not yet been
+seen suppressed on a production site. Promote this to live-confirmed only when an actual
+instance is observed gone in the wild, and record the site and date as
+`docs/plugins/brainstorm-force.md` does.
+
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 
 ```php

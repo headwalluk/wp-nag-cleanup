@@ -46,6 +46,23 @@ absent after).
   not `review_request` itself: the producer branches to `network_admin_notices` on multisite,
   so removing it covers both paths with one call. Every deliverability notice is preserved.
 
+### Verification status
+
+All five are **bench-confirmed** — each notice was observed rendering on `bench2.local`
+before its rule and absent after, using a structural probe on the notice's own markup rather
+than its copy.
+
+None is **live-confirmed**. Paul checked the fleet sites carrying each plugin on 11 Sep,
+before deployment, and no instance of any of the five notices was showing. That is neither
+confirmation nor refutation: every one of these nags is gated (Complianz needs a free
+single-site install over a month old; Code Snippets needs one of seven specific competitor
+plugins present; Disable Comments needs a recorded bulk delete; CPT UI needs a public custom
+post type; WP Mail SMTP needs a complete non-default mailer and 14 days), and those gates are
+not met on those particular sites.
+
+Each document records this in a "Live fleet check" section. Promote to live-confirmed only
+when an instance is actually observed gone in production.
+
 ### Fixed
 
 - **The `disable_comments_show_review_prompt` rule is the project's first use of a vendor

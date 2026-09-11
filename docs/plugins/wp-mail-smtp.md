@@ -141,6 +141,19 @@ The deliverability notices could not be exercised — they require a genuinely b
 configuration, and the bench has placeholder SMTP settings that are never used to send. They
 are separate callbacks on separate objects and no rule here names them.
 
+### Live fleet check — attempted, inconclusive
+
+Paul checked the fleet sites carrying this plugin on 11 Sep 2026, before 1.26.0 was
+deployed, and **no instance of this notice was showing**. That is neither confirmation nor
+refutation of the rule: the vendor's gates (a non-default mailer, a fully complete mailer configuration, and activation at least 14 days ago) are not met on those particular sites,
+so there was nothing to see either way.
+
+Status therefore stands as **bench-confirmed, not live-confirmed** — the notice was
+observed rendering before the rule and absent after on `bench2.local`, but has not yet been
+seen suppressed on a production site. Promote this to live-confirmed only when an actual
+instance is observed gone in the wild, and record the site and date as
+`docs/plugins/brainstorm-force.md` does.
+
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 
 ```php
