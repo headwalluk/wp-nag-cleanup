@@ -128,7 +128,10 @@ BSF plugin on the site) and WPForms Lite (1.25.0, the review request and the adm
 rating text) and ShapedPlugin (1.25.0, three callbacks across Product Slider for
 WooCommerce — and the one case so far where a singleton **is** available and the reader is
 still correct, because calling `instance()` would construct the object and add the hooks).
-Never add a second reader; extend this one.
+Code Snippets (1.26.0, the competitor-conversion promotion — and the one case where the
+vendor registers the same callback **twice**, so the rule loops the finder rather than
+calling it once) and WP Mail SMTP (1.26.0, the review request). Never add a second reader;
+extend this one.
 
 Two habits that have repeatedly avoided needing it:
 

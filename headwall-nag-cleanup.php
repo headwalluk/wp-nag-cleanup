@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.25.0
+ * Version:     1.26.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.25.0';
+		const VERSION = '1.26.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -55,6 +55,14 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * them instead. Only used where the target is on admin_init itself.
 		 */
 		const EARLY_PRIORITY = 1;
+
+		/**
+		 * Upper bound when a vendor registers the same callback more than once.
+		 *
+		 * Code Snippets constructs Promotion_Manager twice in Plugin.php, so its promotion
+		 * lands on admin_notices twice and one remove_action() leaves a copy rendering.
+		 */
+		const MAX_DUPLICATE_CALLBACKS = 16;
 
 		/**
 		 * Widgets removed by mechanism 3, as widget ID, meta box context, vendor and reason.
@@ -239,6 +247,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// Brainstorm Force bsf-analytics, Astra Pro 4.13.8. docs/plugins/brainstorm-force.md
 			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
 
+			// Disable Comments 2.9.0 review prompt. The vendor documents this filter in-code
+			// as "whether the review prompt may be shown at all".
+			// docs/plugins/disable-comments.md
+			add_filter( 'disable_comments_show_review_prompt', '__return_false' );
+
 			// CartFlows 5-star review request. The vendor added this filter in 2.2.5 and
 			// documents it in-code as an override for site owners and white-label
 			// distributors. CartFlows 3.2.0. docs/plugins/cartflows.md
@@ -304,6 +317,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_bdthemes_review_and_tracking_notices();
 			$this->unhook_monsterinsights_promos();
 			$this->unhook_shapedplugin_promos();
+			$this->unhook_complianz_review_notice();
+			$this->unhook_cptui_pro_upsell();
 		}
 
 		/**
@@ -616,6 +631,20 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_bsf_analytics_optin_notice();
 			$this->unhook_astra_theme_wc_upsell();
 			$this->unhook_wpforms_review_promos();
+			$this->unhook_wp_mail_smtp_review_request();
+		}
+
+		/**
+		 * Remove WP Mail SMTP's review request before it registers its notice.
+		 *
+		 * Review::admin_notices() is the producer: it runs on admin_init at the default
+		 * priority and does nothing but add review_request to admin_notices (or to
+		 * network_admin_notices on multisite), so removing it covers both. The instance is
+		 * discarded by `( new Review() )->hooks();` in Admin\Area.
+		 * WP Mail SMTP 4.9.0. docs/plugins/wp-mail-smtp.md
+		 */
+		public function unhook_wp_mail_smtp_review_request() : void {
+			$this->remove_discarded_instance_callback( 'admin_init', 'WPMailSMTP\\Admin\\Review', 'admin_notices', 'wp-mail-smtp' );
 		}
 
 		/**
@@ -782,6 +811,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		public function unhook_late_vendor_notices() : void {
 			$this->unhook_elementor_promotion_banners();
 			$this->unhook_elementskit_promos();
+			$this->unhook_code_snippets_promotions();
 		}
 
 		/**
@@ -910,6 +940,81 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->remove_discarded_instance_callback( 'admin_notices', $notice_class, 'display_admin_notice', 'woo-product-slider' );
 			$this->remove_discarded_instance_callback( 'admin_footer_text', $notice_class, 'admin_footer', 'woo-product-slider' );
 			$this->remove_discarded_instance_callback( 'admin_notices', $banner_class, 'render_offer_banner', 'woo-product-slider' );
+		}
+
+		/**
+		 * Remove Complianz's "leave a review" notice.
+		 *
+		 * cmplz_review::this() returns the stored instance and never constructs one, so it is
+		 * safe to call — unlike ShapedPlugin's accessor. The vendor registers the notice only
+		 * when its own gate passes (free build, not multisite, activated over a month ago and
+		 * not yet dismissed), so "not registered" is the normal steady state here and is left
+		 * silent rather than logged as drift.
+		 * Complianz's compliance warnings come from a different object and survive.
+		 * Complianz GDPR 7.5.5. docs/plugins/complianz-gdpr.md
+		 */
+		public function unhook_complianz_review_notice() : void {
+			if ( ! class_exists( 'cmplz_review' ) ) {
+				// Not installed.
+			} else {
+				$complianz_review = \cmplz_review::this();
+
+				if ( ! is_object( $complianz_review ) ) {
+					// Class loaded but never constructed.
+				} elseif ( false === has_action( 'admin_notices', [ $complianz_review, 'show_leave_review_notice' ] ) ) {
+					// Vendor gate not met; nothing queued. Expected, so not logged.
+				} else {
+					remove_action( 'admin_notices', [ $complianz_review, 'show_leave_review_notice' ] );
+					$this->log( 'complianz-gdpr', 'Removed cmplz_review::show_leave_review_notice from admin_notices.' );
+				}
+			}
+		}
+
+		/**
+		 * Remove Custom Post Type UI's Pro upsell notice.
+		 *
+		 * A plain named function at an explicit priority, so it is named directly.
+		 * Custom Post Type UI 1.19.3. docs/plugins/custom-post-type-ui.md
+		 */
+		public function unhook_cptui_pro_upsell() : void {
+			if ( false !== has_action( 'admin_notices', 'cptui_pro_upsell_notification' ) ) {
+				remove_action( 'admin_notices', 'cptui_pro_upsell_notification', 11 );
+				$this->log( 'custom-post-type-ui', 'Removed cptui_pro_upsell_notification from admin_notices priority 11.' );
+			}
+		}
+
+		/**
+		 * Remove Code Snippets' competitor-plugin promotion notice.
+		 *
+		 * Seven Promotion_Base subclasses each target a different competitor's admin screens,
+		 * and the screen lists are disjoint, so at most one is ever registered on a request —
+		 * which is why matching the abstract parent once is complete. Runs on current_screen
+		 * because the vendor only adds the notice from its own current_screen handler.
+		 * Code Snippets 3.10.2. docs/plugins/code-snippets.md
+		 */
+		public function unhook_code_snippets_promotions() : void {
+			$promotion_class = 'Code_Snippets\\Integration\\Promotions\\Notices\\Promotion_Base';
+			$removed_count   = 0;
+
+			// Plugin.php constructs Promotion_Manager twice, so the matching promotion is on
+			// admin_notices twice and a single remove_action() leaves one still rendering.
+			// The finder returns one entry per call, so loop until it stops matching.
+			for ( $attempt = 0; $attempt < self::MAX_DUPLICATE_CALLBACKS; $attempt++ ) {
+				$found = $this->find_instance_callback( 'admin_notices', $promotion_class, 'display_promotion', 'code-snippets' );
+
+				if ( null === $found ) {
+					break;
+				}
+
+				remove_action( 'admin_notices', $found['function'], $found['priority'] );
+				$removed_count++;
+			}
+
+			if ( 0 === $removed_count ) {
+				// No competitor screen matched, so the vendor queued nothing. Expected.
+			} else {
+				$this->log( 'code-snippets', sprintf( 'Removed %d Promotion_Base::display_promotion callback(s) from admin_notices.', $removed_count ) );
+			}
 		}
 
 		/**

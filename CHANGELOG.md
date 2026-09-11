@@ -5,6 +5,63 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.26.0] — 2026-09-11
+
+### Added
+
+Five vendors from the 11 Sep fleet gap analysis, all bench-confirmed (rendered before,
+absent after).
+
+- **Complianz GDPR 7.5.5** — the "leave a review" notice, mechanism 2 **by name**:
+  `cmplz_review::this()` is a plain getter that returns the stored instance without
+  constructing one, unlike ShapedPlugin's accessor. Every compliance warning is untouched —
+  on a consent plugin those are the highest-consequence notices there are.
+
+  **`complianz-gdpr-premium` needs no rule.** The notice is gated on
+  `! defined( 'cmplz_premium' )` and the premium build defines it, so the vendor already
+  does not nag paying customers. This corrects the gap analysis, which had scored the target
+  at 20 fleet sites on a shared callback name; the real figure is 9.
+
+- **Code Snippets 3.10.2** — the competitor-conversion promotion. Seven `Promotion_Base`
+  subclasses each inject a notice into a *rival plugin's* admin screen, so this is a vendor
+  advertising on someone else's surface rather than its own.
+
+  `Plugin.php` constructs `Promotion_Manager` **twice**, so the promotion is on
+  `admin_notices` twice and a single `remove_action()` left one still rendering (caught on
+  the bench: 2 before, 1 after). The rule now loops the finder until it stops matching,
+  bounded by the new `MAX_DUPLICATE_CALLBACKS`.
+
+- **Disable Comments 2.9.0** — the review prompt, mechanism 1 via
+  `disable_comments_show_review_prompt`, which the vendor documents in-code. The
+  Discussion-settings-override notice is preserved.
+
+- **Custom Post Type UI 1.19.3** — the Pro upsell. `cptui_pro_upsell_notification()` has two
+  branches and only the first is a vendor screen; the second renders on
+  `edit.php?post_type=<any public custom type>` — the Products list on a WooCommerce site.
+  Reading to the end of the function changed the verdict. Removed at its explicit priority
+  11; the default 10 would silently match nothing.
+
+- **WP Mail SMTP 4.9.0** — the review request, and the third Awesome Motive plugin to follow
+  the same pattern. The target is `Review::admin_notices`, the *producer* on `admin_init`,
+  not `review_request` itself: the producer branches to `network_admin_notices` on multisite,
+  so removing it covers both paths with one call. Every deliverability notice is preserved.
+
+### Fixed
+
+- **The `disable_comments_show_review_prompt` rule is the project's first use of a vendor
+  filter for a nag confined to the vendor's own screens.** Elsewhere — CartFlows' NPS,
+  WPForms' `promote_wpforms`, ShapedPlugin's cross-sells — that shape was left alone. The
+  distinction is now recorded as **mechanism risk, not location**: those needed unhooking or
+  a library-wide filter, this is a single-purpose boolean the vendor built for the job.
+
+### Deliberately not done
+
+- **`get_setting()` in Code Snippets** would suppress the promotion via `hide_upgrade_menu`,
+  but the function contains no `apply_filters()` at all — there is nothing to hook, and it is
+  a stored site-owner setting besides.
+- **Complianz's `disable_notifications`** would silence the review notice and every
+  compliance warning with it. It is the owner's switch.
+
 ## [1.25.0] — 2026-09-11
 
 ### Added

@@ -152,10 +152,11 @@ which takes a hook, a class and a method. It is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Twelve rules use it as of 1.25.0: WPB Product Slider, Elementor's promotions module,
+Fifteen rules use it as of 1.26.0: WPB Product Slider, Elementor's promotions module,
 ElementsKit's Wpmet libs, QuadLayers, Converter for Media, WPCode, WP Mail Bank,
 BdThemes, MonsterInsights' review request, Rank Math's dashboard blog feed,
-Brainstorm Force's `bsf-analytics` opt-in notice and WPForms Lite's review request. Each has
+Brainstorm Force's `bsf-analytics` opt-in notice, WPForms Lite's review request,
+ShapedPlugin, Code Snippets' competitor promotion and WP Mail SMTP's review request. Each has
 its own write-up, and each had to establish that the other mechanisms were all
 unavailable first — a bar that has failed more often than it has passed, and twice a
 route was found on a second look that the first pass had called impossible. See
@@ -243,6 +244,11 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Rank Math SEO | 1.0.278, Pro 3.0.95 | 2, 4 | Stored PRO upsell and review notifications, and the `rankmath.com` blog feed inside the Overview widget. The widget's own 404, redirection and analytics figures preserved, as is the whole notification store — redirection conflicts, WPML data migration, plugin conflicts, "reconnect Google" |
 | CartFlows | 3.2.0 | 1, 2 | 5-star review request, and the `bsf-analytics` usage-tracking opt-in ("Help shape the future of CartFlows"). Legacy UI deprecation notice, custom-script migration prompt, WooCommerce dependency and Pro version-mismatch warnings preserved, as is the Funnel Performance widget |
 | Brainstorm Force — `bsf-analytics` | library 1.1.29 | 2 | The usage-tracking opt-in notice, for **every** BSF plugin *and the Astra theme* on the site. One library instance serves them all |
+| Complianz GDPR | 7.5.5 | 2 | "Leave a review" notice. **All compliance warnings preserved** — cookie-banner and privacy-statement problems are the reason the plugin exists. The premium build already suppresses this nag itself, so it needs no rule |
+| Code Snippets | 3.10.2 | 2 | The competitor-conversion promotion injected into *other plugins'* admin screens. PHP-version notice preserved |
+| Disable Comments | 2.9.0 | 1 | Review prompt, via the vendor's own documented filter. Discussion-settings-override notice preserved |
+| Custom Post Type UI | 1.19.3 | 2 | Pro upsell — including the branch that renders on the post-list screen of **any** public custom post type, not just CPT UI's own screens |
+| WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |
 | Product Slider for WooCommerce (ShapedPlugin) | 2.8.13 | 2 | Seasonal offer banner (a full-width advert on **every** admin page), 5-star review request and the admin-footer rating text. WooCommerce-dependency notice, the two vendor-screen cross-sells and the footer version string preserved. Not the same plugin as WPB WooCommerce Product Slider |
 | WPForms Lite | 2.0.1.1 | 2 | 5-star review request and the admin-footer rating text. The "Made with ♥" footer block, the entry-reports dashboard widget, and every operational notice preserved — Stripe/PayPal/Square webhook, domain and card-testing-fraud warnings, requirement failures, Lite Connect backup errors and the Lite/Pro conflict notice |
 | Astra (the free **theme**, not `astra-addon`) | 4.13.11 | 2 | "Running a WooCommerce store? You need more than just a theme" Business Toolkit upsell, shown on the WooCommerce admin screens. PHP memory-limit warning, both Astra Pro version-mismatch notices and the deprecated-hook warnings preserved |

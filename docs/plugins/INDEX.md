@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.25.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.26.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -34,6 +34,7 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `themeisle_sdk_hide_dashboard_widget` | ThemeIsle SDK, Menu Icons 0.13.24 | [themeisle-sdk.md](themeisle-sdk.md) |
 | `cky_is_module_active_review_feedback` | CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `cky_is_module_active_connect_banner` | CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
+| `disable_comments_show_review_prompt` | Disable Comments 2.9.0 | [disable-comments.md](disable-comments.md) |
 | `aioseo_show_seo_news` | AIOSEO Lite 5.0.1.1, Pro 4.3.4.1 | [all-in-one-seo-pack.md](all-in-one-seo-pack.md) |
 | `CYA11Y_ACCESSYES_BANNER_DISPLAYED` (constant) | WebToffee, via CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `fs_show_admin_notice_{slug}` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md) |
@@ -54,6 +55,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_bsf_analytics_optin_notice` † | `admin_init` @ 1 | CartFlows 3.2.0, bsf-analytics 1.1.29 | [cartflows.md](cartflows.md), [brainstorm-force.md](brainstorm-force.md) |
 | `unhook_astra_theme_wc_upsell` | `admin_init` @ 1 | Astra **theme** 4.13.11 | [astra-theme.md](astra-theme.md) |
 | `unhook_wpforms_review_promos` † | `admin_init` @ 1 | WPForms Lite 2.0.1.1 | [wpforms-lite.md](wpforms-lite.md) |
+| `unhook_wp_mail_smtp_review_request` † | `admin_init` @ 1 | WP Mail SMTP 4.9.0 | [wp-mail-smtp.md](wp-mail-smtp.md) |
 | `unhook_elementor_notices` | `admin_init` @ 999 | Elementor 4.2.4 | [elementor.md](elementor.md) |
 | `unhook_wpb_product_slider_review_notice` † | `admin_init` @ 999 | WPB WooCommerce Product Slider 2.4 | [wpb-woocommerce-product-slider.md](wpb-woocommerce-product-slider.md) |
 | `unhook_forminator_dashboard_promo` | `admin_init` @ 999 | Forminator 1.57.2 | [forminator.md](forminator.md) |
@@ -68,8 +70,11 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_bdthemes_review_and_tracking_notices` † | `admin_init` @ 999 | Element Pack Pro 7.11.2, Ultimate Post Kit 4.5.3 | [bdthemes-element-pack.md](bdthemes-element-pack.md), [ultimate-post-kit.md](ultimate-post-kit.md) |
 | `unhook_monsterinsights_promos` † | `admin_init` @ 999 | MonsterInsights 11.2.0 | [google-analytics-for-wordpress.md](google-analytics-for-wordpress.md) |
 | `unhook_shapedplugin_promos` † | `admin_init` @ 999 | Product Slider for WooCommerce 2.8.13 | [woo-product-slider.md](woo-product-slider.md) |
+| `unhook_complianz_review_notice` | `admin_init` @ 999 | Complianz GDPR 7.5.5 | [complianz-gdpr.md](complianz-gdpr.md) |
+| `unhook_cptui_pro_upsell` | `admin_init` @ 999 | Custom Post Type UI 1.19.3 | [custom-post-type-ui.md](custom-post-type-ui.md) |
 | `unhook_elementskit_promos` † | `current_screen` @ 999 | ElementsKit Lite 4.0.2 | [elementskit-lite.md](elementskit-lite.md) |
 | `unhook_elementor_promotion_banners` † | `current_screen` @ 999 | Elementor 4.2.4 | [elementor.md](elementor.md) |
+| `unhook_code_snippets_promotions` † | `current_screen` @ 999 | Code Snippets 3.10.2 | [code-snippets.md](code-snippets.md) |
 | `unhook_rank_math_dashboard_feed` † | `rest_api_init` @ 999 | Rank Math SEO 1.0.278 | [seo-by-rank-math.md](seo-by-rank-math.md) |
 | `remove_core_welcome_panel` | `admin_init` @ 999 | WordPress core 7.1 — **opt-in only** | — (see Configuration in `README.md`) |
 
@@ -122,9 +127,10 @@ one alone lets the other appear, so do not trim that constant to a single entry.
 | `get_freemius_module()` | Reaches a Freemius module by id without booting the SDK |
 | `get_elementor_admin_notices_component()` | Reaches Elementor's admin-notices component |
 | `log()` | Gated on `HEADWALL_NAG_CLEANUP_DEBUG`. Logs what **happened**, never what was registered |
+| `MAX_DUPLICATE_CALLBACKS` | Loop bound for vendors that register the same callback twice. Code Snippets constructs `Promotion_Manager` twice, so one `remove_action()` leaves a copy rendering |
 
 ## Vendors examined with no rule
 
-`ls docs/plugins/` lists all 39 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
+`ls docs/plugins/` lists all 44 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
 produced nothing to suppress — a completed result, not a gap. Notable ones people ask about:
 EmbedPress, GeneratePress, Advanced Custom Fields, Autoptimize, Independent Analytics.
