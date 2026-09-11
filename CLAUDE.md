@@ -75,7 +75,33 @@ signal the rule is too clever and probably should not be written.
   has an admin-request route
 - Never a blanket `remove_all_actions()` on any notice hook
 - Never walk `$wp_filter` removing whatever looks promotional
-- Keep it well under ~1000 lines
+
+### There is no line-count cap — decided 11 Sep 2026
+
+**Do not trim this file to hit a line count, and do not propose it.** The file passed
+1000 lines at 1.24.0 and that is fine. It is roughly 50% code, 38% comments, 11% blank,
+and the comment share is deliberate.
+
+- **The executable content is trivial.** Every rule is a `remove_action()`, an
+  `add_filter()` or a `remove_meta_box()`. All of this project's value is knowing *which*
+  hook, *which* version, and *which* trap — and that knowledge lives in the comments. A
+  file with trivial code and dense knowledge is correctly proportioned at 38% comments
+- **The comments are written for a coding agent, not a human reviewer.** That is the
+  stated audience for both the comments and `docs/**`. An agent reads the whole file into
+  context and pays no navigation cost for length; a human's scroll-and-scan cost, which is
+  what a line-count instinct is really measuring, does not apply
+- **They cost nothing at runtime.** PHP compiles the file once and opcache serves the
+  cached opcodes, so comments are never re-parsed per request. (`opcache.save_comments`
+  defaults to On, so docblocks are retained for Reflection — a little shared memory,
+  never execution time.)
+- **Colocation beats a reference.** Every line moved out to `docs/plugins/` is a line the
+  agent must choose to go and read, at the moment it is least likely to. Comments also get
+  updated when the code next to them changes; docs rot — the stale "blocked" finding fixed
+  in `brainstorm-force.md` on 11 Sep was in a doc, not a comment
+
+What the file is judged on instead: **locality and uniformity** — rules grouped with the
+dispatcher that calls them, and every rule the same shape, so an agent pattern-matching off
+a neighbour writes a correct new one.
 
 There is **one** sanctioned `$wp_filter` reader — the private method
 `find_instance_callback()` — for vendors that register a callback from an object they
@@ -95,8 +121,14 @@ declared impossible. Current uses: WPB Product Slider (1.3.0), Elementor's promo
 module (1.12.0, the conversion banner and both seasonal pointers), ElementsKit's Wpmet
 libs (1.13.0), QuadLayers (1.14.0), Converter for Media (1.19.0), WPCode (three
 callbacks), WP Mail Bank (1.21.0), BdThemes (1.23.0, the feedback-hub and DCI SDKs across
-Element Pack and Ultimate Post Kit), MonsterInsights (1.24.0, the review request) and
-Rank Math (1.24.0, the dashboard blog feed). Never add a second reader; extend this one.
+Element Pack and Ultimate Post Kit), MonsterInsights (1.24.0, the review request),
+Rank Math (1.24.0, the dashboard blog feed), Brainstorm Force's `bsf-analytics`
+(1.25.0, the usage-tracking opt-in notice, reached through CartFlows and covering every
+BSF plugin on the site) and WPForms Lite (1.25.0, the review request and the admin-footer
+rating text) and ShapedPlugin (1.25.0, three callbacks across Product Slider for
+WooCommerce — and the one case so far where a singleton **is** available and the reader is
+still correct, because calling `instance()` would construct the object and add the hooks).
+Never add a second reader; extend this one.
 
 Two habits that have repeatedly avoided needing it:
 
@@ -350,20 +382,51 @@ PHP, matching the wider Headwall house style:
 
 ### Comments
 
-Comments say **how the code works**, not why the decision behind it was taken.
-Background, rationale, rejected alternatives, evidence and version archaeology all
-belong in `docs/plugins/` — reference the document, do not restate it.
+**The reader is another coding agent.** Write for something that will edit this file
+without having seen the session that produced it, and whose default move on code it does
+not understand the constraints of is to "improve" it.
 
-- One line of docblock per method, saying what it does
-- Inline comments only where the mechanism is genuinely non-obvious: a load-order
-  trap, a core function behaving unexpectedly, a guard whose absence would be
-  silently wrong
-- A rule gets a comment naming the vendor, the version verified against, and the doc
-  path. Not the reasoning — that is what the doc is for
+Every method gets a docblock opening with one or two sentences saying what it does, and
+closing with the vendor, the version verified against, and the exact
+`docs/plugins/<slug>.md` path. Between those, include anything from the three categories
+below — and nothing else.
+
+**1. Silent-failure traps.** Anything whose violation produces a no-op that looks like
+success. These are the highest-value lines in the file:
+
+```php
+// Case matters: _wp_filter_build_unique_id() keys a static callback by literal
+// string, so a mismatch here removes nothing and looks like success.
+```
+
+**2. "We already checked this, don't retry it."** When an obvious-looking route was
+examined and rejected, say so *here*, not only in the doc. `CLAUDE.md` tells an agent to
+hunt for a vendor opt-out filter and to check for a singleton accessor — so it will find
+`hide_am_notices`, and it will find the `get_instance()` that BdThemes never calls. The
+comment is what stops it shipping the bad rule:
+
+```php
+// The vendor's own hide_am_notices switch is not used: its settings screen describes
+// it as also hiding deprecation and required-configuration notices.
+```
+
+**3. "Do not simplify this."** Where correct code looks redundant. Deleting the
+explanation invites a refactor that silently breaks the boundary rule:
+
+```php
+// Freemius suppresses a notice on any value that is not exactly true, so the
+// incoming value is passed straight back for ids we do not claim.
+```
+
+What still belongs in `docs/plugins/` and **not** here: bench evidence, before/after
+figures, version archaeology, the full mechanism comparison, and anything a reader needs
+only when auditing rather than editing.
+
 - No-op branches still get a comment, but a terse one. `// Core widgets stay unless
   the site owner opts in.` not a paragraph on whose call it is
-- If a comment is running past three or four lines, it is documentation that has
-  ended up in the wrong file
+- Length is not the test — category is. A fourteen-line docblock carrying a namespace
+  trap and two don't-retry markers is correct. A four-line one restating the doc's
+  rationale is not
 
 ## Things not to do
 
@@ -378,3 +441,6 @@ belong in `docs/plugins/` — reference the document, do not restate it.
   never phones home. Removing other people's outbound calls is the point of it
 - Do not use blanket suppression as a shortcut for a vendor that is hard to target
 - Do not add a rule you have not verified against real plugin source
+- Do not trim the distributable to hit a line count, and do not propose it. There is no
+  cap — see "There is no line-count cap", decided 11 Sep 2026. The comments are written
+  for a coding agent and carry traps and guardrails, not narrative

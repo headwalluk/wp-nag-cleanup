@@ -21,10 +21,12 @@ document for five plugins, in the manner of `yith-plugin-fw.md`:
 | `bsf-core` | Product registration, licensing, updates, rollback | Astra Pro, Spectra Pro |
 | `astra-notices` | Generic admin notice framework (`BSF_Admin_Notices`) | Spectra, Astra Widgets, Custom Typekit Fonts |
 
-**One rule is added**, against `bsf-analytics`. The other two libraries are left
-entirely alone, and the reasons matter more than the rule does — `bsf-core` prints
-licence activation notices and `astra-notices` carries database migration prompts.
-Both offer tempting one-line kill switches that this project must not use.
+**Two rules are added, both against `bsf-analytics`** — one here in 1.4.0 stopping the
+usage payload, and one added in 1.25.0 removing the opt-in notice, which this document
+originally recorded as blocked. The other two libraries are left entirely alone, and the
+reasons matter more than the rules do — `bsf-core` prints licence activation notices and
+`astra-notices` carries database migration prompts. Both offer tempting one-line kill
+switches that this project must not use.
 
 ### Search checklist
 
@@ -42,7 +44,7 @@ Both offer tempting one-line kill switches that this project must not use.
 | Item | Hook | Verdict | Reason |
 |---|---|---|---|
 | Usage-tracking payload | `init` 99 → `BSF_Analytics::maybe_track_analytics` | **suppress** | Outbound telemetry. Gated by `bsf_usage_tracking_enabled` |
-| Usage-tracking opt-in notice | `admin_init` → `BSF_Analytics::option_notice` | suppress — **blocked** | "Help shape the future of…". Instance discarded; see below |
+| Usage-tracking opt-in notice | `admin_init` → `BSF_Analytics::option_notice` | **suppress** | "Help shape the future of…". Unblocked and shipped in 1.25.0; see below |
 | Licence activation notice | `admin_notices` 1000 → `bsf_notices` | **keep** | *"Please activate your copy of the [Product] to get update notifications"*. Never suppressed |
 | Spectra Legacy DB update required | `admin_notices` → `UAGB_Admin::register_notices` | **keep** | Database migration prompt. Never suppressed |
 | DB update in progress / success | same callback | keep | Operational status for the migration above |
@@ -120,7 +122,7 @@ not to write the rule, and here the collateral is a schema migration prompt.
 Note it is also narrow in practice — one screen, one condition — so the cost of leaving
 it is low.
 
-### The `bsf-analytics` opt-in notice — blocked, same shape as WPB Product Slider
+### The `bsf-analytics` opt-in notice — was blocked, closed in 1.25.0
 
 `BSF_Analytics::option_notice` queues the tracking consent nag:
 
@@ -128,7 +130,8 @@ it is low.
 > features that matter…
 
 It is a usage-tracking opt-in prompt, squarely on the suppress list, and it recurs
-monthly after "Skip" (`MONTH_IN_SECONDS`). It cannot be reached:
+monthly after "Skip" (`MONTH_IN_SECONDS`). When this document was written it could not be
+reached, and the reasons mechanism 1 remains unavailable still hold:
 
 - **Mechanism 1** — no filter or constant gates the notice.
   `bsf_usage_tracking_enabled` does **not** suppress it (see "What the rule does and
@@ -141,16 +144,29 @@ monthly after "Skip" (`MONTH_IN_SECONDS`). It cannot be reached:
   the loader keeps no reference. Identical to `WPB_WPS_Review_Notice`
 - **Mechanism 3** — not a dashboard widget
 
-Removing it would need a **second** `$wp_filter` exception. Per `CLAUDE.md` that
-requires this write-up plus a deliberate decision, and it is left for that decision
-rather than taken here. Two further complications if it is ever revisited:
+**This was closed in 1.25.0.** When it was written, removing the notice would have meant
+a *second* `$wp_filter` exception and that was not a decision to take in passing. It is no
+longer second: `find_instance_callback()` has ten uses, and this is the eleventh. The rule
+is `remove_discarded_instance_callback( 'admin_init', 'BSF_Analytics', 'option_notice' )`,
+run at `EARLY_PRIORITY` because the producer is itself on `admin_init` at priority 10.
 
-- The callback is on `admin_init` at priority 10 in the current library, so an unhook
-  would have to run *before* `admin_init:10` — earlier than this plugin's usual 999 —
-  whereas the older library in `astra-widgets` and `custom-typekit-fonts` puts
-  `option_notice` directly on `admin_notices`. Two shapes, one rule
-- The notice only renders where `BSF_Admin_Notices` exists, so a site running Astra Pro
-  alone never sees it
+It was reached through CartFlows, which ships the same library and put the notice in front
+of a client on the fleet. The full write-up, the boundary-rule pass over the rest of the
+vendor's notices, and the bench verification are in **`docs/plugins/cartflows.md`** — the
+rule is keyed on the `BSF_Analytics` class rather than on any plugin, so it covers Astra
+Pro, Spectra and the rest of this document's five as well.
+
+Two complications recorded here at the time, and how they landed:
+
+- *"The callback is on `admin_init` at priority 10 … whereas the older library in
+  `astra-widgets` and `custom-typekit-fonts` puts `option_notice` directly on
+  `admin_notices`. Two shapes, one rule."* Only the `admin_init` shape is handled. The
+  loader picks the **highest** library version across every installed BSF plugin, so the
+  old shape only survives on a site running *nothing but* those two older plugins — the
+  same accepted gap already recorded under "Library version coverage"
+- *"The notice only renders where `BSF_Admin_Notices` exists."* Still true, and it makes
+  the rule a no-op rather than a risk on an Astra-Pro-only site. `option_notice()` bails on
+  `! class_exists( 'BSF_Admin_Notices' )` before doing anything
 
 ## Mechanism
 
@@ -261,8 +277,9 @@ Re-check when a new version appears in the vault:
 - `classes/class-uagb-admin.php` — `register_notices()`. If the Spectra Pro popup upsell
   is ever split into its own callback, it becomes a clean mechanism 2 target
 - `lib/astra-notices/class-bsf-admin-notices.php` — if a per-notice filter is added
-  (something like `bsf_admin_notices_show_{id}`), both the upsell and the opt-in notice
-  become mechanism 1 rules and this document's two blocked findings can be closed
+  (something like `bsf_admin_notices_show_{id}`), the Spectra Pro popup upsell becomes a
+  mechanism 1 rule and this document's one remaining blocked finding can be closed.
+  Confirmed still absent in `astra-notices` 1.2.3 as shipped with CartFlows 3.2.0
 - **`bsf_usage_tracking_enabled` is already gone from Spectra's 3.0 beta.** Checked
   7 Sep 2026: Astra Pro 4.13.8 and Spectra 2.20.3 both honour the filter, but
   `ultimate-addons-for-gutenberg` 3.0.0-beta.1 still ships `lib/bsf-analytics/` with the

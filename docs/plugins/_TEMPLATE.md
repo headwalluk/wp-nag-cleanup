@@ -1,3 +1,15 @@
+<!--
+Audience: another coding agent, not a human reviewer. Front-load the decision — what was
+suppressed, what was kept, and the exact code — and put evidence below it. Use exact
+symbols (hook names, class names, method names, option keys, version strings) rather than
+descriptions, because they are what gets searched for. State rejections explicitly as
+"not used, because ..." so they are not re-proposed.
+
+Silent-failure traps, "we already checked this" markers and "do not simplify this" guards
+belong in the PHP file's comments as well as here — see the Comments section of CLAUDE.md.
+Duplicating those two is deliberate; everything else lives here only.
+-->
+
 # Plugin Name
 
 - slug: `plugin-slug`

@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.24.1
+ * Version:     1.25.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.24.1';
+		const VERSION = '1.25.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -239,6 +239,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// Brainstorm Force bsf-analytics, Astra Pro 4.13.8. docs/plugins/brainstorm-force.md
 			add_filter( 'bsf_usage_tracking_enabled', '__return_false' );
 
+			// CartFlows 5-star review request. The vendor added this filter in 2.2.5 and
+			// documents it in-code as an override for site owners and white-label
+			// distributors. CartFlows 3.2.0. docs/plugins/cartflows.md
+			add_filter( 'cartflows_show_review_notice', '__return_false' );
+
 			// ThemeIsle SDK, bundled in Menu Icons, WPCF7 Redirect and others.
 			// Menu Icons 0.13.24. docs/plugins/themeisle-sdk.md
 			add_filter( 'themeisle_sdk_hide_dashboard_widget', '__return_true' );
@@ -298,6 +303,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_mail_bank_review_notice();
 			$this->unhook_bdthemes_review_and_tracking_notices();
 			$this->unhook_monsterinsights_promos();
+			$this->unhook_shapedplugin_promos();
 		}
 
 		/**
@@ -607,6 +613,59 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		public function unhook_early_vendor_notices() : void {
 			$this->unhook_wpcode_promos();
 			$this->unhook_freemius_promos();
+			$this->unhook_bsf_analytics_optin_notice();
+			$this->unhook_astra_theme_wc_upsell();
+			$this->unhook_wpforms_review_promos();
+		}
+
+		/**
+		 * Remove WPForms Lite's review request and its admin-footer rating text.
+		 *
+		 * Both belong to a discarded WPForms_Review instance; review_request builds its
+		 * notice from admin_init at the default priority, so it is removed before that runs.
+		 * WPForms Lite 2.0.1.1. docs/plugins/wpforms-lite.md
+		 */
+		public function unhook_wpforms_review_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_init', 'WPForms_Review', 'review_request', 'wpforms-lite' );
+			$this->remove_discarded_instance_callback( 'admin_footer_text', 'WPForms_Review', 'admin_footer', 'wpforms-lite' );
+		}
+
+		/**
+		 * Remove the Astra theme's "Upgrade to Business Toolkit" notice on WooCommerce screens.
+		 *
+		 * Registered from after_setup_theme priority 99 onto admin_init at the default
+		 * priority, so it is removed before that runs. The callback is static, so it is
+		 * named directly rather than through the $wp_filter reader.
+		 * Astra theme 4.13.11. docs/plugins/astra-theme.md
+		 */
+		public function unhook_astra_theme_wc_upsell() : void {
+			// Case matters: _wp_filter_build_unique_id() keys a static callback by literal
+			// string, so a mismatch here removes nothing and looks like success.
+			$astra_wc_upsell_callback = 'Astra_Admin_Settings::upgrade_to_pro_wc_notice';
+
+			if ( ! class_exists( 'Astra_Admin_Settings' ) ) {
+				// Astra theme not active.
+			} elseif ( false === has_action( 'admin_init', $astra_wc_upsell_callback ) ) {
+				$this->log( 'astra-theme', 'Astra_Admin_Settings::upgrade_to_pro_wc_notice not registered on admin_init; no action taken.' );
+			} else {
+				remove_action( 'admin_init', $astra_wc_upsell_callback );
+				$this->log( 'astra-theme', 'Removed Astra_Admin_Settings::upgrade_to_pro_wc_notice from admin_init.' );
+			}
+		}
+
+		/**
+		 * Remove the bsf-analytics usage-tracking opt-in notice.
+		 *
+		 * The library constructs BSF_Analytics on init and discards the instance, so the
+		 * callback is matched by class rather than named. It queues the notice from an
+		 * admin_init callback at the default priority, so it is removed before that runs.
+		 * The loader builds one instance for every Brainstorm Force plugin on the site,
+		 * so this covers all of them at once.
+		 * CartFlows 3.2.0, bsf-analytics 1.1.29.
+		 * docs/plugins/cartflows.md, docs/plugins/brainstorm-force.md
+		 */
+		public function unhook_bsf_analytics_optin_notice() : void {
+			$this->remove_discarded_instance_callback( 'admin_init', 'BSF_Analytics', 'option_notice', 'bsf-analytics' );
 		}
 
 		/**
@@ -827,9 +886,37 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 
 		/**
+		 * Remove ShapedPlugin's review request, footer rating text and seasonal offer banner.
+		 *
+		 * All three go through the $wp_filter reader. Dashboard_Notice is constructed and
+		 * discarded in Admin::__construct(), so it has nothing to name.
+		 *
+		 * ShapedPlugin_Offer_Banner does have an instance() singleton, and it is deliberately
+		 * not used: main.php only calls it behind the SHAPEDPLIUGIN_OFFER_BANNER_LOADED mutex
+		 * (the vendor's typo, not ours), so on a site where a sibling ShapedPlugin product won
+		 * that mutex this plugin's copy was never constructed — and calling instance() would
+		 * construct it and *add* the banner hooks. The reader only ever matches what is
+		 * already registered.
+		 *
+		 * That mutex also bounds the rule: the live banner may belong to a sibling plugin's
+		 * namespace, which this does not match. WooCommerce-missing and cross-install notices
+		 * are separate callbacks and survive.
+		 * Product Slider for WooCommerce 2.8.13. docs/plugins/woo-product-slider.md
+		 */
+		public function unhook_shapedplugin_promos() : void {
+			$notice_class = 'ShapedPlugin\\WooProductSlider\\Admin\\Notices\\Dashboard_Notice';
+			$banner_class = 'ShapedPlugin\\WooProductSlider\\Admin\\Notices\\ShapedPlugin_Offer_Banner';
+
+			$this->remove_discarded_instance_callback( 'admin_notices', $notice_class, 'display_admin_notice', 'woo-product-slider' );
+			$this->remove_discarded_instance_callback( 'admin_footer_text', $notice_class, 'admin_footer', 'woo-product-slider' );
+			$this->remove_discarded_instance_callback( 'admin_notices', $banner_class, 'render_offer_banner', 'woo-product-slider' );
+		}
+
+		/**
 		 * Remove the single callback that prints Elementor's $plain_notices.
 		 *
-		 * Collateral and withdrawal conditions: docs/plugins/elementor.md
+		 * Collateral and withdrawal conditions are in the doc.
+		 * Elementor 4.2.4. docs/plugins/elementor.md
 		 */
 		public function unhook_elementor_notices() : void {
 			if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
@@ -849,7 +936,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		/**
 		 * Remove WPB Product Slider's five-star review notice.
 		 *
-		 * docs/plugins/wpb-woocommerce-product-slider.md
+		 * WPB WooCommerce Product Slider 2.4. docs/plugins/wpb-woocommerce-product-slider.md
 		 */
 		public function unhook_wpb_product_slider_review_notice() : void {
 			$this->remove_discarded_instance_callback(
@@ -866,7 +953,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Runs on current_screen, not admin_init: wp-admin/admin.php calls
 		 * set_current_screen() after admin_init, and Conversion_Banner only adds its
 		 * in_admin_header callback once the screen is known.
-		 * docs/plugins/elementor.md
+		 * Elementor 4.2.4. docs/plugins/elementor.md
 		 */
 		public function unhook_elementor_promotion_banners() : void {
 			$this->remove_discarded_instance_callback(

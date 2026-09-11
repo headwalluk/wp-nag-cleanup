@@ -5,6 +5,170 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.25.0] — 2026-09-11
+
+### Added
+
+- **CartFlows 3.2.0 — two rules.** Found on a client site: a fresh login produced a wall
+  of CartFlows notices. See [`docs/plugins/cartflows.md`](docs/plugins/cartflows.md).
+
+  - **The `bsf-analytics` usage-tracking opt-in notice** — *"Help shape the future of
+    CartFlows. Share how you use the plugin…"* Mechanism 2, removed on `admin_init` at
+    `EARLY_PRIORITY` because the producer is itself on `admin_init` at priority 10.
+
+    **This closes the blocked finding in
+    [`docs/plugins/brainstorm-force.md`](docs/plugins/brainstorm-force.md).** It was
+    recorded as unreachable in 1.4.0 on the grounds that removing it would need a *second*
+    `$wp_filter` exception. It is now the eleventh, and the bar it has to clear is the
+    same one every other use clears — mechanisms 1 to 3 re-checked and written up first.
+
+    The rule keys on the `BSF_Analytics` class, not on CartFlows. `BSF_Analytics_Loader`
+    is a singleton that builds **one** instance holding every registered Brainstorm Force
+    entity, so a single `remove_action()` suppresses this nag for Astra Pro, Spectra,
+    CartFlows and the rest at once.
+
+  - **The 5-star review request** — mechanism 1. CartFlows 2.2.5 added
+    `cartflows_show_review_notice` and documents it in-code: *"Return false to suppress
+    the notice entirely."*
+
+- **Product Slider for WooCommerce (ShapedPlugin) 2.8.13 — one rule, three callbacks.**
+  Found on a client site. See [`docs/plugins/woo-product-slider.md`](docs/plugins/woo-product-slider.md).
+  **Not** the same plugin as `wpb-woocommerce-product-slider`, which has its own rule.
+
+  `Dashboard_Notice::display_admin_notice` (the `sp-wps-review-notice` 5-star ask),
+  `Dashboard_Notice::admin_footer` (the footer rating text) and
+  `ShapedPlugin_Offer_Banner::render_offer_banner` — a full-width image advert linking to
+  `wooproductslider.io/pricing` that, unlike the review nag, is **not screen-gated** and
+  renders on every admin page while one of its hard-coded date windows is open.
+
+  `ShapedPlugin_Offer_Banner` has a real `instance()` singleton and it is deliberately not
+  used. `main.php` only calls it behind the `SHAPEDPLIUGIN_OFFER_BANNER_LOADED` mutex (the
+  vendor's typo), so on a site where a sibling ShapedPlugin product loaded first this
+  plugin's copy was never constructed — and calling `instance()` would construct it and
+  **add** the banner hooks. The first case in the project where a singleton is available
+  and the `$wp_filter` reader is still the correct tool.
+
+  That mutex also bounds the rule: each ShapedPlugin product ships the banner class under
+  its own namespace, so a site where a sibling won the mutex keeps its banner. Recorded
+  rather than papered over; no other ShapedPlugin slug has been analysed yet.
+
+  The WooCommerce-dependency notice, both vendor-screen cross-sells and the footer version
+  string are untouched.
+
+- **WPForms Lite 2.0.1.1 — one rule, two callbacks.** The other source of the nags on that
+  client site. See [`docs/plugins/wpforms-lite.md`](docs/plugins/wpforms-lite.md).
+
+  `WPForms_Review::review_request` (the 5-star ask) and `WPForms_Review::admin_footer` (which
+  replaces core's admin footer text with a rating ask on WPForms screens). Mechanism 2 at
+  `EARLY_PRIORITY`; `new WPForms_Review();` discards the instance and the class is not in
+  WPForms' own registry, so both go through the `$wp_filter` reader.
+
+  `WPForms_Review::promote_wpforms` is **left alone** — it renders the vendor's own
+  "Made with ♥ by the WPForms Team" block in its own page footer, which is out of scope.
+  The distinction against `admin_footer` is that the latter hijacks core's furniture.
+
+  Twenty-two other WPForms notices are untouched, including eight Stripe, PayPal and Square
+  webhook, domain and fraud-detection warnings.
+
+- **Astra theme 4.13.11 — one rule.** The free theme, which is a separate codebase from
+  the `astra-addon` plugin covered by `brainstorm-force.md` and has its own notice surface.
+  See [`docs/plugins/astra-theme.md`](docs/plugins/astra-theme.md).
+
+  `Astra_Admin_Settings::upgrade_to_pro_wc_notice` prints *"Running a WooCommerce store?
+  You need more than just a theme … Upgrade to Business Toolkit"* on the WooCommerce admin
+  screens only, which is why it shows up on **WooCommerce → Status** and nowhere else.
+  Mechanism 2 at `EARLY_PRIORITY`; the callback is static, so it is named directly and no
+  `$wp_filter` read is involved.
+
+  The theme also bundles `bsf-analytics` under the entity key `astra`, so its
+  *"Help shape the future of Astra"* nag is removed by the shared rule above — one callback
+  covers the theme and every BSF plugin on the site.
+
+- **`docs/plugins/INDEX.md`** — every rule in one table, by mechanism: hook or widget ID,
+  the phase the removal runs on, the vendor version it was verified against, and a link to
+  its document. Generated by parsing `headwall-nag-cleanup.php` rather than transcribed, and
+  it is to be amended in the same commit as any rule change.
+
+  Building it surfaced real drift: three rule docblocks (`unhook_elementor_notices`,
+  `unhook_wpb_product_slider_review_notice`, `unhook_elementor_promotion_banners`) were
+  missing the vendor-and-version line the convention requires. Added — Elementor 4.2.4 and
+  WPB WooCommerce Product Slider 2.4.
+
+### Decided
+
+- **There is no line-count cap on `headwall-nag-cleanup.php`, and comments are written for
+  a coding agent.** The file passed 1000 lines at 1.24.0 and is 1126 here. A trim of all 43
+  docblocks to one or two sentences was proposed, examined and **rejected**.
+
+  Reading the ten fattest docblocks rather than counting them showed almost no narrative in
+  them. They carry silent-failure traps (Rank Math declares `namespace RankMath` despite
+  living in `includes/admin/`, so the wrong class name is a silent no-op), "we already
+  checked this" markers (MonsterInsights' `hide_am_notices` also hides deprecation notices;
+  BdThemes' `get_instance()` is never called by its own bootstrap) and "do not simplify
+  this" guards (Freemius suppresses on any value that is not exactly `true`, so the
+  incoming value must be passed back).
+
+  That last category matters most for this audience: an agent's default move on code whose
+  constraints it does not know is to improve it, and an over-broad rule shipped by someone
+  who did not know why the narrow one was chosen is this project's main risk.
+
+  The executable content here is trivial and all the value is in knowing which hook, which
+  version and which trap — so a file that is 50% code and 38% comments is correctly
+  proportioned. Comments cost nothing at runtime; PHP compiles once and opcache serves the
+  cached opcodes.
+
+  `CLAUDE.md` gains a "There is no line-count cap" section and a rewritten "Comments"
+  section naming the three categories that belong in-file; `docs/plugins/_TEMPLATE.md`
+  gains an audience note. The file is judged on **locality and uniformity** instead.
+
+### Deliberately not done
+
+- **`wpforms_setting` / `hide-announcements` was not used.** It would have stopped the
+  WPForms review nag in one filter, and its scope is genuinely narrow — four readers, all
+  promotional. It was rejected because `settings-api.php` renders every settings field's
+  current value through `wpforms_setting()`, so filtering it would show the "Hide
+  Announcements" toggle as **on** to an owner who never set it, and **persist** that value
+  into `wpforms_settings` the next time anyone saves that page. A mechanism 1 rule that
+  edits the vendor's stored settings through the vendor's own form is mechanism 4 by
+  accident, without mechanism 4's safeguards.
+
+- **`astra_get_option_ast-disable-upgrade-notices` was not used**, though it is a genuine
+  one-line mechanism 1 rule that stops the Astra upsell registering. The gate it feeds,
+  `astra_showcase_upgrade_notices()`, is read in **27 places** — Customizer section configs
+  for WooCommerce, EDD, LifterLMS, typography and the header/footer builders, a post meta
+  box, three React admin-app flags, and one place where it *inverts* to add an
+  `ast-pro-available` CSS class rather than remove anything. Filtering it would restructure
+  Customizer config arrays across the theme to suppress one notice. It is also a real
+  stored site-owner setting, written by `astra_update_option()` in two migration paths.
+
+  A `remove_action()` naming one static callback is the higher-numbered mechanism and the
+  smaller change. It won.
+
+- **`cf_white_label_options` was not used**, though it would have replaced the mechanism 2
+  rule with a one-line filter and no `$wp_filter` read at all — `BSF_Analytics` treats
+  white-label mode as a reason to skip both the notice and the tracking send. The filter's
+  purpose is to declare the product rebranded; using it to hide a notice asserts something
+  false to the vendor's code, and its blast radius is whatever the vendor decides
+  white-label means next release. Same reasoning that rejected it for Astra in 1.4.0, and
+  `wpdesk_tracker_notice_screens` before that.
+
+- **The Legacy UI deprecation notice and the custom-script migration prompt were kept.**
+  Both are branded exactly like the telemetry nag — same logo, same buttons, same
+  framework — and read as marketing at a glance. The boundary rule tests content, not
+  costume: one announces a UI change with a stated way back, the other is a data migration
+  prompt. The shared styling is why the test has to be applied to the text.
+
+- The NPS survey (*"How likely are you to recommend CartFlows…"*) is left for its own
+  pass. It renders only on CartFlows' own screens, and its opt-out
+  (`nps_survey_show_notice`) reaches a library shared across every Brainstorm Force
+  product, so an unscoped rule would be too broad. Recorded in the doc so it is not
+  re-discovered as new.
+
+- The Funnel Performance dashboard widget is kept. It prints the site's real WooCommerce
+  revenue and order count with one upsell line inside it; `remove_meta_box()` would take
+  the figures too, and the widget makes no outbound request, so removing it would buy
+  nothing.
+
 ## [1.24.1] — 2026-09-10
 
 ### Fixed

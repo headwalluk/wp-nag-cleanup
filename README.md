@@ -152,9 +152,10 @@ which takes a hook, a class and a method. It is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Ten rules use it as of 1.24.0: WPB Product Slider, Elementor's promotions module,
+Twelve rules use it as of 1.25.0: WPB Product Slider, Elementor's promotions module,
 ElementsKit's Wpmet libs, QuadLayers, Converter for Media, WPCode, WP Mail Bank,
-BdThemes, MonsterInsights' review request and Rank Math's dashboard blog feed. Each has
+BdThemes, MonsterInsights' review request, Rank Math's dashboard blog feed,
+Brainstorm Force's `bsf-analytics` opt-in notice and WPForms Lite's review request. Each has
 its own write-up, and each had to establish that the other mechanisms were all
 unavailable first — a bar that has failed more often than it has passed, and twice a
 route was found on a second look that the first pass had called impossible. See
@@ -240,8 +241,17 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Modula (WPChill) | 2.14.39 | 1 | Telemetry consent prompt, and the telemetry itself — weekly and hourly cron to `telemetry.wpchill.com` carrying the site URL and a full plugin inventory. Elementor and PHP-version warnings, Action Scheduler notices and the bulk-action result preserved |
 | MonsterInsights (Google Analytics for WordPress) | 11.2.0 | 2 | PRO upsell tooltip on the Insights menu, review request, WPConsent cross-sell. UA-sunset alert, licence, PHP-version, measurement-protocol and addon-deprecation notices preserved, as is the analytics dashboard widget |
 | Rank Math SEO | 1.0.278, Pro 3.0.95 | 2, 4 | Stored PRO upsell and review notifications, and the `rankmath.com` blog feed inside the Overview widget. The widget's own 404, redirection and analytics figures preserved, as is the whole notification store — redirection conflicts, WPML data migration, plugin conflicts, "reconnect Google" |
+| CartFlows | 3.2.0 | 1, 2 | 5-star review request, and the `bsf-analytics` usage-tracking opt-in ("Help shape the future of CartFlows"). Legacy UI deprecation notice, custom-script migration prompt, WooCommerce dependency and Pro version-mismatch warnings preserved, as is the Funnel Performance widget |
+| Brainstorm Force — `bsf-analytics` | library 1.1.29 | 2 | The usage-tracking opt-in notice, for **every** BSF plugin *and the Astra theme* on the site. One library instance serves them all |
+| Product Slider for WooCommerce (ShapedPlugin) | 2.8.13 | 2 | Seasonal offer banner (a full-width advert on **every** admin page), 5-star review request and the admin-footer rating text. WooCommerce-dependency notice, the two vendor-screen cross-sells and the footer version string preserved. Not the same plugin as WPB WooCommerce Product Slider |
+| WPForms Lite | 2.0.1.1 | 2 | 5-star review request and the admin-footer rating text. The "Made with ♥" footer block, the entry-reports dashboard widget, and every operational notice preserved — Stripe/PayPal/Square webhook, domain and card-testing-fraud warnings, requirement failures, Lite Connect backup errors and the Lite/Pro conflict notice |
+| Astra (the free **theme**, not `astra-addon`) | 4.13.11 | 2 | "Running a WooCommerce store? You need more than just a theme" Business Toolkit upsell, shown on the WooCommerce admin screens. PHP memory-limit warning, both Astra Pro version-mismatch notices and the deprecated-hook warnings preserved |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
+
+Every rule above is also in [`docs/plugins/INDEX.md`](docs/plugins/INDEX.md) as a
+lookup table — hook or widget ID, the phase the rule runs on, the version it was verified
+against, and a link to its document.
 
 The two core entries are the ones that are not vendor nags. Both are off unless you
 turn them on, and both are documented under [Configuration](#configuration) rather
