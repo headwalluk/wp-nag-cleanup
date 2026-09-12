@@ -115,6 +115,21 @@ add_filter( 'yith_plugin_fw_show_dashboard_widgets', '__return_false' );
 Sanctioned, stable, and cannot break anything the vendor did not intend to be
 switchable. Always prefer this where it exists.
 
+One rule uses a **core** filter in the same shape, where the vendor offers no switch and
+its notice cannot be unhooked at all. Premium Addons prints its seasonal sale pointer from
+an anonymous closure, which `remove_action()` cannot name; the closure bails when its own
+dismissal transient is set, and core's `pre_transient_{$transient}` answers that gate from
+memory:
+
+```php
+add_filter( 'pre_transient_pa_sumr26_pointer_dismiss', '__return_true' );
+```
+
+Nothing is written. The vendor's own option write sits after the gate and is skipped with
+it, so no dismissal is recorded and removing this plugin restores the pointer — which is
+the whole difference between this and setting the vendor's dismissal flag in the database.
+See [`docs/plugins/premium-addons-for-elementor.md`](docs/plugins/premium-addons-for-elementor.md).
+
 ### 2. Targeted unhooking
 
 Where a vendor provides no switch, remove the specific callback that prints the
@@ -221,7 +236,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Elementor | 4.2.4 | 2, 3 | Nine promotional notices, the "Elementor Overview" dashboard widget, and the promotions module (Go Pro banner, Black Friday, Birthday) |
 | WPB Product Slider for WooCommerce | 2.4 | 2 | Five-star review notice (the one `$wp_filter` exception) |
 | Forminator | 1.57.2 | 2 | "Pro Form Templates" dashboard promo, review request |
-| Premium Addons for Elementor | 4.11.102 | 2, 3 | Review nag, Angie and Connect-AI upsells, "Premium Addons News" widget and its `premiumaddons.com` fetch |
+| Premium Addons for Elementor | 4.11.103 | 1, 2, 3 | Seasonal sale pointer, review nag, Angie and Connect-AI upsells, "Premium Addons News" widget and its `premiumaddons.com` fetch |
 | CSS Hero | 5.1.0 | 3 | "From the CSS Hero world" RSS widget |
 | WooCommerce Lottery (wpgenie) | 1.1.21 | 3 | "wpgenie.org - Our latest themes and plugins" RSS widget |
 | WP Swings — Gift Cards Lite, Subscriptions | 3.2.10, 2.0.2 | 2 | Remotely-driven seasonal offer banners (`wps-offer-notice`) |

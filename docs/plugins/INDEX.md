@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.26.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.27.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -39,6 +39,12 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `CYA11Y_ACCESSYES_BANNER_DISPLAYED` (constant) | WebToffee, via CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `fs_show_admin_notice_{slug}` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md) |
 | `wpchill_telemetry_config` | Modula 2.14.39 | [modula-best-grid-gallery.md](modula-best-grid-gallery.md) |
+| `pre_transient_{campaign}` ‡ | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
+
+`‡` is **core's** filter, not the vendor's: Premium Addons prints its seasonal sale
+pointer from an anonymous closure that no `remove_action()` can name, and the closure's
+own dismissal transient is the only gate reachable from outside. One filter per campaign
+name, all of them listed in `PREMIUM_ADDONS_POINTER_TRANSIENTS`. Nothing is written.
 
 ## Mechanism 2 — targeted unhooks
 
@@ -59,7 +65,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_elementor_notices` | `admin_init` @ 999 | Elementor 4.2.4 | [elementor.md](elementor.md) |
 | `unhook_wpb_product_slider_review_notice` † | `admin_init` @ 999 | WPB WooCommerce Product Slider 2.4 | [wpb-woocommerce-product-slider.md](wpb-woocommerce-product-slider.md) |
 | `unhook_forminator_dashboard_promo` | `admin_init` @ 999 | Forminator 1.57.2 | [forminator.md](forminator.md) |
-| `unhook_premium_addons_promos` | `admin_init` @ 999 | Premium Addons for Elementor 4.11.102 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
+| `unhook_premium_addons_promos` | `admin_init` @ 999 | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
 | `unhook_wp_swings_offer_banners` | `admin_init` @ 999 | Gift Cards Lite 3.2.10, Subscriptions 2.0.2 | [wp-swings.md](wp-swings.md) |
 | `unhook_quadlayers_promote_notice` † | `admin_init` @ 999 | Insta Gallery 5.0.8 | [quadlayers.md](quadlayers.md) |
 | `unhook_essential_blocks_campaigns` | `admin_init` @ 999 | Essential Blocks 6.4.3 | [essential-blocks.md](essential-blocks.md) |
@@ -89,7 +95,7 @@ rules exist.
 
 | Widget ID | Context | Vendor verified against | What it is |
 |---|---|---|---|
-| `pa-stories` | `column3` | Premium Addons for Elementor 4.11.102 | Premium Addons News; fetches premiumaddons.com |
+| `pa-stories` | `column3` | Premium Addons for Elementor 4.11.103 | Premium Addons News; fetches premiumaddons.com |
 | `widget_cssheronews` | `normal` | CSS Hero 5.1.0 | From the CSS Hero world; RSS feed |
 | `wpgenie_dashboard_products_news` | `normal` | WooCommerce Lottery 1.1.21 | wpgenie.org themes and plugins; RSS feed |
 | `hasthemes-dashboard-stories` | `normal` | HT Mega for Elementor 3.2.5 | HasThemes Stories; vendor feed |

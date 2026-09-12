@@ -5,6 +5,47 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.27.0] — 2026-09-12
+
+### Added
+
+- **Premium Addons for Elementor 4.11.103** — the seasonal sale pointer, a core
+  `wp-pointer` popup ("Summer Sale 2026! … Save 30% Now") anchored to the plugin's admin
+  menu item on the dashboard and on its own page. Reported by Paul from a live client site,
+  and **confirmed gone on that site** after deploying this release.
+
+  It is printed from an **anonymous closure** on `in_admin_header`, so `remove_action()`
+  has nothing to name, and the sanctioned `$wp_filter` reader cannot help either — it
+  matches instances of a named class, and a closure is neither. Elementor's equivalent was
+  solved by dequeuing the promotion's assets by handle; that route does not exist here,
+  because the script is printed inline.
+
+  The rule instead answers the closure's own dismissal gate. It bails on any of four
+  OR'd conditions, the last of which is its dismissal transient, and
+  `pre_transient_{$transient}` is core's short-circuit over `get_transient()` — so
+  `__return_true` ends the closure at line 14. **Nothing is
+  written** — the vendor's `_pa_plugin_pointer_priority` write sits after the gate and is
+  skipped with it, which is what separates this from the option-writing route rejected
+  when the plugin was first analysed.
+
+  The transient name is campaign-scoped and changes every few releases — five names
+  between 4.11.62 and 4.11.103, with `pa_summer26` and `pa_sumr26` being the *same*
+  campaign renamed, re-showing the pointer to everyone who had dismissed it. All five are
+  named in `PREMIUM_ADDONS_POINTER_TRANSIENTS`, because the fleet runs whatever version
+  each site has. A new campaign needs a new entry; the drift check in the document has the
+  one-line command for it.
+
+### Changed
+
+- The two existing Premium Addons rules re-verified unchanged against 4.11.103:
+  `required_plugins_check()` is still `public` and still the whole of the operational
+  output of `admin_notices()`, and the dashboard widget is still `pa-stories` in
+  `column3`.
+- `/analyse-plugin` pass (a) now greps for the **multiline** `add_action(` form and for
+  `in_admin_header` / `admin_print_footer_scripts`. The single-line grep is why the
+  pointer was missed when this plugin was analysed on 5 Sep: it was present in the release
+  that was read, and never appeared in a search result.
+
 ## [1.26.0] — 2026-09-11
 
 ### Added

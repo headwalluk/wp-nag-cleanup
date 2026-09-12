@@ -53,14 +53,30 @@ free, freemium or premium.
 Run every pass, even when an early one finds something. The document has to be able
 to say "we looked for X and there was none", and that is only true if X was checked.
 
-**a. Admin notice registrations**
+**a. Admin notice and admin-header registrations**
 
 ```bash
-command grep -rn "add_action( *['\"]admin_notices\|add_action( *['\"]network_admin_notices\|add_action( *['\"]all_admin_notices" "${WORK_PATH}"
+NOTICE_HOOKS="admin_notices|network_admin_notices|all_admin_notices|in_admin_header|admin_print_footer_scripts"
+command grep -rnE "add_action\( *['\"](${NOTICE_HOOKS})" "${WORK_PATH}"
 ```
 
 For each hit, read the callback. Note the hook, the callback, the priority, and
 whether the callback prints one notice or many.
+
+**Then run it again for the multiline form**, where the hook name is on the line after
+`add_action(`:
+
+```bash
+command grep -rn -A1 "add_action($" "${WORK_PATH}" --include=*.php | command grep -E "^\S+[-:][0-9]+[-:]\s*'"
+```
+
+This second pass is not optional. Premium Addons' seasonal `wp-pointer` sale popup is
+registered exactly that way, and the single-line grep above missed it entirely — the
+plugin was analysed, documented and ruled on in Sep 2026 with the pointer sitting in the
+release that was read. `docs/plugins/premium-addons-for-elementor.md`.
+
+`in_admin_header` and `admin_print_footer_scripts` are in the hook list for the same
+reason: a promo that opens as a pointer or a modal never touches `admin_notices` at all.
 
 **b. Vendor opt-out surfaces — always look for these first**
 

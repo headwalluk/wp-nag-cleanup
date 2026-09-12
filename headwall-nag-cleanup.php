@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.26.0
+ * Version:     1.27.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.26.0';
+		const VERSION = '1.27.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -97,6 +97,24 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		];
 
 		/**
+		 * Premium Addons' seasonal pointer campaigns, named by the transient each one
+		 * writes when the site owner dismisses it.
+		 *
+		 * The name is campaign-scoped, so a new campaign needs a new entry here rather
+		 * than a pattern: five names appeared between 4.11.62 and 4.11.103. pa_summer26
+		 * and pa_sumr26 are two different campaigns, not a typo — 4.11.84 renamed the
+		 * transient, which re-showed the pointer to everyone who had dismissed it.
+		 * docs/plugins/premium-addons-for-elementor.md
+		 */
+		const PREMIUM_ADDONS_POINTER_TRANSIENTS = [
+			'pa_xmas25_pointer_dismiss',   // 4.11.62 to 4.11.67.
+			'pa_val26_pointer_dismiss',    // 4.11.68 to 4.11.72.
+			'pa_spring26_pointer_dismiss', // 4.11.73 to 4.11.76.
+			'pa_summer26_pointer_dismiss', // 4.11.77 to 4.11.83.
+			'pa_sumr26_pointer_dismiss',   // 4.11.84 onwards; current at 4.11.103.
+		];
+
+		/**
 		 * Mechanism 3: promotional dashboard widgets, removed by id on wp_dashboard_setup.
 		 *
 		 * Write-ups in docs/plugins/: premium-addons-for-elementor, css-hero,
@@ -107,7 +125,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			[
 				'widget_id' => 'pa-stories',
 				'context'   => 'column3',
-				'vendor'    => 'Premium Addons for Elementor 4.11.102',
+				'vendor'    => 'Premium Addons for Elementor 4.11.103',
 				'reason'    => 'Premium Addons News; fetches premiumaddons.com on render',
 			],
 			[
@@ -293,6 +311,27 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// path at once. Modula 2.14.39, unchanged since 2.14.1.
 			// docs/plugins/modula-best-grid-gallery.md
 			add_filter( 'wpchill_telemetry_config', [ $this, 'disable_wpchill_telemetry' ] );
+
+			// Premium Addons for Elementor's seasonal sale pointer, a wp-pointer popup
+			// anchored to its admin menu item on the dashboard and on its own page. It is
+			// printed from an anonymous closure on in_admin_header (includes/promotion-pointer.php),
+			// so remove_action() has nothing to name and the $wp_filter reader cannot help
+			// either — it matches instances of a class, and a closure is neither.
+			//
+			// The last of the closure's four bail-out conditions is its own dismissal
+			// transient, and pre_transient_* is core's short-circuit over it — the four are
+			// OR'd, so answering any one of them ends the closure. get_transient() returns
+			// this value without a lookup, the closure returns, and the pointer is never
+			// printed. Nothing is written — the vendor's own _pa_plugin_pointer_priority
+			// option write sits after the gate and is skipped with it, so this leaves no
+			// residue and records no dismissal the site owner did not make.
+			//
+			// The hook is core's rather than the vendor's; only the transient name comes
+			// from the vendor, and that is what drifts. Premium Addons 4.11.103.
+			// docs/plugins/premium-addons-for-elementor.md
+			foreach ( self::PREMIUM_ADDONS_POINTER_TRANSIENTS as $pointer_transient ) {
+				add_filter( 'pre_transient_' . $pointer_transient, '__return_true' );
+			}
 
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
@@ -871,7 +910,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * One callback prints the Elementor dependency notice and three promos. Both
 		 * methods are public, so the dispatcher is swapped for the operational half
 		 * rather than the promos being dismissed on the site owner's behalf.
-		 * Premium Addons for Elementor 4.11.102. docs/plugins/premium-addons-for-elementor.md
+		 * Premium Addons for Elementor 4.11.103. docs/plugins/premium-addons-for-elementor.md
 		 */
 		public function unhook_premium_addons_promos() : void {
 			$notices_class = '\\PremiumAddons\\Admin\\Includes\\Admin_Notices';
