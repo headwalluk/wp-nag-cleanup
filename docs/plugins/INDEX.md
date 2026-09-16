@@ -137,6 +137,16 @@ one alone lets the other appear, so do not trim that constant to a single entry.
 
 ## Vendors examined with no rule
 
-`ls docs/plugins/` lists all 44 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
+`ls docs/plugins/` lists all 55 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
 produced nothing to suppress — a completed result, not a gap. Notable ones people ask about:
-EmbedPress, GeneratePress, Advanced Custom Fields, Autoptimize, Independent Analytics.
+EmbedPress, GeneratePress, Advanced Custom Fields, Autoptimize, Independent Analytics,
+Yoast SEO and Contact Form 7.
+
+**The `NONE` sweep, 16 Sep 2026** — eleven high-install, low-suspicion plugins (~500 fleet
+installs) analysed in one pass, all eleven producing no rule: `contact-form-7`,
+`wp-sweep`, `user-switching`, `query-monitor`, `database-collation-fix`,
+`classic-editor`, `woo-update-manager`, `wpmail-dkim-sign`, `wordpress-importer`,
+`nav-menu-roles`, `alt-text-fix`. **Nine of the eleven register nothing at all on any
+notice hook**; the exceptions are User Switching (the switched-session banner) and Query
+Monitor (three broken-install warnings), both operational. Do not re-analyse these without a reason — a new vault version, or a nag
+actually sighted on a fleet site.
