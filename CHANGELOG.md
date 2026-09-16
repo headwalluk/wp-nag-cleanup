@@ -5,6 +5,29 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.28.0] — 2026-09-16
+
+### Added
+
+- **Check & Log Email 2.0.16** — two nags Paul reported from a live dev site, both
+  bench-confirmed (there before, gone after):
+
+  - the **newsletter sign-up pointer**, a core `wp-pointer` on the plugin's menu item that
+    asks for *"some best resources on monetization"*. It fills in the current admin's
+    email address, display name and site URL, and prints the address into the page source
+    on every admin page load. One click sends it to `magazine3.company` over plain HTTP.
+    The rule removes the script's enqueue, so the address is no longer printed at all
+  - the **"please consider rating it"** review request, and the script behind its buttons
+
+  Both come from objects the plugin creates and then throws away
+  (`new Check_Email_Newsletter();`, and a `Check_Email_Review` that `add_loadie()` refuses
+  to store because it does not implement `Loadie`), so both go through the sanctioned
+  `$wp_filter` reader. Two tempting routes were rejected and are recorded as traps:
+  `__return_true` on `pre_option_check-email-rate-time` would **show** the nag, because
+  the gate is `time() > $value`, and `ck_mail_localize_filter` is a general script-data
+  filter, not an opt-out. SMTP-credentials and log-threshold warnings, and both
+  dashboard widgets, are untouched. `docs/plugins/check-email.md`.
+
 ## [1.27.0] — 2026-09-12
 
 ### Added

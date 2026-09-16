@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.27.0
+ * Version:     1.28.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.27.0';
+		const VERSION = '1.28.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -358,6 +358,30 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_shapedplugin_promos();
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
+			$this->unhook_check_email_promos();
+		}
+
+		/**
+		 * Remove Check & Log Email's newsletter sign-up pointer and its review request.
+		 *
+		 * The pointer is a wp-pointer drawn by ck_mail-newsletter-script, which does nothing
+		 * else; removing its enqueue callback leaves the pointer nothing to open. It is
+		 * enqueued by `new Check_Email_Newsletter();`, which discards the instance.
+		 *
+		 * The review notice and its dismiss script come from Check_Email_Review, added on
+		 * init. wpchill_check_email() does not reach it: add_loadie() rejects it for not
+		 * implementing Loadie, so the instance is never stored.
+		 *
+		 * Not used: pre_option_check-email-rate-time with __return_true. The gate is
+		 * `time() > $value`, and true compares as 1, so that shows the nag. Not used either:
+		 * ck_mail_localize_filter, a general script-data filter shared with the deactivation
+		 * feedback form, not an opt-out.
+		 * Check & Log Email 2.0.16. docs/plugins/check-email.md
+		 */
+		public function unhook_check_email_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_enqueue_scripts', 'Check_Email_Newsletter', 'ck_mail_enqueue_newsletter_js', 'check-email' );
+			$this->remove_discarded_instance_callback( 'admin_notices', 'CheckEmail\\Core\\Check_Email_Review', 'five_star_wp_rate_notice', 'check-email' );
+			$this->remove_discarded_instance_callback( 'admin_print_footer_scripts', 'CheckEmail\\Core\\Check_Email_Review', 'ajax_script', 'check-email' );
 		}
 
 		/**
