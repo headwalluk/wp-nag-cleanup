@@ -163,8 +163,11 @@ to remove its tables, pages, terms, roles and capabilities. The remaining option
 (including Freemius's `fs_accounts`, `fs_active_plugins`, `fs_debug_mode`) were deleted by
 comparing against a snapshot taken before install.
 
-**Not yet live-confirmed.** Reported from a live client site. Promote once the release is
-deployed there and the notice is seen gone.
+### Live — **Confirmed**, 16 Sep 2026
+
+Paul deployed 1.30.0 to the live client site where the nag was reported and confirmed it
+gone the same day. That site already had the sticky stored, which is the case the render
+filter exists for.
 
 ## Additions to `headwall-nag-cleanup.php`: second Freemius module on the existing rule
 
