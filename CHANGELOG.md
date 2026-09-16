@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.29.0] — 2026-09-16
+
+### Added
+
+- **404 to 301 4.0.4** (All in One SEO) — the *"give it a 5-star rating on WordPress"*
+  review request, reported by Paul from a live client site. Bench-confirmed (there before,
+  gone after). `Admin\Admin`'s constructor runs `new Notices\Review();` and keeps nothing, so
+  the public `aioseo404To301()->admin` singleton does not reach it, and the rule goes
+  through the sanctioned `$wp_filter` reader. The notice's dismiss script is added from
+  inside the removed callback, so it goes too with no second removal.
+
+  Only 4.0.4 shows this nag: 4.0.3 shipped the class with nothing calling it, and the 3.x
+  notice only appeared on the vendor's own screens. The redundant-addons migration notice,
+  the PHP/WordPress version warnings and the Recent 404s dashboard widget are untouched.
+  The widget's one-line Broken Link Checker cross-sell is left alone because it is printed
+  in the same render call as the site's real 404 data. `docs/plugins/404-to-301.md`.
+
+### Changed
+
+- **Check & Log Email** rules (1.28.0) live-confirmed on the client staging site where they
+  were reported.
+
 ## [1.28.0] — 2026-09-16
 
 ### Added

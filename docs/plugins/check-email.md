@@ -193,8 +193,10 @@ The SMTP and log-threshold notices were not exercised: they need a failing SMTP 
 a log table over its threshold. They are separate callbacks on separate classes, and no
 rule here names them.
 
-**Not yet live-confirmed.** Reported from a live dev site; promote to live-confirmed once
-1.28.0 is deployed there and both are seen gone.
+### Live — **Confirmed**, 16 Sep 2026
+
+Paul deployed 1.28.0 to the client staging site where both nags were reported and
+confirmed both gone the same day.
 
 ## Additions to `headwall-nag-cleanup.php`: 1 rule method, mechanism 2
 

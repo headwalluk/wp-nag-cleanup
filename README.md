@@ -167,12 +167,13 @@ which takes a hook, a class and a method. It is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Sixteen rules use it as of 1.28.0: WPB Product Slider, Elementor's promotions module,
+Seventeen rules use it as of 1.29.0: WPB Product Slider, Elementor's promotions module,
 ElementsKit's Wpmet libs, QuadLayers, Converter for Media, WPCode, WP Mail Bank,
 BdThemes, MonsterInsights' review request, Rank Math's dashboard blog feed,
 Brainstorm Force's `bsf-analytics` opt-in notice, WPForms Lite's review request,
 ShapedPlugin, Code Snippets' competitor promotion, WP Mail SMTP's review request and
-Check & Log Email's newsletter pointer and review request. Each has
+Check & Log Email's newsletter pointer and review request, and 404 to 301's review request.
+Each has
 its own write-up, and each had to establish that the other mechanisms were all
 unavailable first — a bar that has failed more often than it has passed, and twice a
 route was found on a second look that the first pass had called impossible. See
@@ -266,6 +267,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Custom Post Type UI | 1.19.3 | 2 | Pro upsell — including the branch that renders on the post-list screen of **any** public custom post type, not just CPT UI's own screens |
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |
 | Check & Log Email | 2.0.16 | 2 | Newsletter sign-up pointer that fills in the admin's email address, and the review request. SMTP-credentials and log-threshold warnings preserved, as are both dashboard widgets |
+| 404 to 301 (All in One SEO) | 4.0.4 | 2 | Review request. Redundant-addons migration notice, PHP/WordPress version warnings and the Recent 404s dashboard widget preserved |
 | Product Slider for WooCommerce (ShapedPlugin) | 2.8.13 | 2 | Seasonal offer banner (a full-width advert on **every** admin page), 5-star review request and the admin-footer rating text. WooCommerce-dependency notice, the two vendor-screen cross-sells and the footer version string preserved. Not the same plugin as WPB WooCommerce Product Slider |
 | WPForms Lite | 2.0.1.1 | 2 | 5-star review request and the admin-footer rating text. The "Made with ♥" footer block, the entry-reports dashboard widget, and every operational notice preserved — Stripe/PayPal/Square webhook, domain and card-testing-fraud warnings, requirement failures, Lite Connect backup errors and the Lite/Pro conflict notice |
 | Astra (the free **theme**, not `astra-addon`) | 4.13.11 | 2 | "Running a WooCommerce store? You need more than just a theme" Business Toolkit upsell, shown on the WooCommerce admin screens. PHP memory-limit warning, both Astra Pro version-mismatch notices and the deprecated-hook warnings preserved |

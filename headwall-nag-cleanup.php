@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.28.0
+ * Version:     1.29.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.28.0';
+		const VERSION = '1.29.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -359,6 +359,22 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
 			$this->unhook_check_email_promos();
+			$this->unhook_404_to_301_review_notice();
+		}
+
+		/**
+		 * Remove 404 to 301's "give it a 5-star rating" review request.
+		 *
+		 * Admin\Admin's constructor runs `new Notices\Review();` and keeps nothing, so the
+		 * aioseo404To301()->admin singleton does not reach it. maybeShowNotice adds the dismiss
+		 * script itself, so removing it takes the script too. Only 4.0.4 registers it; 4.0.3
+		 * ships the class with nothing calling it.
+		 * 404 to 301 4.0.4. docs/plugins/404-to-301.md
+		 */
+		public function unhook_404_to_301_review_notice() : void {
+			// Not All in One SEO's own AIOSEO\Plugin\Common\Admin\Notices\Review; the namespace
+			// differs by vendor product, and that notice is not claimed here.
+			$this->remove_discarded_instance_callback( 'admin_notices', 'AIOSEO\\FourNotFour\\Admin\\Notices\\Review', 'maybeShowNotice', '404-to-301' );
 		}
 
 		/**
