@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.29.0
+ * Version:     1.30.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.29.0';
+		const VERSION = '1.30.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -74,6 +74,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		const FIRSS_FREEMIUS_MODULE_ID = 195;
 		const FIRSS_FREEMIUS_SLUG      = 'featured-images-for-rss-feeds';
+
+		/**
+		 * Role Based Pricing for WooCommerce's Freemius module, keyed the same way.
+		 * docs/plugins/role-and-customer-based-pricing-for-woocommerce.md
+		 */
+		const RACBPFW_FREEMIUS_MODULE_ID = 9596;
+		const RACBPFW_FREEMIUS_SLUG      = 'role-and-customer-based-pricing-for-woocommerce';
 
 		/**
 		 * Freemius sticky ids that carry promotion only. These are the sole two notices
@@ -301,6 +308,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/featured-images-for-rss-feeds.md
 			add_filter(
 				'fs_show_admin_notice_' . self::FIRSS_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
+
+			// Same Freemius stickies, Role Based Pricing for WooCommerce 2.0.0 (SDK 2.13.2).
+			// docs/plugins/role-and-customer-based-pricing-for-woocommerce.md
+			add_filter(
+				'fs_show_admin_notice_' . self::RACBPFW_FREEMIUS_SLUG,
 				[ $this, 'hide_freemius_promo_notice' ],
 				self::LATE_PRIORITY,
 				2
@@ -796,7 +812,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 
 		/**
-		 * Remove Freemius's trial and affiliate notice producers for Featured Images in RSS.
+		 * Remove Freemius's trial and affiliate notice producers for each claimed module.
 		 *
 		 * Both run from admin_init at the default priority, so they are removed before
 		 * those run. Unhooking rather than using the SDK's own show_trial filter is
@@ -804,18 +820,30 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * menu counter bubble *before* it consults that filter, so the filter alone would
 		 * leave a badge the site owner could never clear.
 		 * Featured Images in RSS 1.7.3, Freemius SDK 2.13.4.
-		 * docs/plugins/featured-images-for-rss-feeds.md
+		 * Role Based Pricing for WooCommerce 2.0.0, Freemius SDK 2.13.2.
+		 * docs/plugins/featured-images-for-rss-feeds.md,
+		 * docs/plugins/role-and-customer-based-pricing-for-woocommerce.md
 		 */
 		public function unhook_freemius_promos() : void {
-			$freemius_module = $this->get_freemius_module( self::FIRSS_FREEMIUS_MODULE_ID );
+			$this->unhook_freemius_module_promos( self::FIRSS_FREEMIUS_MODULE_ID );
+			$this->unhook_freemius_module_promos( self::RACBPFW_FREEMIUS_MODULE_ID );
+		}
+
+		/**
+		 * Remove one Freemius module's trial and affiliate notice producers from admin_init.
+		 *
+		 * Each module registers its own pair on its own instance, so a module left out of
+		 * unhook_freemius_promos() keeps its menu badge even though its stored sticky is hidden.
+		 */
+		private function unhook_freemius_module_promos( int $module_id ) : void {
+			$freemius_module = $this->get_freemius_module( $module_id );
 
 			if ( null === $freemius_module ) {
 				// Freemius has not booted, or this module is not installed.
-				$this->log( 'firss-freemius', 'Freemius module 195 not present; nothing to unhook.' );
 			} else {
 				remove_action( 'admin_init', [ $freemius_module, '_add_trial_notice' ] );
 				remove_action( 'admin_init', [ $freemius_module, '_add_affiliate_program_notice' ] );
-				$this->log( 'firss-freemius', 'Removed Freemius trial and affiliate notice producers from admin_init.' );
+				$this->log( 'freemius', sprintf( 'Removed trial and affiliate notice producers for module %d from admin_init.', $module_id ) );
 			}
 		}
 
@@ -833,7 +861,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$notice_id = ( is_array( $notice ) && isset( $notice['id'] ) ) ? $notice['id'] : '';
 
 			if ( in_array( $notice_id, self::FREEMIUS_PROMO_NOTICE_IDS, true ) ) {
-				$this->log( 'firss-freemius', sprintf( 'Hid Freemius sticky notice "%s".', $notice_id ) );
+				$manager_id = ( is_array( $notice ) && isset( $notice['manager_id'] ) ) ? $notice['manager_id'] : '';
+				$this->log( 'freemius', sprintf( 'Hid sticky notice "%s" for %s.', $notice_id, $manager_id ) );
 				$show_notice = false;
 			} else {
 				// Every other Freemius notice renders on the vendor's own terms.

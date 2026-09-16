@@ -5,6 +5,33 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.30.0] — 2026-09-16
+
+### Added
+
+- **Role Based Pricing for WooCommerce 2.0.0** (Meow Crew, Freemius SDK 2.13.2) — the
+  Freemius *"Test all our awesome premium features with a 7-day free trial"* sticky,
+  reported by Paul from a live client site. It is the same `trial_promotion` sticky
+  handled for Featured Images in RSS in 1.22.1, so the rule extends that one instead of
+  adding a new one. Module id `9596` and its slug go through the same render-time
+  `fs_show_admin_notice_{slug}` filter (which hides a sticky that is already stored) and
+  the same `admin_init` unhook of the trial and affiliate producers (which stops the menu
+  badge).
+
+  Bench-confirmed with a sticky seeded through the SDK's own `add_sticky()`: the sticky
+  and its `fs-trial` menu badge went 1 → 0. The Freemius opt-in notice still rendered, and
+  the sticky **stayed in Freemius storage** — hidden, not deleted.
+  `docs/plugins/role-and-customer-based-pricing-for-woocommerce.md`.
+
+### Changed
+
+- `unhook_freemius_promos()` now calls a new private `unhook_freemius_module_promos()` once
+  per claimed module. Freemius log lines move from `firss-freemius` to `freemius` and name
+  the module. The "Freemius module 195 not present" line is removed. It fired on every
+  admin request of every site without that plugin, which the logging rules in `CLAUDE.md`
+  do not allow.
+- **404 to 301** rule (1.29.0) live-confirmed on the client site where it was reported.
+
 ## [1.29.0] — 2026-09-16
 
 ### Added

@@ -254,8 +254,9 @@ Re-check when a new version appears in the vault:
   these are the only two
 - `class-freemius.php:1580-1581` — the two `add_action( 'admin_init', … )` registrations.
   If either moves to a different hook or priority, the `EARLY_PRIORITY` unhook misses it.
-  Debug logging reports "Freemius module 195 not present" only when the module is absent,
-  so a moved hook fails **silently** — re-read these lines rather than trusting the log
+  `remove_action()` on a hook that is no longer there still logs "Removed … producers",
+  so a moved hook fails **silently** — re-read these lines rather than trusting the log.
+  (The module-absent branch logs nothing since 1.30.0)
 - `class-freemius.php` — `get_instance_by_id()` and the `'m_' . $id` keying of
   `self::$_instances`. The accessor is the whole reason no `$wp_filter` walk is needed
 - `featured_images_in_rss.php` — the `fs_dynamic_init()` config. The **id `195`** keys the
@@ -333,7 +334,11 @@ plus `hide_freemius_promo_notice()`, `unhook_freemius_promos()` and the
 
 ### Adding a second Freemius plugin later
 
+**Done once, 1.30.0:** Role Based Pricing for WooCommerce (module 9596), see
+[`role-and-customer-based-pricing-for-woocommerce.md`](role-and-customer-based-pricing-for-woocommerce.md).
+
 `FREEMIUS_PROMO_NOTICE_IDS` is SDK-wide and needs no change. A new module needs its own
-id and slug, one more `add_filter()` on `fs_show_admin_notice_{slug}`, and one more pair
-of `remove_action()` calls. If that reaches three or four modules, turn the id/slug pairs
-into a single array and loop — not before.
+id and slug constants, one more `add_filter()` on `fs_show_admin_notice_{slug}`, and one
+more `unhook_freemius_module_promos( $id )` call in `unhook_freemius_promos()`. If that
+reaches three or four modules, turn the id/slug pairs into a single array and loop — not
+before.

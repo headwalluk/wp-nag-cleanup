@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.29.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.30.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -37,7 +37,7 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `disable_comments_show_review_prompt` | Disable Comments 2.9.0 | [disable-comments.md](disable-comments.md) |
 | `aioseo_show_seo_news` | AIOSEO Lite 5.0.1.1, Pro 4.3.4.1 | [all-in-one-seo-pack.md](all-in-one-seo-pack.md) |
 | `CYA11Y_ACCESSYES_BANNER_DISPLAYED` (constant) | WebToffee, via CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
-| `fs_show_admin_notice_{slug}` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md) |
+| `fs_show_admin_notice_{slug}` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md) |
 | `wpchill_telemetry_config` | Modula 2.14.39 | [modula-best-grid-gallery.md](modula-best-grid-gallery.md) |
 | `pre_transient_{campaign}` ‡ | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
 
@@ -57,7 +57,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | Rule method | Phase | Vendor verified against | Doc |
 |---|---|---|---|
 | `unhook_wpcode_promos` † | `admin_init` @ 1 | WPCode 2.3.9 | [insert-headers-and-footers.md](insert-headers-and-footers.md) |
-| `unhook_freemius_promos` | `admin_init` @ 1 | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md) |
+| `unhook_freemius_promos` | `admin_init` @ 1 | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md) |
 | `unhook_bsf_analytics_optin_notice` † | `admin_init` @ 1 | CartFlows 3.2.0, bsf-analytics 1.1.29 | [cartflows.md](cartflows.md), [brainstorm-force.md](brainstorm-force.md) |
 | `unhook_astra_theme_wc_upsell` | `admin_init` @ 1 | Astra **theme** 4.13.11 | [astra-theme.md](astra-theme.md) |
 | `unhook_wpforms_review_promos` † | `admin_init` @ 1 | WPForms Lite 2.0.1.1 | [wpforms-lite.md](wpforms-lite.md) |
@@ -133,13 +133,14 @@ one alone lets the other appear, so do not trim that constant to a single entry.
 | `hide_freemius_promo_notice()` | Mechanism 1 callback for `fs_show_admin_notice_{slug}`. Passes the incoming value straight back for ids we do not claim |
 | `disable_wpchill_telemetry()` | Mechanism 1 callback for `wpchill_telemetry_config` |
 | `get_freemius_module()` | Reaches a Freemius module by id without booting the SDK |
+| `unhook_freemius_module_promos()` | Removes one Freemius module's trial and affiliate producers. Called once per claimed module id from `unhook_freemius_promos()`; a module missing there keeps its menu badge |
 | `get_elementor_admin_notices_component()` | Reaches Elementor's admin-notices component |
 | `log()` | Gated on `HEADWALL_NAG_CLEANUP_DEBUG`. Logs what **happened**, never what was registered |
 | `MAX_DUPLICATE_CALLBACKS` | Loop bound for vendors that register the same callback twice. Code Snippets constructs `Promotion_Manager` twice, so one `remove_action()` leaves a copy rendering |
 
 ## Vendors examined with no rule
 
-`ls docs/plugins/` lists all 57 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
+`ls docs/plugins/` lists all 58 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
 produced nothing to suppress — a completed result, not a gap. Notable ones people ask about:
 EmbedPress, GeneratePress, Advanced Custom Fields, Autoptimize, Independent Analytics,
 Yoast SEO and Contact Form 7.
