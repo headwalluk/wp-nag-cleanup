@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.31.0
+ * Version:     1.32.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.31.0';
+		const VERSION = '1.32.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -282,6 +282,16 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// distributors. CartFlows 3.2.0. docs/plugins/cartflows.md
 			add_filter( 'cartflows_show_review_notice', '__return_false' );
 
+			// SureRank 5-star review request. Its eligibility also holds back the NPS survey,
+			// which then becomes eligible, but only on SureRank's own top-level screen.
+			// Present from 1.7.4. SureRank 1.10.1. docs/plugins/surerank.md
+			add_filter( 'surerank_show_rating_notice', '__return_false' );
+
+			// SureForms 5-star review request. The Getting Started notice gates on the
+			// underlying milestone, not this filter, so it is not released by it.
+			// Present from 2.10.1. SureForms 2.12.7. docs/plugins/sureforms.md
+			add_filter( 'srfm_show_rating_notice', '__return_false' );
+
 			// ThemeIsle SDK, bundled in Menu Icons, WPCF7 Redirect and others.
 			// Menu Icons 0.13.24. docs/plugins/themeisle-sdk.md
 			add_filter( 'themeisle_sdk_hide_dashboard_widget', '__return_true' );
@@ -378,6 +388,45 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_404_to_301_review_notice();
 			$this->unhook_inisev_promos();
 			$this->unhook_magical_addons_promos();
+			$this->unhook_surerank_permalink_upsell();
+		}
+
+		/**
+		 * Remove SureRank's "Changed a permalink? SureRank Pro automatically redirects old
+		 * URLs" upsell, and the enqueue of the React bundle that draws it.
+		 *
+		 * render_notice prints an empty #surerank-admin-notice mount; the bundle fills it.
+		 * The loader builds Admin_Notice on plugins_loaded for every request, so
+		 * get_instance() here returns that object rather than constructing one. With Pro
+		 * active the constructor adds neither hook and has_action() finds nothing.
+		 * The post and term hooks that arm the nudge are left: they only write
+		 * surerank_nudges, which nothing renders once the notice is gone.
+		 * SureRank 1.10.1. docs/plugins/surerank.md
+		 */
+		public function unhook_surerank_permalink_upsell() : void {
+			$notice_class = 'SureRank\\Inc\\Admin\\Admin_Notice';
+
+			if ( ! class_exists( $notice_class ) ) {
+				// Not installed.
+			} else {
+				$notice = $notice_class::get_instance();
+
+				$upsell_callbacks = [
+					'admin_notices'         => [ $notice, 'render_notice' ],
+					'admin_enqueue_scripts' => [ $notice, 'admin_enqueue_scripts' ],
+				];
+
+				foreach ( $upsell_callbacks as $hook_name => $upsell_callback ) {
+					$priority = has_action( $hook_name, $upsell_callback );
+
+					if ( false === $priority ) {
+						// Pro is active, or the site has no pretty permalinks.
+					} else {
+						remove_action( $hook_name, $upsell_callback, $priority );
+						$this->log( 'surerank', sprintf( 'Removed Admin_Notice::%s from %s priority %d.', $upsell_callback[1], $hook_name, $priority ) );
+					}
+				}
+			}
 		}
 
 		/**

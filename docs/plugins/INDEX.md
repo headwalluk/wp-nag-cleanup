@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.31.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.32.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -31,6 +31,8 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `wpdesk_tracker_enabled` | WP Desk tracker, Flexible Invoices 6.2.27 | [flexible-invoices.md](flexible-invoices.md) |
 | `bsf_usage_tracking_enabled` | Brainstorm Force bsf-analytics, Astra Pro 4.13.8 | [brainstorm-force.md](brainstorm-force.md) |
 | `cartflows_show_review_notice` | CartFlows 3.2.0 (filter added in 2.2.5) | [cartflows.md](cartflows.md) |
+| `surerank_show_rating_notice` | SureRank 1.10.1 (filter present from 1.7.4) | [surerank.md](surerank.md) |
+| `srfm_show_rating_notice` | SureForms 2.12.7 (filter present from 2.10.1) | [sureforms.md](sureforms.md) |
 | `themeisle_sdk_hide_dashboard_widget` | ThemeIsle SDK, Menu Icons 0.13.24 | [themeisle-sdk.md](themeisle-sdk.md) |
 | `cky_is_module_active_review_feedback` | CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `cky_is_module_active_connect_banner` | CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
@@ -82,6 +84,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_404_to_301_review_notice` † | `admin_init` @ 999 | 404 to 301 4.0.4 | [404-to-301.md](404-to-301.md) |
 | `unhook_inisev_promos` † | `admin_init` @ 999 | Copy & Delete Posts 1.5.6 (Inisev `Inisev\Subs` modules) | [copy-delete-posts.md](copy-delete-posts.md) |
 | `unhook_magical_addons_promos` | `admin_init` @ 999 | Magical Addons for Elementor 1.5.0, review request 1.4.6 | [magical-addons-for-elementor.md](magical-addons-for-elementor.md) |
+| `unhook_surerank_permalink_upsell` | `admin_init` @ 999 | SureRank 1.10.1, via `Admin_Notice::get_instance()` | [surerank.md](surerank.md) |
 | `unhook_elementskit_promos` † | `current_screen` @ 999 | ElementsKit Lite 4.0.2 | [elementskit-lite.md](elementskit-lite.md) |
 | `unhook_elementor_promotion_banners` † | `current_screen` @ 999 | Elementor 4.2.4 | [elementor.md](elementor.md) |
 | `unhook_code_snippets_promotions` † | `current_screen` @ 999 | Code Snippets 3.10.2 | [code-snippets.md](code-snippets.md) |
@@ -142,7 +145,7 @@ one alone lets the other appear, so do not trim that constant to a single entry.
 
 ## Vendors examined with no rule
 
-`ls docs/plugins/` lists all 60 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
+`ls docs/plugins/` lists all 62 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
 produced nothing to suppress — a completed result, not a gap. Notable ones people ask about:
 EmbedPress, GeneratePress, Advanced Custom Fields, Autoptimize, Independent Analytics,
 Yoast SEO and Contact Form 7.

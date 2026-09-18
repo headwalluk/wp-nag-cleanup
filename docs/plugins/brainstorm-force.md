@@ -21,6 +21,12 @@ document for five plugins, in the manner of `yith-plugin-fw.md`:
 | `bsf-core` | Product registration, licensing, updates, rollback | Astra Pro, Spectra Pro |
 | `astra-notices` | Generic admin notice framework (`BSF_Admin_Notices`) | Spectra, Astra Widgets, Custom Typekit Fonts |
 
+Also bundled, 18 Sep 2026: SureRank 1.10.1 (`bsf-analytics` 1.1.26, `astra-notices`,
+`nps-survey` 1.0.17) and SureForms 2.12.7 (`bsf-analytics` 1.1.29, `astra-notices` 1.2.1).
+Both still have `BSF_Analytics::option_notice` on `admin_init` and read
+`bsf_usage_tracking_enabled`, so both `bsf-analytics` rules cover them unchanged. Their own
+notices are in `surerank.md` and `sureforms.md`.
+
 **Two rules are added, both against `bsf-analytics`** — one here in 1.4.0 stopping the
 usage payload, and one added in 1.25.0 removing the opt-in notice, which this document
 originally recorded as blocked. The other two libraries are left entirely alone, and the

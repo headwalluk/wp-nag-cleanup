@@ -5,6 +5,34 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.32.0] — 2026-09-18
+
+### Added
+
+- **SureRank 1.10.1** (Brainstorm Force): the *"Changed a permalink? SureRank Pro
+  automatically redirects old URLs to keep your SEO intact."* upsell, reported by Paul from
+  a live client site. It appears after any published URL changes, names no URL, and offers
+  only **Upgrade Now**. Removed through the vendor's own `Admin_Notice::get_instance()`.
+  The loader builds that object on `plugins_loaded` for every request, so the call
+  constructs nothing. The React bundle's enqueue goes too. Also the 5-star review request,
+  via the vendor's `surerank_show_rating_notice` filter (present from 1.7.4). That filter
+  also releases the NPS survey, but only on SureRank's own dashboard screen.
+
+  Bench-confirmed: upsell 1 → 0, its bundle 2 → 0, review request 1 → 0. The Search
+  Console widget is kept, and the nudge option is unchanged. `docs/plugins/surerank.md`.
+
+- **SureForms 2.12.7** (Brainstorm Force): the 5-star review request, via the vendor's
+  `srfm_show_rating_notice` filter (present from 2.10.1). Bench-confirmed 1 → 0. Examined
+  because it came from the same site. The notice Paul judged operational is kept: the
+  "Finish setting up *form*" prompt, which names a template-imported form and links to its
+  fixes. Also kept: form-check warnings, database repair, the Stripe webhook notice and all
+  three dashboard widgets. The Getting Started notice and the "build your first form"
+  pointer are onboarding with no price attached, so they are left as ambiguous.
+  `docs/plugins/sureforms.md`.
+
+  Both plugins bundle `bsf-analytics` (1.1.26 and 1.1.29). The 1.25.0 rules already cover
+  their usage-tracking opt-in.
+
 ## [1.31.0] — 2026-09-18
 
 ### Added
