@@ -5,6 +5,34 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.31.0] — 2026-09-18
+
+### Added
+
+- **Copy & Delete Posts 1.5.6** (Inisev) — the full-width *"You've been using the Copy &
+  Delete Posts plugin for over 61 days now – entirely for FREE :)"* review banner, reported
+  by Paul from a live client site. Also a second Inisev module found in the same pass: a
+  *"Then you'll love Backup Migration"* cross-sell banner with an in-place install button,
+  shown after 30 days. Both are shared `Inisev\Subs` modules constructed and discarded
+  inside a closure, so the rule goes through the sanctioned `$wp_filter` reader. It removes
+  each banner and its banner-only asset enqueue. Matching by class means any sibling Inisev
+  plugin that loaded the module first is covered too.
+
+  Bench-confirmed with both 30-day gates backdated: review banner 1 → 0, cross-sell
+  1 → 0, both scripts 3 → 0. The plugin's own markup is unchanged and no dismissal was
+  written. The `analyst` opt-in SDK and the plugin-install-screen "Try it first" feature
+  notice are left alone. `docs/plugins/copy-delete-posts.md`.
+
+- **Magical Addons for Elementor 1.5.0** — the *"Magical Theme Builder is Live! Get Magical
+  Addons Pro + Magical Posts Display Pro for Just $29"* sales notice, reported by Paul from
+  the same client site. It shows on every admin screen, and dismissing it only lasts 25
+  days. A static callback on `madAdminInfo`, named directly with no `$wp_filter` read. The
+  same rule removes 1.4.6's review request from the same class (source-verified only).
+
+  Bench-confirmed: sales notice 1 → 0, no other notice touched, no dismissal meta written.
+  Elementor-missing, version and theme-builder dependency notices preserved.
+  `docs/plugins/magical-addons-for-elementor.md`.
+
 ## [1.30.0] — 2026-09-16
 
 ### Added

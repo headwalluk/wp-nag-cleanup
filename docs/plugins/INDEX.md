@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.30.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.31.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -80,6 +80,8 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_cptui_pro_upsell` | `admin_init` @ 999 | Custom Post Type UI 1.19.3 | [custom-post-type-ui.md](custom-post-type-ui.md) |
 | `unhook_check_email_promos` † | `admin_init` @ 999 | Check & Log Email 2.0.16 | [check-email.md](check-email.md) |
 | `unhook_404_to_301_review_notice` † | `admin_init` @ 999 | 404 to 301 4.0.4 | [404-to-301.md](404-to-301.md) |
+| `unhook_inisev_promos` † | `admin_init` @ 999 | Copy & Delete Posts 1.5.6 (Inisev `Inisev\Subs` modules) | [copy-delete-posts.md](copy-delete-posts.md) |
+| `unhook_magical_addons_promos` | `admin_init` @ 999 | Magical Addons for Elementor 1.5.0, review request 1.4.6 | [magical-addons-for-elementor.md](magical-addons-for-elementor.md) |
 | `unhook_elementskit_promos` † | `current_screen` @ 999 | ElementsKit Lite 4.0.2 | [elementskit-lite.md](elementskit-lite.md) |
 | `unhook_elementor_promotion_banners` † | `current_screen` @ 999 | Elementor 4.2.4 | [elementor.md](elementor.md) |
 | `unhook_code_snippets_promotions` † | `current_screen` @ 999 | Code Snippets 3.10.2 | [code-snippets.md](code-snippets.md) |
@@ -140,7 +142,7 @@ one alone lets the other appear, so do not trim that constant to a single entry.
 
 ## Vendors examined with no rule
 
-`ls docs/plugins/` lists all 58 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
+`ls docs/plugins/` lists all 60 documents (plus this index and `_TEMPLATE.md`). Those without a rule above were analysed and
 produced nothing to suppress — a completed result, not a gap. Notable ones people ask about:
 EmbedPress, GeneratePress, Advanced Custom Fields, Autoptimize, Independent Analytics,
 Yoast SEO and Contact Form 7.

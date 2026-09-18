@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.30.0
+ * Version:     1.31.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.30.0';
+		const VERSION = '1.31.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -376,6 +376,57 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_cptui_pro_upsell();
 			$this->unhook_check_email_promos();
 			$this->unhook_404_to_301_review_notice();
+			$this->unhook_inisev_promos();
+			$this->unhook_magical_addons_promos();
+		}
+
+		/**
+		 * Remove Inisev's review request and its Backup Migration cross-sell banner.
+		 *
+		 * Both are shared Inisev\Subs modules that Copy & Delete Posts constructs in a closure
+		 * on its own cdp_loaded action and discards. Each constructor hooks wp_loaded, which
+		 * adds the notice and a banner-only asset enqueue, so both are there by admin_init.
+		 * Whichever Inisev plugin loads a class first owns it, so matching by class covers
+		 * every sibling that ships these modules.
+		 *
+		 * Not used: defining IRB_H_CHECK_LOADED or NEW_BB_BANNER_H_HTML_LOADED ahead of the
+		 * vendor. They are once-per-request flags between Inisev plugins, not opt-outs.
+		 * Copy & Delete Posts 1.5.6. docs/plugins/copy-delete-posts.md
+		 */
+		public function unhook_inisev_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Inisev\\Subs\\Inisev_Review', 'display_review', 'inisev' );
+			$this->remove_discarded_instance_callback( 'admin_enqueue_scripts', 'Inisev\\Subs\\Inisev_Review', 'add_assets', 'inisev' );
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Inisev\\Subs\\New_BB_Banner', 'display_banner', 'inisev' );
+			$this->remove_discarded_instance_callback( 'admin_enqueue_scripts', 'Inisev\\Subs\\New_BB_Banner', 'add_assets', 'inisev' );
+		}
+
+		/**
+		 * Remove Magical Addons for Elementor's Pro bundle sales notice and its review request.
+		 *
+		 * Both are static callbacks, so they are named directly. display_review_notice exists
+		 * only up to 1.4.6; on 1.5.0 has_action() finds nothing and no line is logged. The
+		 * Elementor-missing, version and theme-builder dependency notices are separate callbacks.
+		 * mgaddons_admin_scripts is left hooked: its stylesheet also carries rules for other
+		 * admin markup.
+		 * Magical Addons for Elementor 1.5.0, review request 1.4.6.
+		 * docs/plugins/magical-addons-for-elementor.md
+		 */
+		public function unhook_magical_addons_promos() : void {
+			// Case matters: the class is declared madAdminInfo, and a static callback is keyed
+			// by literal string, so a mismatch removes nothing and looks like success.
+			$promo_callbacks = [
+				[ 'madAdminInfo', 'display_sales_notice' ],
+				[ 'madAdminInfo', 'display_review_notice' ],
+			];
+
+			foreach ( $promo_callbacks as $promo_callback ) {
+				if ( false === has_action( 'admin_notices', $promo_callback ) ) {
+					// Not installed, or this version does not register it.
+				} else {
+					remove_action( 'admin_notices', $promo_callback );
+					$this->log( 'magical-addons-for-elementor', sprintf( 'Removed %s::%s from admin_notices.', $promo_callback[0], $promo_callback[1] ) );
+				}
+			}
 		}
 
 		/**
