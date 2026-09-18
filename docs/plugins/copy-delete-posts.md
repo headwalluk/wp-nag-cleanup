@@ -186,6 +186,11 @@ Expected log noise: while either banner's gate is closed (the first 30 days, or 
 dismissal) and the plugin is active, the matching lines read
 `… not registered on admin_notices; no action taken.` That is correct, not drift.
 
+### Live — **Confirmed**, 18 Sep 2026
+
+Paul deployed 1.31.0 to the live client site where the review banner was reported and confirmed
+it gone the same day.
+
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 
 ```php

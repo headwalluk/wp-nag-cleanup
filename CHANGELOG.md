@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Both plugins bundle `bsf-analytics` (1.1.26 and 1.1.29). The 1.25.0 rules already cover
   their usage-tracking opt-in.
 
+### Changed
+
+- **Copy & Delete Posts** and **Magical Addons for Elementor** rules (1.31.0)
+  live-confirmed on the client site where they were reported.
+
 ## [1.31.0] — 2026-09-18
 
 ### Added

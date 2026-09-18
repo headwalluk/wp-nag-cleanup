@@ -132,6 +132,11 @@ confirmed rule.
 The Elementor-missing notice was not exercised: it needs Elementor deactivated. It is a
 separate instance-method callback that no rule names.
 
+### Live — **Confirmed**, 18 Sep 2026
+
+Paul deployed 1.31.0 to the live client site where the sales notice was reported and confirmed
+it gone the same day.
+
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 
 ```php
