@@ -185,8 +185,8 @@ web request had written `no`, so every admin request redirected to onboarding.
 ### Live — permalink upsell **Confirmed**, 18 Sep 2026
 
 Paul deployed 1.32.0 to the live client site where the upsell was reported and confirmed it
-gone the same day. The review request was not showing on that site before the deploy, so it
-remains bench-confirmed only.
+gone the same day. His report named only the upsell, so the review request was not observed
+there and remains bench-confirmed only.
 
 The NPS release was not seen on the bench: its 5-day `display_after` gate had not passed,
 so `nps-survey-surerank` was 0 before and after. The coupling is **source-verified**.

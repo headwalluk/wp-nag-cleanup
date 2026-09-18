@@ -166,8 +166,8 @@ No log line: a mechanism 1 rule cannot report a suppression (see Debug logging i
 
 ### Live — 18 Sep 2026
 
-Paul deployed 1.32.0 to the client site and reported no problems. The review request was
-not among the notices showing there before the deploy, so this rule remains
+Paul deployed 1.32.0 to the client site and reported it good. His report did not name the
+SureForms review request, so it was not observed there and this rule remains
 **bench-confirmed only**.
 
 The "Finish setting up" notice and the action items were not exercised: one needs a
