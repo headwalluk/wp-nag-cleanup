@@ -5,6 +5,23 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.33.1] — 2026-09-18
+
+### Fixed
+
+- **Dashboard widget removal logged widgets that were never there.** With
+  `HEADWALL_NAG_CLEANUP_DEBUG` on, `remove_promotional_dashboard_widgets()` wrote
+  *"Removed dashboard widget …"* for every entry in `PROMOTIONAL_DASHBOARD_WIDGETS` on every
+  dashboard load, whether or not that vendor was installed. On bench2 that was 11 lines, 9
+  of them for plugins that were absent. It now reads `$wp_meta_boxes` by widget id first
+  and logs only a widget that was actually registered. A widget found in a different column
+  from the one listed is logged as drift, since that removal does nothing.
+
+  Removal is unchanged: `remove_meta_box()` still runs for every listed id, because the
+  `false` entry it leaves also blocks a vendor that registers the widget after us. Checked
+  on the bench: a widget added at `PHP_INT_MAX` in the listed column stays hidden and logs
+  nothing.
+
 ## [1.33.0] — 2026-09-18
 
 ### Added

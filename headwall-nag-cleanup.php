@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.33.0
+ * Version:     1.33.1
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.33.0';
+		const VERSION = '1.33.1';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -1449,14 +1449,56 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			}
 
 			foreach ( $widgets_to_remove as $widget ) {
+				// Read before removing: remove_meta_box() leaves a false entry behind either way.
+				$registered_context = $this->find_dashboard_widget_context( $widget['widget_id'] );
+
+				// Called whether or not the widget is registered yet: the false entry also stops
+				// a later wp_add_dashboard_widget(), because add_meta_box() at 'core' priority
+				// will not re-add a removed id. Do not move this inside the branch below.
 				// A null screen resolves to the current one, covering all three dashboards.
 				remove_meta_box( $widget['widget_id'], null, $widget['context'] );
 
-				$this->log(
-					$widget['vendor'],
-					sprintf( 'Removed dashboard widget "%s" (%s).', $widget['widget_id'], $widget['reason'] )
-				);
+				if ( null === $registered_context ) {
+					// Not on this dashboard: vendor absent, or it registers later and is blocked.
+				} elseif ( $registered_context === $widget['context'] ) {
+					$this->log(
+						$widget['vendor'],
+						sprintf( 'Removed dashboard widget "%s" (%s).', $widget['widget_id'], $widget['reason'] )
+					);
+				} else {
+					$this->log(
+						$widget['vendor'],
+						sprintf( 'Dashboard widget "%s" is registered in "%s", not "%s"; not removed.', $widget['widget_id'], $registered_context, $widget['context'] )
+					);
+				}
 			}
+		}
+
+		/**
+		 * The context a dashboard widget is live in on the current screen, or null.
+		 *
+		 * Reads $wp_meta_boxes by exact widget id only. A false entry is one already removed.
+		 */
+		private function find_dashboard_widget_context( string $widget_id ) : ?string {
+			global $wp_meta_boxes;
+
+			$registered_context = null;
+			$screen             = get_current_screen();
+
+			if ( null === $screen || ! isset( $wp_meta_boxes[ $screen->id ] ) || ! is_array( $wp_meta_boxes[ $screen->id ] ) ) {
+				// No screen yet, or nothing registered on this dashboard.
+			} else {
+				foreach ( $wp_meta_boxes[ $screen->id ] as $context => $boxes_by_priority ) {
+					foreach ( [ 'high', 'core', 'default', 'low' ] as $priority ) {
+						if ( isset( $boxes_by_priority[ $priority ][ $widget_id ] ) && is_array( $boxes_by_priority[ $priority ][ $widget_id ] ) ) {
+							$registered_context = (string) $context;
+							break 2;
+						}
+					}
+				}
+			}
+
+			return $registered_context;
 		}
 
 		/**
