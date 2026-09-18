@@ -156,9 +156,12 @@ Bench left as found: plugin uninstalled through its own uninstaller, which drops
 nag-cleanup file restored. The table, option, cron, user and `wp_terms` column snapshots
 all match.
 
-### Live — not yet
+### Live — **Confirmed**, 18 Sep 2026
 
-Paul reported the notice from a live site. Not yet deployed there.
+On the live site where Paul first saw it. The site's web designer had already dismissed the
+notice, so Paul brought it back with
+`wp option update simple-rate-time $(( $(date +%s) - 3600 ))`. He saw it render under the
+old mu-plugin, then deployed 1.33.0 and it was gone.
 
 ## Additions to `headwall-nag-cleanup.php`: 1 rule method, mechanism 2
 
