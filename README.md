@@ -167,13 +167,14 @@ which takes a hook, a class and a method. It is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Eighteen rules use it as of 1.31.0: WPB Product Slider, Elementor's promotions module,
+Nineteen rules use it as of 1.33.0: WPB Product Slider, Elementor's promotions module,
 ElementsKit's Wpmet libs, QuadLayers, Converter for Media, WPCode, WP Mail Bank,
 BdThemes, MonsterInsights' review request, Rank Math's dashboard blog feed,
 Brainstorm Force's `bsf-analytics` opt-in notice, WPForms Lite's review request,
 ShapedPlugin, Code Snippets' competitor promotion, WP Mail SMTP's review request and
 Check & Log Email's newsletter pointer and review request, 404 to 301's review request,
-and Inisev's review and Backup Migration cross-sell banners.
+Inisev's review and Backup Migration cross-sell banners, and Simple Custom Post Order's
+review request.
 Each has
 its own write-up, and each had to establish that the other mechanisms were all
 unavailable first — a bar that has failed more often than it has passed, and twice a
@@ -270,6 +271,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |
 | Check & Log Email | 2.0.16 | 2 | Newsletter sign-up pointer that fills in the admin's email address, and the review request. SMTP-credentials and log-threshold warnings preserved, as are both dashboard widgets |
 | 404 to 301 (All in One SEO) | 4.0.4 | 2 | Review request. Redundant-addons migration notice, PHP/WordPress version warnings and the Recent 404s dashboard widget preserved |
+| Simple Custom Post Order (Colorlib) | 2.8.8 | 2 | Review request ("Stoked to see you're using Simple Custom Post Order") and its dismiss script. The "select which post types to order" setup notice preserved |
 | Copy & Delete Posts (Inisev) | 1.5.6 | 2 | "You've been using … for FREE :)" review banner, and the Backup Migration cross-sell banner, plus their scripts. The plugin's own duplicate UI, the `analyst` opt-in flow and the plugin-install-screen feature notice preserved |
 | SureRank (Brainstorm Force) | 1.10.1 | 1, 2 | "Changed a permalink? SureRank Pro automatically redirects old URLs" upsell and its React bundle, and the 5-star review request. Bulk-action results and the Search Console dashboard widget preserved |
 | SureForms (Brainstorm Force) | 2.12.7 | 1 | 5-star review request. Form-check warnings, database repair, Stripe webhook, "Finish setting up *form*" and all three dashboard widgets preserved |

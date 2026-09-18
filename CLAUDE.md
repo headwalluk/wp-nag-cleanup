@@ -133,7 +133,7 @@ vendor registers the same callback **twice**, so the rule loops the finder rathe
 calling it once) and WP Mail SMTP (1.26.0, the review request) and Check & Log Email (1.28.0, the newsletter
 pointer and the review request) and 404 to 301 (1.29.0, the review request) and Copy & Delete Posts (1.31.0, Inisev's
 shared `Inisev\Subs` review and cross-sell modules, matched by class so sibling Inisev
-plugins are covered). Never add a second reader;
+plugins are covered) and Simple Custom Post Order (1.33.0, the review request). Never add a second reader;
 extend this one.
 
 Two habits that have repeatedly avoided needing it:

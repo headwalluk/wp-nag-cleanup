@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.32.0
+ * Version:     1.33.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.32.0';
+		const VERSION = '1.33.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -385,6 +385,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
 			$this->unhook_check_email_promos();
+			$this->unhook_simple_custom_post_order_review_notice();
 			$this->unhook_404_to_301_review_notice();
 			$this->unhook_inisev_promos();
 			$this->unhook_magical_addons_promos();
@@ -514,6 +515,24 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->remove_discarded_instance_callback( 'admin_enqueue_scripts', 'Check_Email_Newsletter', 'ck_mail_enqueue_newsletter_js', 'check-email' );
 			$this->remove_discarded_instance_callback( 'admin_notices', 'CheckEmail\\Core\\Check_Email_Review', 'five_star_wp_rate_notice', 'check-email' );
 			$this->remove_discarded_instance_callback( 'admin_print_footer_scripts', 'CheckEmail\\Core\\Check_Email_Review', 'ajax_script', 'check-email' );
+		}
+
+		/**
+		 * Remove Simple Custom Post Order's "please consider rating it" review request.
+		 *
+		 * class-simple-review.php ends `new Simple_Review();`, so nothing holds the instance.
+		 * Its init() adds the notice and its dismiss script from inside the vendor's own init
+		 * callback, before admin_init. 2.5.10 to 2.8.6 register them on an init/10 callback
+		 * added during init/10, which never runs; nothing is found there and a line is logged.
+		 *
+		 * Not used: pre_option_simple-rate-time with __return_true. The gate is
+		 * `time() > $value`, and true compares as 1, so that shows the nag.
+		 * The "select which post types to order" setup notice is SCPO_Engine's, and stays.
+		 * Simple Custom Post Order 2.8.8. docs/plugins/simple-custom-post-order.md
+		 */
+		public function unhook_simple_custom_post_order_review_notice() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Simple_Review', 'five_star_wp_rate_notice', 'simple-custom-post-order' );
+			$this->remove_discarded_instance_callback( 'admin_print_footer_scripts', 'Simple_Review', 'ajax_script', 'simple-custom-post-order' );
 		}
 
 		/**

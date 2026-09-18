@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.33.0] — 2026-09-18
+
+### Added
+
+- **Simple Custom Post Order 2.8.8** (Colorlib): the *"Stoked to see you're using Simple
+  Custom Post Order for a few days now … please consider rating it"* review request,
+  reported by Paul. `Simple_Review` is constructed and discarded at the bottom of its own
+  file, so the rule goes through the sanctioned `$wp_filter` reader and removes the notice
+  and its dismiss script. It is the same Epsilon review class as Check & Log Email's.
+
+  The notice was dead code from 2.5.10 to 2.8.6: its `init` callback was added while `init`
+  priority 10 was already running, so it never ran. 2.8.7 fixed that, which is why sites are
+  only now seeing it. On those older versions the rule finds nothing and logs a line.
+
+  Bench-confirmed with the one-day gate backdated: notice 2 → 0, dismiss script 1 → 0,
+  `simple-rate-time` unchanged. The "select which post types to order" setup notice is
+  kept. `docs/plugins/simple-custom-post-order.md`.
+
 ## [1.32.0] — 2026-09-18
 
 ### Added
