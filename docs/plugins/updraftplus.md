@@ -243,6 +243,13 @@ table, cron and user snapshots match. The option snapshot differed by one row,
 removed, and Elementor regenerates it. One Quick Draft auto-draft (post `220335`), created
 by the test user's dashboard loads and reassigned to user 1, was left for the full bench reset that followed.
 
+### Live — autobackup advert **Confirmed**, 21 Sep 2026
+
+Paul deployed 1.34.0 by hand to a live site and tested it there. The *"Automatically back
+up before updates"* advert on `update-core.php` was gone.
+
+The dashboard panel was not part of that check. It remains bench-confirmed only.
+
 ## Additions to `headwall-nag-cleanup.php`: 2 rules
 
 ```php
