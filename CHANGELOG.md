@@ -5,6 +5,29 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.0] — 2026-09-21
+
+### Added
+
+- **UpdraftPlus 1.26.7**: the *"Automatically back up before updates — With UpdraftPlus
+  Premium, your site is backed up before every update"* advert, reported by Paul on
+  `update-core.php`. It is not an admin notice. It comes from core's
+  `core_upgrade_preamble` action, which is why it appears on no other screen. It is also
+  printed on the single plugin and theme update screens. All three gate on the vendor's own
+  `updraftplus_dismissedautobackup` timestamp, so core's `pre_option_` filter answers that
+  gate with a future timestamp and nothing is written. Every unhook route was rejected: with
+  Premium, the same callback prints the operational "back up before updating" checkbox. The
+  vendor's `UPDRAFTPLUS_NOADS_B` constant was rejected too, because it also changes
+  UpdraftPlus's own settings screen and its backup report emails.
+- **UpdraftPlus 1.26.7**: the *"Thank you for installing UpdraftPlus!"* dashboard panel,
+  a cross-sell for seven products that appears 28 days after install. Removed with
+  `remove_action()` on the vendor's global `$updraftplus_admin`.
+
+  Both were bench-confirmed on a copy of the reporting site. Advert 1 → 0 on
+  `update-core.php`, with the dismissal option unchanged. Panel 1 → 0 on the dashboard.
+  The UpdraftClone line injected into core's "PHP update required" widget is left alone as
+  ambiguous, and so is every storage, disk, log, restore and migration warning.
+
 ## [1.33.1] — 2026-09-18
 
 ### Fixed

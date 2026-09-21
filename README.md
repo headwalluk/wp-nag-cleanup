@@ -115,7 +115,7 @@ add_filter( 'yith_plugin_fw_show_dashboard_widgets', '__return_false' );
 Sanctioned, stable, and cannot break anything the vendor did not intend to be
 switchable. Always prefer this where it exists.
 
-One rule uses a **core** filter in the same shape, where the vendor offers no switch and
+Two rules use a **core** filter in the same shape, where the vendor offers no switch and
 its notice cannot be unhooked at all. Premium Addons prints its seasonal sale pointer from
 an anonymous closure, which `remove_action()` cannot name; the closure bails when its own
 dismissal transient is set, and core's `pre_transient_{$transient}` answers that gate from
@@ -129,6 +129,13 @@ Nothing is written. The vendor's own option write sits after the gate and is ski
 it, so no dismissal is recorded and removing this plugin restores the pointer — which is
 the whole difference between this and setting the vendor's dismissal flag in the database.
 See [`docs/plugins/premium-addons-for-elementor.md`](docs/plugins/premium-addons-for-elementor.md).
+
+UpdraftPlus's "Automatically back up before updates" advert gets the same treatment on
+its dismissal option, `pre_option_updraftplus_dismissedautobackup`. Every way of unhooking
+it would also remove the operational "back up before updating" checkbox that Premium
+prints in the same place. The answer is a future timestamp rather than `true`, because the
+vendor compares it with `time()`. See
+[`docs/plugins/updraftplus.md`](docs/plugins/updraftplus.md).
 
 ### 2. Targeted unhooking
 
@@ -272,6 +279,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Check & Log Email | 2.0.16 | 2 | Newsletter sign-up pointer that fills in the admin's email address, and the review request. SMTP-credentials and log-threshold warnings preserved, as are both dashboard widgets |
 | 404 to 301 (All in One SEO) | 4.0.4 | 2 | Review request. Redundant-addons migration notice, PHP/WordPress version warnings and the Recent 404s dashboard widget preserved |
 | Simple Custom Post Order (Colorlib) | 2.8.8 | 2 | Review request ("Stoked to see you're using Simple Custom Post Order") and its dismiss script. The "select which post types to order" setup notice preserved |
+| UpdraftPlus | 1.26.7 | 1, 2 | "Automatically back up before updates" Premium advert on `update-core.php` and the plugin and theme update screens, and the "Thank you for installing UpdraftPlus!" cross-sell panel on the dashboard. Every storage, disk, log, restore and migration warning preserved, as is Premium's own "back up before updating" checkbox |
 | Copy & Delete Posts (Inisev) | 1.5.6 | 2 | "You've been using … for FREE :)" review banner, and the Backup Migration cross-sell banner, plus their scripts. The plugin's own duplicate UI, the `analyst` opt-in flow and the plugin-install-screen feature notice preserved |
 | SureRank (Brainstorm Force) | 1.10.1 | 1, 2 | "Changed a permalink? SureRank Pro automatically redirects old URLs" upsell and its React bundle, and the 5-star review request. Bulk-action results and the Search Console dashboard widget preserved |
 | SureForms (Brainstorm Force) | 2.12.7 | 1 | 5-star review request. Form-check warnings, database repair, Stripe webhook, "Finish setting up *form*" and all three dashboard widgets preserved |

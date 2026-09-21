@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.33.1**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.34.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -42,11 +42,15 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `fs_show_admin_notice_{slug}` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md) |
 | `wpchill_telemetry_config` | Modula 2.14.39 | [modula-best-grid-gallery.md](modula-best-grid-gallery.md) |
 | `pre_transient_{campaign}` ‡ | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
+| `pre_option_updraftplus_dismissedautobackup` ‡ | UpdraftPlus 1.26.7 | [updraftplus.md](updraftplus.md) |
 
 `‡` is **core's** filter, not the vendor's: Premium Addons prints its seasonal sale
 pointer from an anonymous closure that no `remove_action()` can name, and the closure's
 own dismissal transient is the only gate reachable from outside. One filter per campaign
 name, all of them listed in `PREMIUM_ADDONS_POINTER_TRANSIENTS`. Nothing is written.
+UpdraftPlus's autobackup advert is answered the same way, on its dismissal option: every
+route to unhooking it would also take Premium's operational "back up before updating"
+checkbox. The answer is `PHP_INT_MAX`, not `true`, because the gate is a timestamp comparison.
 
 ## Mechanism 2 — targeted unhooks
 
@@ -86,6 +90,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_inisev_promos` † | `admin_init` @ 999 | Copy & Delete Posts 1.5.6 (Inisev `Inisev\Subs` modules) | [copy-delete-posts.md](copy-delete-posts.md) |
 | `unhook_magical_addons_promos` | `admin_init` @ 999 | Magical Addons for Elementor 1.5.0, review request 1.4.6 | [magical-addons-for-elementor.md](magical-addons-for-elementor.md) |
 | `unhook_surerank_permalink_upsell` | `admin_init` @ 999 | SureRank 1.10.1, via `Admin_Notice::get_instance()` | [surerank.md](surerank.md) |
+| `unhook_updraftplus_dashboard_panel` | `admin_init` @ 999 | UpdraftPlus 1.26.7, via `global $updraftplus_admin` | [updraftplus.md](updraftplus.md) |
 | `unhook_elementskit_promos` † | `current_screen` @ 999 | ElementsKit Lite 4.0.2 | [elementskit-lite.md](elementskit-lite.md) |
 | `unhook_elementor_promotion_banners` † | `current_screen` @ 999 | Elementor 4.2.4 | [elementor.md](elementor.md) |
 | `unhook_code_snippets_promotions` † | `current_screen` @ 999 | Code Snippets 3.10.2 | [code-snippets.md](code-snippets.md) |

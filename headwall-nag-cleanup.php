@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.33.1
+ * Version:     1.34.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.33.1';
+		const VERSION = '1.34.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -359,6 +359,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				add_filter( 'pre_transient_' . $pointer_transient, '__return_true' );
 			}
 
+			// UpdraftPlus's "Automatically back up before updates" Premium advert. Every
+			// surface that prints it gates on the vendor's own dismissal timestamp, so core's
+			// pre_option_ short-circuit reaches all of them with nothing written.
+			// UpdraftPlus 1.26.7. docs/plugins/updraftplus.md
+			add_filter( 'pre_option_updraftplus_dismissedautobackup', [ $this, 'answer_updraftplus_autobackup_dismissed' ] );
+
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
 			$this->log( 'vendor-optouts', 'Registered vendor opt-out filters.' );
@@ -390,6 +396,34 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_inisev_promos();
 			$this->unhook_magical_addons_promos();
 			$this->unhook_surerank_permalink_upsell();
+			$this->unhook_updraftplus_dashboard_panel();
+		}
+
+		/**
+		 * Remove UpdraftPlus's "Thank you for installing UpdraftPlus!" cross-sell panel.
+		 *
+		 * UpdraftPlus_Admin's constructor adds it to all_admin_notices, only on index.php and
+		 * only once the backup directory is 28 days old. The constructor runs from
+		 * UpdraftPlus::admin_menu, before admin_init, and the vendor keeps the instance in
+		 * the global $updraftplus_admin.
+		 * UpdraftPlus 1.26.7. docs/plugins/updraftplus.md
+		 */
+		public function unhook_updraftplus_dashboard_panel() : void {
+			global $updraftplus_admin;
+
+			if ( ! is_a( $updraftplus_admin, 'UpdraftPlus_Admin' ) ) {
+				// Not installed.
+			} else {
+				$panel_callback = [ $updraftplus_admin, 'show_admin_notice_ad' ];
+				$priority       = has_action( 'all_admin_notices', $panel_callback );
+
+				if ( false === $priority ) {
+					// Not the dashboard, not yet 28 days old, or dismissed by the site owner.
+				} else {
+					remove_action( 'all_admin_notices', $panel_callback, $priority );
+					$this->log( 'updraftplus', sprintf( 'Removed UpdraftPlus_Admin::show_admin_notice_ad from all_admin_notices priority %d.', $priority ) );
+				}
+			}
 		}
 
 		/**
@@ -1005,6 +1039,29 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			}
 
 			return $telemetry_config;
+		}
+
+		/**
+		 * Report UpdraftPlus's autobackup advert as dismissed, without writing the option.
+		 *
+		 * It is printed on update-core.php by core_upgrade_preamble, and on the single plugin
+		 * and theme update screens by admin_action_upgrade_pluginortheme. Both gate on
+		 * updraftplus_dismissedautobackup, as does the notices library's own dismissal check.
+		 *
+		 * A future timestamp, not __return_true: the gates are `$value > time()` and
+		 * `time() < $value`, and true compares as 1, so that shows the advert.
+		 *
+		 * Not used: removing core_upgrade_preamble, or __return_empty_string on
+		 * updraftplus_autobackup_blurb. With Premium, that same callback and filter print the
+		 * autobackup addon's "back up before updating" checkbox. Not used either: the
+		 * UPDRAFTPLUS_NOADS_B constant. It also changes UpdraftPlus's own settings screen and
+		 * its backup report emails.
+		 * UpdraftPlus 1.26.7. docs/plugins/updraftplus.md
+		 */
+		public function answer_updraftplus_autobackup_dismissed() : int {
+			$this->log( 'updraftplus', 'Answered updraftplus_dismissedautobackup as dismissed.' );
+
+			return PHP_INT_MAX;
 		}
 
 		/**
