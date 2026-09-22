@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.35.0] — 2026-09-22
+
+### Added
+
+- **Freemius usage-tracking opt-in** (sticky `connect_account`, *"We made a few tweaks to
+  the plugin, Opt in to make … better!"*). Reported by Paul from a live site running
+  Delete Comments & Disable Comments 7.1 (SDK 2.11.0). It is hidden through the existing
+  `fs_show_admin_notice_{slug}` render filter, so nothing is written to Freemius storage.
+  It applies to every claimed Freemius slug. That means the two already covered, Featured
+  Images in RSS and Role Based Pricing for WooCommerce, plus two new ones:
+  `delete-all-comments-of-website` and `independent-analytics`. Licence, trial-state,
+  activation and ownership stickies are unchanged. The premium "Complete activation now"
+  step has no id, so it cannot match.
+
+### Changed
+
+- **Reversed the earlier decision to leave the Freemius opt-in alone.** It had been
+  declined three times, first in `docs/plugins/independent-analytics.md`, on the grounds
+  that no filter reaches it. That was wrong: the render filter used since 1.22.1 reaches
+  every Freemius notice. The three earlier docs are corrected and carry a dated reversal
+  note.
+
 ## [1.34.0] — 2026-09-21
 
 ### Added

@@ -19,16 +19,19 @@ bundled **Freemius SDK**, not from the plugin's own code.
 produce a rule — see [`featured-images-for-rss-feeds.md`](featured-images-for-rss-feeds.md)
 and the dated note further down.)*
 
-**No rule is added**, and unlike the previous three audits that is a close call rather
-than an obvious one. The reasoning is set out in full below because it is the strongest
-candidate declined so far.
+**Reversed 22 Sep 2026 (1.35.0): the opt-in is now suppressed.** The original decision,
+kept below as the record, rested first on "the SDK exposes no filter on this notice". That
+was wrong. `fs_show_admin_notice_{slug}` filters every Freemius notice at render, this one
+included, with no database write. See
+[`delete-all-comments-of-website.md`](delete-all-comments-of-website.md) for the decision.
+This slug is claimed through the same filter.
 
 ### Search checklist
 
 | Pass | Result |
 |---|---|
 | `admin_notices` / `network_admin_notices` / `all_admin_notices` registrations | None in the plugin's own code. **Freemius registers `admin_notices` and `network_admin_notices`** from `FS_Admin_Notice_Manager::_admin_notices_hook` |
-| Vendor opt-out filters | Freemius filters are namespaced per module via `fs_apply_filter()`, so there is **no global switch**. None gates the opt-in notice |
+| Vendor opt-out filters | Freemius filters are namespaced per module via `fs_apply_filter()`, so there is **no global switch**. *Originally recorded as "none gates the opt-in notice". Wrong: `fs_show_admin_notice_independent-analytics` gates it at render. Used since 1.35.0* |
 | Vendor opt-out constants | `WP_FS__DEMO_MODE`, `WP_FS__DEV_MODE`, `WP_FS__SKIP_EMAIL_ACTIVATION` — development aids, not opt-outs |
 | Dashboard widgets | 1: `iawp`. **Site data, not a nag** |
 | Outbound calls from widgets | None. The widget reads local `Page_Statistics` |
@@ -38,7 +41,7 @@ candidate declined so far.
 
 | Item | Hook | Verdict | Reason |
 |---|---|---|---|
-| Freemius opt-in / connect notice | `admin_notices` → `FS_Admin_Notice_Manager::_admin_notices_hook`, sticky id `connect_account` | suppress — **declined**, see below | *"We made a few tweaks to the plugin, Opt in to make "Independent Analytics" better!"* with Opt In / Skip buttons |
+| Freemius opt-in / connect notice | `admin_notices` → `FS_Admin_Notice_Manager::_admin_notices_hook`, sticky id `connect_account` | **suppress** (render filter, 1.35.0). Originally declined, see below | *"We made a few tweaks to the plugin, Opt in to make "Independent Analytics" better!"* with Opt In / Skip buttons |
 | `iawp` dashboard widget | `wp_dashboard_setup` | keep | Renders the site's own 30-day traffic chart and quick stats |
 
 ## Deliberately left alone
@@ -52,6 +55,8 @@ its own switch (`iawp_disable_widget`) for owners who do not want it. Not a nag,
 not ours to remove.
 
 ### The Freemius opt-in notice — declined, but it was close
+
+**Reversed 22 Sep 2026 (1.35.0).** `connect_account` is now suppressed through the `fs_show_admin_notice_{slug}` render filter. See [`delete-all-comments-of-website.md`](delete-all-comments-of-website.md). The first bullet below is the error that decision corrected.
 
 This one is genuinely in scope on the face of it. Confirmed on a live install, it renders
 on **every core admin screen except the dashboard**:
@@ -142,4 +147,10 @@ Re-check when a new version appears in the vault:
 Tested on `bench2.local` (WP 7.1) with Independent Analytics 2.15.5 active and
 un-opted-in, over authenticated admin requests. No rule deployed. Zero PHP fatals.
 
-## Additions to `headwall-nag-cleanup.php`: NONE
+1.35.0 rule: **source-verified only**, on the same render filter live-confirmed for
+`trial_promotion` in 1.22.1.
+
+## Additions to `headwall-nag-cleanup.php`: `fs_show_admin_notice_independent-analytics` (1.35.0)
+
+`IAWP_FREEMIUS_SLUG` registered for `hide_freemius_promo_notice()`, with `connect_account`
+added to `FREEMIUS_PROMO_NOTICE_IDS`.

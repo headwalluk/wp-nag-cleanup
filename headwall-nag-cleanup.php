@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.34.0
+ * Version:     1.35.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.34.0';
+		const VERSION = '1.35.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -83,12 +83,25 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		const RACBPFW_FREEMIUS_SLUG      = 'role-and-customer-based-pricing-for-woocommerce';
 
 		/**
-		 * Freemius sticky ids that carry promotion only. These are the sole two notices
-		 * the SDK types 'promotion'; licence, update and opt-in stickies are not listed.
+		 * Freemius modules claimed only for the render filter. Neither declares a trial or
+		 * affiliate programme, so neither needs a module id for unhook_freemius_promos().
+		 * docs/plugins/independent-analytics.md, docs/plugins/delete-all-comments-of-website.md
+		 */
+		const IAWP_FREEMIUS_SLUG = 'independent-analytics';
+		const DACW_FREEMIUS_SLUG = 'delete-all-comments-of-website';
+
+		/**
+		 * Freemius sticky ids that carry promotion only. Licence, trial-state, activation
+		 * and ownership stickies are not listed.
+		 *
+		 * connect_account has exactly one producer, add_sticky_optin_admin_notice(), and is
+		 * the usage-tracking opt-in. It is not the premium licence-activation prompt: that
+		 * one ("Complete activation now") is added with no id, so it never matches here.
 		 */
 		const FREEMIUS_PROMO_NOTICE_IDS = [
 			'trial_promotion',
 			'affiliate_program',
+			'connect_account',
 		];
 
 		/**
@@ -327,6 +340,26 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/role-and-customer-based-pricing-for-woocommerce.md
 			add_filter(
 				'fs_show_admin_notice_' . self::RACBPFW_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
+
+			// Same Freemius stickies, Independent Analytics 2.15.5 (SDK 2.13.4). Only the
+			// connect_account opt-in is ever produced here.
+			// docs/plugins/independent-analytics.md
+			add_filter(
+				'fs_show_admin_notice_' . self::IAWP_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
+
+			// Same Freemius stickies, Delete Comments & Disable Comments 7.1 (SDK 2.11.0).
+			// Only the connect_account opt-in is ever produced here.
+			// docs/plugins/delete-all-comments-of-website.md
+			add_filter(
+				'fs_show_admin_notice_' . self::DACW_FREEMIUS_SLUG,
 				[ $this, 'hide_freemius_promo_notice' ],
 				self::LATE_PRIORITY,
 				2

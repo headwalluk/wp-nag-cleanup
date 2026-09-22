@@ -43,7 +43,7 @@ The plugin's own code adds nothing promotional to the notice area or the dashboa
 |---|---|---|---|
 | Freemius trial promotion | `admin_init` 10 → `Freemius::_add_trial_notice`, sticky id `trial_promotion`, type `promotion` | **suppress** (unhook + render filter) | Trial upsell, says nothing about the site. Re-shows every 30 days |
 | Freemius affiliate program | `admin_init` 10 → `Freemius::_add_affiliate_program_notice` | **suppress** (same rule, no-op today) | The module declares no affiliate program, so the producer bails at `! $this->has_affiliate_program()`. The shared rule unhooks it anyway, so the rule stays correct if the vendor turns one on |
-| Freemius opt-in / connect | sticky id `connect_account` | keep | Declined for every Freemius module, see `independent-analytics.md`. **Seen still rendering on the bench after the rule** — the negative check |
+| Freemius opt-in / connect | sticky id `connect_account` | **suppress** from 1.35.0 | Originally declined for every Freemius module. Reversed, see `delete-all-comments-of-website.md`. The 1.22.1 bench saw it still rendering after the trial rule, which was the negative check then |
 | `AdminNotifier` messages | `admin_notices` → closure | keep | Result and error messages from actions the admin just took |
 | Pricing-rule validation warning | `admin_notices` → closure in `RoleSpecificPricingCPT` | keep | Pricing rule is misconfigured. Operational, and on the vendor's own post type |
 | "You are using the free version … Upgrade to premium" | `views/admin/alerts/upgrade-alert.php`, from `Settings::…` | out of scope | Rendered inside the plugin's own WooCommerce settings section |
@@ -54,7 +54,7 @@ The plugin's own code adds nothing promotional to the notice area or the dashboa
 
 The two closures carry operational messages, and closures cannot be unhooked by name
 anyway. The upgrade alert lives on the vendor's own settings section. The `connect_account`
-opt-in is declined here for the same reasons as for every other Freemius module.
+opt-in was declined here for the same reasons as for every other Freemius module. **Reversed 22 Sep 2026 (1.35.0).** `connect_account` is now suppressed through the `fs_show_admin_notice_{slug}` render filter. See [`delete-all-comments-of-website.md`](delete-all-comments-of-website.md).
 
 ### `fs_show_trial_{slug}` — not used
 
@@ -154,7 +154,7 @@ stored.
 | Check | Result |
 |---|---|
 | Screens asserted: `id="dashboard-widgets"`, `id="the-list"` | yes |
-| `data-id="connect_account"` opt-in still rendering | **yes**, 1 before and 1 after |
+| `data-id="connect_account"` opt-in still rendering | **yes**, 1 before and 1 after *(expected at 1.22.1; suppressed from 1.35.0)* |
 | `trial_promotion` still in Freemius storage after the rule | **yes** — `has_sticky()` true. Hidden, not deleted |
 | PHP fatals / warnings / parse errors | **0** |
 

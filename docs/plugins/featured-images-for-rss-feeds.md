@@ -48,7 +48,7 @@ in full under [Mechanism](#mechanism) rather than quietly corrected.
 | Freemius trial promotion | `admin_init` 10 → `Freemius::_add_trial_notice`, sticky id `trial_promotion`, type `promotion` | **suppress** (unhook + render filter) | *"Hey! How do you like **Featured Images in RSS…** so far? Test all our awesome premium features with a 14-day free trial. No credit card required!"* with a **Start free trial ➜** button. Pure upsell, no site state. Re-shows **every 30 days** |
 | Freemius affiliate program | `admin_init` 10 → `Freemius::_add_affiliate_program_notice`, sticky id `affiliate_program`, type `promotion` | **suppress** (unhook + render filter) | *"Hey there, did you know that **…** has an affiliate program? If you like the plugin you can become our ambassador and earn some cash!"* Pure promotion, no site state |
 | 30-day review request | `admin_notices` → anonymous closure, `featured_images_in_rss.php:351` | keep — **unreachable**, see below | Would be a review nag, but it is registered too late to fire, is gated to the vendor's own settings page, and is a closure |
-| Freemius opt-in / connect notice | `admin_notices` → `FS_Admin_Notice_Manager::_admin_notices_hook`, sticky id `connect_account` | keep | Declined for this plugin on the same reasoning as `independent-analytics.md` |
+| Freemius opt-in / connect notice | `admin_notices` → `FS_Admin_Notice_Manager::_admin_notices_hook`, sticky id `connect_account` | **suppress** from 1.35.0 | Originally declined, see below. Now hidden by the same render filter as the trial sticky |
 | `firss_call_to_action`, `firss_inform_premium` | `firss_settings_form_actions`, `firss_settings_after_form` | keep | Vendor's own settings screen. Out of scope by construction |
 | "Please rate and review" plugin row link | `plugin_row_meta` | keep | A plugin-list row link, not a notice. Not the notice area |
 
@@ -97,6 +97,9 @@ it, and it is not a nag we can or should act on.** If the vendor ever moves that
 and still confined to the vendor's own screen.
 
 ### The Freemius opt-in notice — declined, consistent with Independent Analytics
+
+**Reversed 22 Sep 2026 (1.35.0).** `connect_account` is now suppressed through the `fs_show_admin_notice_{slug}` render filter. See [`delete-all-comments-of-website.md`](delete-all-comments-of-website.md). The claim below that the SDK has no filter on it was wrong. The
+render filter this very rule uses reaches it.
 
 `is_org_compliant => true` means this module shows the same sticky `connect_account`
 opt-in prompt analysed at length in `docs/plugins/independent-analytics.md`. Nothing
@@ -289,8 +292,8 @@ about:
 
 - **Render filter** — driven through Freemius's own `fs_apply_filter()` tag builder,
   copied verbatim, and evaluated against the SDK's `true !== $show_notice` gate.
-  `trial_promotion` and `affiliate_program` suppress; `connect_account`,
-  `license_expired` and `plan_upgraded` pass through unchanged; an incoming `false`
+  `trial_promotion` and `affiliate_program` suppress; `connect_account` *(suppressed from
+  1.35.0)*, `license_expired` and `plan_upgraded` pass through unchanged; an incoming `false`
   stays `false`
 - **Unhook** — against a stub keyed the way `Freemius::$_instances` is keyed (`m_195`).
   Both promotional producers come off `admin_init`; a sibling licence-notice producer on
