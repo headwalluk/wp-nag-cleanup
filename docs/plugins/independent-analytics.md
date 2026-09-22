@@ -147,7 +147,9 @@ Re-check when a new version appears in the vault:
 Tested on `bench2.local` (WP 7.1) with Independent Analytics 2.15.5 active and
 un-opted-in, over authenticated admin requests. No rule deployed. Zero PHP fatals.
 
-1.35.0 rule: **source-verified only**, on the same render filter live-confirmed for
+1.35.0 rule: not yet observed on an Independent Analytics site. The same rule and the
+same `connect_account` id were **live-confirmed** on a Delete Comments & Disable Comments
+client site on 22 Sep 2026, and the render filter was live-confirmed for
 `trial_promotion` in 1.22.1.
 
 ## Additions to `headwall-nag-cleanup.php`: `fs_show_admin_notice_independent-analytics` (1.35.0)

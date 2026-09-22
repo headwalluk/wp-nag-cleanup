@@ -114,15 +114,18 @@ suppresses any value that is not exactly `true`.
 
 ## Verification
 
-**Source-verified only.** The filter tag was built with `fs_apply_filter()` in SDK 2.11.0
+**Live-confirmed** by Paul on the reporting client site, 22 Sep 2026, running 1.35.0:
+the `connect_account` opt-in is gone.
+
+Before that it was source-verified. The filter tag was built with `fs_apply_filter()` in SDK 2.11.0
 (`"fs_{$tag}_{$module_unique_affix}"`), and the affix defaults to the slug. The render
 filter itself was live-confirmed in 1.22.1 for `trial_promotion`
 ([`featured-images-for-rss-feeds.md`](featured-images-for-rss-feeds.md)). This change adds
 an id and two slugs to that mechanism. It does not add a new mechanism.
 
-Needed to confirm: on the reporting site, or on a bench with the plugin installed on an
-older version and then updated so `connect_account` is stored, `data-id="connect_account"`
-should go from 1 before to 0 after on `edit.php`. The negative check is that the plugin's
+To re-check it on a bench, install an older version of the plugin and then update it, so
+that `connect_account` is stored. `data-id="connect_account"` should then go from 1 before
+to 0 after on `edit.php`. The negative check is that the plugin's
 own Tools screen and any action-result notice still render. Note that the opt-in only
 appears in the update-into-activation-mode path, so a fresh install shows the unrelated
 "one step away" notice instead.
