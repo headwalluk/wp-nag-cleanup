@@ -121,7 +121,7 @@ declared impossible. Current uses: WPB Product Slider (1.3.0), Elementor's promo
 module (1.12.0, the conversion banner and both seasonal pointers), ElementsKit's Wpmet
 libs (1.13.0), QuadLayers (1.14.0), Converter for Media (1.19.0), WPCode (three
 callbacks), WP Mail Bank (1.21.0), BdThemes (1.23.0, the feedback-hub and DCI SDKs across
-Element Pack and Ultimate Post Kit), MonsterInsights (1.24.0, the review request),
+Element Pack and Ultimate Post Kit), MonsterInsights (1.24.0, the review request) and ExactMetrics (1.36.0, its renamed twin),
 Rank Math (1.24.0, the dashboard blog feed), Brainstorm Force's `bsf-analytics`
 (1.25.0, the usage-tracking opt-in notice, reached through CartFlows and covering every
 BSF plugin on the site) and WPForms Lite (1.25.0, the review request and the admin-footer

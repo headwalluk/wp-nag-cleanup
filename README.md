@@ -174,9 +174,9 @@ which takes a hook, a class and a method. It is bounded:
 - It scans every priority, so a vendor changing priority does not silently kill it
 - If nothing matches it logs and does nothing
 
-Nineteen rules use it as of 1.33.0: WPB Product Slider, Elementor's promotions module,
+Twenty rules use it as of 1.36.0: WPB Product Slider, Elementor's promotions module,
 ElementsKit's Wpmet libs, QuadLayers, Converter for Media, WPCode, WP Mail Bank,
-BdThemes, MonsterInsights' review request, Rank Math's dashboard blog feed,
+BdThemes, MonsterInsights' and ExactMetrics' review requests, Rank Math's dashboard blog feed,
 Brainstorm Force's `bsf-analytics` opt-in notice, WPForms Lite's review request,
 ShapedPlugin, Code Snippets' competitor promotion, WP Mail SMTP's review request and
 Check & Log Email's newsletter pointer and review request, 404 to 301's review request,
@@ -270,6 +270,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Delete Comments & Disable Comments (royalnavneet), via Freemius | 7.1, SDK 2.11.0 | 1 | Freemius usage-tracking opt-in ("We made a few tweaks…"). Licence activation step and action-result notices preserved |
 | Modula (WPChill) | 2.14.39 | 1 | Telemetry consent prompt, and the telemetry itself — weekly and hourly cron to `telemetry.wpchill.com` carrying the site URL and a full plugin inventory. Elementor and PHP-version warnings, Action Scheduler notices and the bulk-action result preserved |
 | MonsterInsights (Google Analytics for WordPress) | 11.2.0 | 2 | PRO upsell tooltip on the Insights menu, review request, WPConsent cross-sell. UA-sunset alert, licence, PHP-version, measurement-protocol and addon-deprecation notices preserved, as is the analytics dashboard widget |
+| ExactMetrics (Google Analytics Dashboard for WP) | 10.3.0 | 2 | Same codebase as MonsterInsights, same three rules: PRO upsell tooltip on the admin menu, review request, WPConsent cross-sell. The same operational notices and dashboard widget preserved |
 | Rank Math SEO | 1.0.278, Pro 3.0.95 | 2, 4 | Stored PRO upsell and review notifications, and the `rankmath.com` blog feed inside the Overview widget. The widget's own 404, redirection and analytics figures preserved, as is the whole notification store — redirection conflicts, WPML data migration, plugin conflicts, "reconnect Google" |
 | CartFlows | 3.2.0 | 1, 2 | 5-star review request, and the `bsf-analytics` usage-tracking opt-in ("Help shape the future of CartFlows"). Legacy UI deprecation notice, custom-script migration prompt, WooCommerce dependency and Pro version-mismatch warnings preserved, as is the Funnel Performance widget |
 | Brainstorm Force — `bsf-analytics` | library 1.1.29 | 2 | The usage-tracking opt-in notice, for **every** BSF plugin *and the Astra theme* on the site. One library instance serves them all |

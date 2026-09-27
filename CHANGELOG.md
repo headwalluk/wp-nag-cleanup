@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.36.0] — 2026-09-27
+
+### Added
+
+- **ExactMetrics (Google Analytics Dashboard for WP)**: the "Grow Your Business with
+  ExactMetrics Pro" upsell tooltip pinned to the admin menu, the WPConsent cross-sell
+  notice, and the review request. Reported by Paul from a live site running 10.3.0.
+  ExactMetrics is MonsterInsights' codebase renamed, so `unhook_exactmetrics_promos()`
+  mirrors `unhook_monsterinsights_promos()` rule for rule, including rejecting the
+  vendor's `hide_am_notices` switch. Licence, PHP-version, UA-sunset, measurement-protocol
+  and addon-deprecation notices are unchanged, as is the analytics dashboard widget.
+
 ## [1.35.0] — 2026-09-22
 
 ### Added

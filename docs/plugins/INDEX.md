@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.35.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.36.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -81,6 +81,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_mail_bank_review_notice` † | `admin_init` @ 999 | WP Mail Bank 4.0.14 | [wp-mail-bank.md](wp-mail-bank.md) |
 | `unhook_bdthemes_review_and_tracking_notices` † | `admin_init` @ 999 | Element Pack Pro 7.11.2, Ultimate Post Kit 4.5.3 | [bdthemes-element-pack.md](bdthemes-element-pack.md), [ultimate-post-kit.md](ultimate-post-kit.md) |
 | `unhook_monsterinsights_promos` † | `admin_init` @ 999 | MonsterInsights 11.2.0 | [google-analytics-for-wordpress.md](google-analytics-for-wordpress.md) |
+| `unhook_exactmetrics_promos` † | `admin_init` @ 999 | ExactMetrics 10.3.0 | [google-analytics-dashboard-for-wp.md](google-analytics-dashboard-for-wp.md) |
 | `unhook_shapedplugin_promos` † | `admin_init` @ 999 | Product Slider for WooCommerce 2.8.13 | [woo-product-slider.md](woo-product-slider.md) |
 | `unhook_complianz_review_notice` | `admin_init` @ 999 | Complianz GDPR 7.5.5 | [complianz-gdpr.md](complianz-gdpr.md) |
 | `unhook_cptui_pro_upsell` | `admin_init` @ 999 | Custom Post Type UI 1.19.3 | [custom-post-type-ui.md](custom-post-type-ui.md) |

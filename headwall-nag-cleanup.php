@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.35.0
+ * Version:     1.36.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.35.0';
+		const VERSION = '1.36.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -420,6 +420,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_mail_bank_review_notice();
 			$this->unhook_bdthemes_review_and_tracking_notices();
 			$this->unhook_monsterinsights_promos();
+			$this->unhook_exactmetrics_promos();
 			$this->unhook_shapedplugin_promos();
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
@@ -825,6 +826,40 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				}
 
 				$this->remove_discarded_instance_callback( 'admin_notices', 'MonsterInsights_Review', 'review_request', 'monsterinsights' );
+			}
+		}
+
+		/**
+		 * Remove ExactMetrics' menu tooltip, review request and WPConsent cross-sell.
+		 *
+		 * ExactMetrics is MonsterInsights' codebase renamed, and every rule mirrors
+		 * unhook_monsterinsights_promos(). The tooltip hangs off adminmenu, not a notice
+		 * hook. ExactMetrics_Review is constructed and discarded at the foot of its own file.
+		 *
+		 * The vendor's own hide_am_notices switch is not used: its settings screen describes
+		 * it as also hiding deprecation and required-configuration notices.
+		 * The tooltip exists in Lite only, so on ExactMetrics Pro its line logs as not registered.
+		 * ExactMetrics 10.3.0. docs/plugins/google-analytics-dashboard-for-wp.md
+		 */
+		public function unhook_exactmetrics_promos() : void {
+			if ( ! defined( 'EXACTMETRICS_VERSION' ) ) {
+				// Not installed.
+			} else {
+				if ( false === has_action( 'adminmenu', 'exactmetrics_get_admin_menu_tooltip' ) ) {
+					$this->log( 'exactmetrics', 'exactmetrics_get_admin_menu_tooltip not registered on adminmenu; no action taken.' );
+				} else {
+					remove_action( 'adminmenu', 'exactmetrics_get_admin_menu_tooltip' );
+					$this->log( 'exactmetrics', 'Removed exactmetrics_get_admin_menu_tooltip from adminmenu.' );
+				}
+
+				if ( false === has_action( 'admin_notices', 'exactmetrics_wpconsent_install_notice' ) ) {
+					$this->log( 'exactmetrics', 'exactmetrics_wpconsent_install_notice not registered on admin_notices; no action taken.' );
+				} else {
+					remove_action( 'admin_notices', 'exactmetrics_wpconsent_install_notice' );
+					$this->log( 'exactmetrics', 'Removed exactmetrics_wpconsent_install_notice from admin_notices.' );
+				}
+
+				$this->remove_discarded_instance_callback( 'admin_notices', 'ExactMetrics_Review', 'review_request', 'exactmetrics' );
 			}
 		}
 
