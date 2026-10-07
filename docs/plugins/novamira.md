@@ -139,7 +139,10 @@ and the test user and debug mu-plugin were removed. The uninstaller left
 `novamira_pro_upsell_installed_at` behind, which was deleted by hand. The table, option,
 cron and user snapshots then diffed clean.
 
-Not yet live-confirmed.
+### Live — welcome notice **Confirmed**, 7 Oct 2026
+
+Paul deployed the rule to production and confirmed that the "Novamira Pro is here." notice
+was gone.
 
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 

@@ -144,7 +144,10 @@ Multisite (`network_admin_notices`) is source-verified only.
 exactly the options new since the snapshot and restoring `wp_user_roles` from its saved
 JSON. Tables, options, cron, users and roles then diffed clean.
 
-Not yet live-confirmed. Paul reported it from a live site that is a candidate.
+### Live — welcome notice **Confirmed**, 7 Oct 2026
+
+Paul deployed the rule to production and confirmed that the newsletter welcome notice was
+gone. Multisite remains source-verified only.
 
 ## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 2
 
