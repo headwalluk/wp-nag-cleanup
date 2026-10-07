@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.36.0
+ * Version:     1.37.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.36.0';
+		const VERSION = '1.37.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -424,6 +424,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_shapedplugin_promos();
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
+			$this->unhook_novamira_pro_welcome_notice();
 			$this->unhook_check_email_promos();
 			$this->unhook_simple_custom_post_order_review_notice();
 			$this->unhook_404_to_301_review_notice();
@@ -1332,6 +1333,22 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			if ( false !== has_action( 'admin_notices', 'cptui_pro_upsell_notification' ) ) {
 				remove_action( 'admin_notices', 'cptui_pro_upsell_notification', 11 );
 				$this->log( 'custom-post-type-ui', 'Removed cptui_pro_upsell_notification from admin_notices priority 11.' );
+			}
+		}
+
+		/**
+		 * Remove Novamira's "Novamira Pro is here." welcome notice.
+		 *
+		 * A plain named function at the default priority, registered when the plugin file loads.
+		 * The "Get Pro" submenu entry, plugin-row link and Connect-page card are left alone:
+		 * they are the vendor's own menu and screen. The vendor's NOVAMIRA_PRO_VERSION check is
+		 * not an opt-out: it is the Pro plugin's own constant, and defining it fakes Pro.
+		 * Novamira 1.12.7. docs/plugins/novamira.md
+		 */
+		public function unhook_novamira_pro_welcome_notice() : void {
+			if ( false !== has_action( 'admin_notices', 'novamira_render_pro_welcome_notice' ) ) {
+				remove_action( 'admin_notices', 'novamira_render_pro_welcome_notice' );
+				$this->log( 'novamira', 'Removed novamira_render_pro_welcome_notice from admin_notices.' );
 			}
 		}
 

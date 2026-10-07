@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.37.0] — 2026-10-07
+
+### Added
+
+- **Novamira 1.12.7**: the *"Novamira Pro is here."* upsell notice with its "Discover
+  more" button. It renders on the Dashboard and the Plugins screen as well as on
+  Novamira's own screens. It is a plain named function at the default priority, removed by
+  name. The "Get Pro" submenu entry and plugin-row link are the vendor's own UI and are
+  out of scope. Every operational notice is unchanged: MCP dependency, WordPress version,
+  domain change, sandbox safe mode, Ghost Mode, connection regressions. Bench-confirmed
+  on Dashboard and Plugins, 1 → 0 each.
+
 ## [1.36.0] — 2026-09-27
 
 ### Added

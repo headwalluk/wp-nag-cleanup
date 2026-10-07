@@ -278,6 +278,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Code Snippets | 3.10.2 | 2 | The competitor-conversion promotion injected into *other plugins'* admin screens. PHP-version notice preserved |
 | Disable Comments | 2.9.0 | 1 | Review prompt, via the vendor's own documented filter. Discussion-settings-override notice preserved |
 | Custom Post Type UI | 1.19.3 | 2 | Pro upsell — including the branch that renders on the post-list screen of **any** public custom post type, not just CPT UI's own screens |
+| Novamira | 1.12.7 | 2 | "Novamira Pro is here." upsell notice on the Dashboard, the Plugins screen and Novamira's own screens. MCP-dependency, WordPress-version, domain-change, sandbox safe-mode, Ghost Mode and connection-regression notices preserved |
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |
 | Check & Log Email | 2.0.16 | 2 | Newsletter sign-up pointer that fills in the admin's email address, and the review request. SMTP-credentials and log-threshold warnings preserved, as are both dashboard widgets |
 | 404 to 301 (All in One SEO) | 4.0.4 | 2 | Review request. Redundant-addons migration notice, PHP/WordPress version warnings and the Recent 404s dashboard widget preserved |
