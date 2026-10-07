@@ -237,8 +237,8 @@ Ambiguous cases stay, and this one is not even especially ambiguous.
 ### `duplicate-post` is a separate audit
 
 Yoast also publish Duplicate Post (82 sites), which does **not** share the notification
-centre — `Yoast_Notification_Center` appears nowhere in it. It needs its own document
-and has not been analysed here.
+centre — `Yoast_Notification_Center` appears nowhere in it. Analysed separately on
+7 Oct 2026 in [`duplicate-post.md`](duplicate-post.md).
 
 ## Mechanism
 

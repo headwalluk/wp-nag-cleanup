@@ -102,8 +102,8 @@ Bench: `bench2.local`, WP 7.1.3, PHP 8.5, Novamira 1.12.7 freshly installed, 7 O
 **No time gate.** `novamira_pro_upsell_installed_at` is recorded on activation but never
 read by the renderer, so the notice shows immediately.
 
-Bench access note: `/etc/hosts` now resolves `bench2.local` to `192.168.122.1` (virbr0),
-which answers 404. Requests went through `curl --resolve bench2.local:80:192.168.0.107`.
+Bench access note: the avahi (mDNS) resolver on this host resolved `bench2.local` to
+`192.168.122.1` (virbr0), which answers 404. Requests went through `curl --resolve bench2.local:80:192.168.0.107`.
 `wp-login.php` also 404s, so the session used an auth cookie minted with
 `wp_generate_auth_cookie()`.
 

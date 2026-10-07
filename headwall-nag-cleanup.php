@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.37.0
+ * Version:     1.38.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.37.0';
+		const VERSION = '1.38.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -425,6 +425,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
 			$this->unhook_novamira_pro_welcome_notice();
+			$this->unhook_duplicate_post_newsletter_notice();
 			$this->unhook_check_email_promos();
 			$this->unhook_simple_custom_post_order_review_notice();
 			$this->unhook_404_to_301_review_notice();
@@ -1349,6 +1350,28 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			if ( false !== has_action( 'admin_notices', 'novamira_render_pro_welcome_notice' ) ) {
 				remove_action( 'admin_notices', 'novamira_render_pro_welcome_notice' );
 				$this->log( 'novamira', 'Removed novamira_render_pro_welcome_notice from admin_notices.' );
+			}
+		}
+
+		/**
+		 * Remove Yoast Duplicate Post's "You've successfully installed" newsletter sign-up notice.
+		 *
+		 * A plain named function, added at the default priority from the vendor's own admin_init
+		 * callback (also at 10), so it exists by LATE_PRIORITY. Multisite registers it on
+		 * network_admin_notices instead, so both hooks are named.
+		 * The vendor's duplicate_post_show_notice option is not answered through
+		 * pre_site_option_: its settings screen renders that option as a checkbox, so a forced
+		 * value would show there and be saved back.
+		 * Yoast Duplicate Post 4.7. docs/plugins/duplicate-post.md
+		 */
+		public function unhook_duplicate_post_newsletter_notice() : void {
+			foreach ( [ 'admin_notices', 'network_admin_notices' ] as $notice_hook ) {
+				if ( false === has_action( $notice_hook, 'duplicate_post_show_update_notice' ) ) {
+					continue;
+				}
+
+				remove_action( $notice_hook, 'duplicate_post_show_update_notice' );
+				$this->log( 'duplicate-post', 'Removed duplicate_post_show_update_notice from ' . $notice_hook . '.' );
 			}
 		}
 

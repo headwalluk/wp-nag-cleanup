@@ -5,6 +5,23 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.0] — 2026-10-07
+
+### Added
+
+- **Yoast Duplicate Post 4.7**: the *"You've successfully installed Yoast Duplicate
+  Post!"* welcome notice. Its body is a Yoast newsletter sign-up form with an email field.
+  Reported by Paul from a live site. It is a plain named function, removed by name from
+  `admin_notices` and, on multisite, `network_admin_notices`. The vendor's "Show welcome
+  notice" setting is not touched. Every clone and Rewrite & Republish notice is unchanged.
+  Bench-confirmed on Dashboard and Plugins, 1 → 0 each. The audit had been flagged as
+  outstanding in `docs/plugins/wordpress-seo.md` since September.
+
+### Fixed
+
+- `docs/plugins/novamira.md` said `/etc/hosts` mapped `bench2.local` to the libvirt bridge.
+  The mapping comes from the avahi (mDNS) resolver.
+
 ## [1.37.0] — 2026-10-07
 
 ### Added

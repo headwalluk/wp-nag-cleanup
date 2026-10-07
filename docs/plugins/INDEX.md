@@ -8,7 +8,7 @@ same commit as any rule change; a stale index is worse than no index.
 
 # Rule index
 
-Every rule in `headwall-nag-cleanup.php` as of **1.37.0**, by mechanism. Version column is
+Every rule in `headwall-nag-cleanup.php` as of **1.38.0**, by mechanism. Version column is
 the release the rule was verified against — if the vendor on a site is newer, re-verify
 before trusting the rule.
 
@@ -86,6 +86,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_complianz_review_notice` | `admin_init` @ 999 | Complianz GDPR 7.5.5 | [complianz-gdpr.md](complianz-gdpr.md) |
 | `unhook_cptui_pro_upsell` | `admin_init` @ 999 | Custom Post Type UI 1.19.3 | [custom-post-type-ui.md](custom-post-type-ui.md) |
 | `unhook_novamira_pro_welcome_notice` | `admin_init` @ 999 | Novamira 1.12.7 | [novamira.md](novamira.md) |
+| `unhook_duplicate_post_newsletter_notice` | `admin_init` @ 999 | Yoast Duplicate Post 4.7 | [duplicate-post.md](duplicate-post.md) |
 | `unhook_check_email_promos` † | `admin_init` @ 999 | Check & Log Email 2.0.16 | [check-email.md](check-email.md) |
 | `unhook_simple_custom_post_order_review_notice` † | `admin_init` @ 999 | Simple Custom Post Order 2.8.8 | [simple-custom-post-order.md](simple-custom-post-order.md) |
 | `unhook_404_to_301_review_notice` † | `admin_init` @ 999 | 404 to 301 4.0.4 | [404-to-301.md](404-to-301.md) |
