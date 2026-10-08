@@ -140,6 +140,11 @@ widget, no REST-rendered surface and no JavaScript-drawn promo.
 
 No time gate: the notice is queued on the first visit to the Replace media screen.
 
+### Live — EMR001 **Confirmed**, 8 Oct 2026
+
+Paul deployed 1.39.0 to production through the headwall-hosting mu-plugin and confirmed that
+the "New Beta Feature!" notice was gone.
+
 ## Additions to `headwall-nag-cleanup.php`: one stored-notice dismissal
 
 ```php
