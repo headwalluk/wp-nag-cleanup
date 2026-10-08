@@ -230,6 +230,11 @@ migration prompt, plugin-conflict warnings and its "reconnect Google" notice, al
 which are left alone — which is why the two IDs are named rather than the renderer
 removed.
 
+Enable Media Replace joined it in 1.39.0, for its "New Beta Feature!" announcement. Its
+producer re-queues the notice whenever the Replace media screen is opened. So here the
+rule uses the vendor's *dismiss* call, the same thing its close button does, rather than
+removal: a dismissed entry stays in the store, and that stops it being added again.
+
 ## What it suppresses today
 
 Version 1.24.1. Every vendor rule below was verified against that vendor's real source
@@ -280,6 +285,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Custom Post Type UI | 1.19.3 | 2 | Pro upsell — including the branch that renders on the post-list screen of **any** public custom post type, not just CPT UI's own screens |
 | Yoast Duplicate Post | 4.7 | 2 | "You've successfully installed Yoast Duplicate Post!" welcome notice, which is a Yoast newsletter sign-up form, on the Dashboard and Plugins screens. All clone and Rewrite & Republish notices preserved |
 | Novamira | 1.12.7 | 2 | "Novamira Pro is here." upsell notice on the Dashboard, the Plugins screen and Novamira's own screens. MCP-dependency, WordPress-version, domain-change, sandbox safe-mode, Ghost Mode and connection-regression notices preserved |
+| Enable Media Replace (ShortPixel) | 4.2.2 | 4 | Stored "New Beta Feature!" Remove Background announcement on the Media Library and attachment screens, dismissed through the vendor's own close-button path. S3-Offload conflict warning, replace errors, success notices and ShortPixel's remote notices preserved |
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |
 | Check & Log Email | 2.0.16 | 2 | Newsletter sign-up pointer that fills in the admin's email address, and the review request. SMTP-credentials and log-threshold warnings preserved, as are both dashboard widgets |
 | 404 to 301 (All in One SEO) | 4.0.4 | 2 | Review request. Redundant-addons migration notice, PHP/WordPress version warnings and the Recent 404s dashboard widget preserved |

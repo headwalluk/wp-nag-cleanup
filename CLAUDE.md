@@ -218,6 +218,11 @@ not come back. That is irreversible — uninstalling this plugin does not restor
   review nag each check for the other, so removing one alone lets the other appear
 - Prefer mechanisms 1 to 3 even when they only help sites that are not yet nagging, if
   the store also holds anything operational under the same ID
+- **Check whether the producer re-queues.** If it runs again on later requests and only
+  skips IDs already in the store, removal is undone the next time it runs. Then the rule
+  should use the vendor's *dismiss* path, which leaves the entry stored and blocks the
+  re-queue. Enable Media Replace is the worked example (1.39.0): `featureNotice()` runs on
+  every Replace screen visit, so EMR001 is `dismiss()`ed, not `removeNoticeByID()`ed
 
 ### Load order
 
@@ -230,8 +235,11 @@ exist yet.
   vendor's own registration actually requires
 - Mechanism 3: `wp_dashboard_setup` (and `wp_network_dashboard_setup` on
   multisite), late
-- Mechanism 4: `all_admin_notices` at `self::EARLY_PRIORITY`, so it runs before the
-  store's own renderer, which sits at the default priority
+- Mechanism 4: the store renderer's own hook at `self::EARLY_PRIORITY`, so it runs
+  before the renderer, which sits at the default priority. Rank Math renders on
+  `all_admin_notices` (the `remove_stored_vendor_notifications()` dispatcher). Enable
+  Media Replace renders on `admin_notices`, which core fires *before* `all_admin_notices`,
+  so its rule is registered there on its own. Joining the dispatcher would be too late
 
 A rule that "does nothing" is nearly always a phase problem, not a wrong hook name.
 

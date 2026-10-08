@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.38.0
+ * Version:     1.39.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.38.0';
+		const VERSION = '1.39.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -114,6 +114,16 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		const RANK_MATH_PROMO_NOTIFICATION_IDS = [
 			'rank_math_pro_notice',
 			'rank_math_review_plugin_notice',
+		];
+
+		/**
+		 * Enable Media Replace notice-store IDs that hold nothing operational.
+		 *
+		 * EMR001 is the "New Beta Feature!" Remove Background announcement.
+		 * docs/plugins/enable-media-replace.md
+		 */
+		const ENABLE_MEDIA_REPLACE_PROMO_NOTICE_IDS = [
+			'EMR001',
 		];
 
 		/**
@@ -237,6 +247,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				add_action( 'wp_network_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
 				add_action( 'wp_user_dashboard_setup', [ $this, 'remove_promotional_dashboard_widgets' ], self::LATE_PRIORITY );
 				add_action( 'all_admin_notices', [ $this, 'remove_stored_vendor_notifications' ], self::EARLY_PRIORITY );
+				add_action( 'admin_notices', [ $this, 'dismiss_enable_media_replace_stored_promos' ], self::EARLY_PRIORITY );
 			} else {
 				// No notice area and no dashboard on this request type.
 			}
@@ -906,6 +917,56 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 						$notification_centre->remove_by_id( $notification_id );
 						$this->log( 'seo-by-rank-math', sprintf( 'Removed stored notification %s.', $notification_id ) );
 					}
+				}
+			}
+		}
+
+		/**
+		 * Dismiss Enable Media Replace's stored "New Beta Feature" announcement.
+		 *
+		 * Registered on admin_notices, not through remove_stored_vendor_notifications():
+		 * all_admin_notices fires after admin_notices, which is where this store renders.
+		 *
+		 * NoticeController::admin_notices() also renders the S3-Offload compatibility
+		 * warning, the "File successfully replaced" result and remote notices, so the
+		 * renderer stays. The vendor's emr/feature/remote_notice filter is not used: it
+		 * gates that same renderer, not only the remote fetch. The producer,
+		 * UIHelper::featureNotice(), is called inline from the Replace media page callback,
+		 * so there is no hook to remove either.
+		 *
+		 * dismiss() is the vendor's own close-button path. Do not swap in
+		 * removeNoticeByID(): the next visit to the Replace screen re-queues a removed
+		 * notice, whereas a dismissed one stays stored and makePersistent() skips it.
+		 * Enable Media Replace 4.2.2. docs/plugins/enable-media-replace.md
+		 */
+		public function dismiss_enable_media_replace_stored_promos() : void {
+			$controller_class = 'EnableMediaReplace\\Notices\\NoticeController';
+
+			if ( ! class_exists( $controller_class ) ) {
+				// Not installed.
+			} elseif ( ! method_exists( $controller_class, 'getInstance' ) || ! method_exists( $controller_class, 'getNoticeByID' ) ) {
+				$this->log( 'enable-media-replace', 'Notice store not reachable; no action taken.' );
+			} else {
+				$notice_store = $controller_class::getInstance();
+				$is_dismissed = false;
+
+				foreach ( self::ENABLE_MEDIA_REPLACE_PROMO_NOTICE_IDS as $notice_id ) {
+					$notice = $notice_store->getNoticeByID( $notice_id );
+
+					if ( ! is_object( $notice ) || $notice->isDismissed() ) {
+						// Never banked on this site, or already dismissed.
+						continue;
+					}
+
+					$notice->dismiss();
+					$is_dismissed = true;
+					$this->log( 'enable-media-replace', sprintf( 'Dismissed stored notice %s.', $notice_id ) );
+				}
+
+				if ( $is_dismissed ) {
+					$notice_store->update();
+				} else {
+					// Nothing changed, so the store is not rewritten.
 				}
 			}
 		}

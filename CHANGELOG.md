@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.39.0] — 2026-10-08
+
+### Added
+
+- **Enable Media Replace 4.2.2**: the stored *"New Beta Feature!"* Remove Background
+  announcement, notice ID `EMR001`. Reported by Paul from `bench1.local`. This is the second
+  mechanism 4 rule. It uses the vendor's own `NoticeModel::dismiss()` (the close-button
+  path), not removal, because the producer re-queues the notice on every visit to the
+  Replace media screen. It runs on `admin_notices` at `EARLY_PRIORITY`, ahead of EMR's
+  renderer. The renderer stays, because it also carries the S3-Offload conflict warning,
+  replace errors and the success notice. The `emr/feature/remote_notice` filter is not
+  used: it switches off that renderer too. Remote notices from ShortPixel are left alone as
+  ambiguous. Bench-confirmed on the Media Library, 1 → 0, still 0 after a Replace screen
+  visit, and a seeded vendor warning still rendered.
+
 ## [1.38.0] — 2026-10-07
 
 ### Added
