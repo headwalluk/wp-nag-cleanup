@@ -131,9 +131,9 @@ Bench: `bench1.local`, Elementor 4.3.4 and DVE 6.0.6 from the vault.
 Surface: the admin notice area on every admin screen. DVE has no dashboard widget, no
 REST-rendered surface and no JavaScript-drawn promo.
 
-**Still to do: a browser check** on the client site or a logged-in bench
-session after deploying 1.40.0. The harness exercises real WordPress and real vendor code,
-but it is not an HTTP request.
+### Live: **Confirmed**, 14 Oct 2026
+
+Paul deployed 1.40.0 to production and confirmed that the Novamira notice was gone.
 
 ## Additions to `headwall-nag-cleanup.php`: one core short-circuit filter
 
