@@ -5,6 +5,22 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.0] — 2026-10-14
+
+### Added
+
+- **Dynamic Visibility for Elementor 6.0.6**: two promos. The Novamira cross-sell (*"Your AI
+  agent builds inside your WordPress."*, dismiss key `novamira_intro`) and the Dynamic
+  Content upsell (*"Buy now Dynamic.ooo …"*, `upgrade_10`), which is shown instead when
+  Novamira is installed. Both appear on every admin screen. Reported by Paul from a client
+  site. They are queued from an anonymous `init` closure, so the rule answers the vendor's
+  own per-user dismissal check, `dve_dismissed_<key>`, from core's `get_user_metadata`
+  short-circuit. It names the two keys in a constant, and nothing is written. The queue
+  renderer is not removed, so a future operational notice on that queue still shows. The
+  Elementor-missing and Elementor-version notices are unaffected. Confirmed on bench1
+  through a wp-cli `WP_ADMIN` harness, 1 → 0 for each key, with seeded queue notices still
+  rendering. An HTTP check was not possible because the bench is behind 2FA.
+
 ## [1.39.0] — 2026-10-08
 
 ### Added

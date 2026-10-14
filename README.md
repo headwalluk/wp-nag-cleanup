@@ -137,6 +137,12 @@ prints in the same place. The answer is a future timestamp rather than `true`, b
 vendor compares it with `time()`. See
 [`docs/plugins/updraftplus.md`](docs/plugins/updraftplus.md).
 
+Dynamic Visibility for Elementor queues its Novamira and Dynamic Content promos from an
+anonymous `init` closure. Its renderer skips any notice whose per-user dismissal meta,
+`dve_dismissed_<key>`, is set. `get_user_metadata` answers that for the two named keys
+only, so the renderer itself and any other notice it carries are left alone. See
+[`docs/plugins/dynamic-visibility-for-elementor.md`](docs/plugins/dynamic-visibility-for-elementor.md).
+
 ### 2. Targeted unhooking
 
 Where a vendor provides no switch, remove the specific callback that prints the
@@ -285,6 +291,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Custom Post Type UI | 1.19.3 | 2 | Pro upsell — including the branch that renders on the post-list screen of **any** public custom post type, not just CPT UI's own screens |
 | Yoast Duplicate Post | 4.7 | 2 | "You've successfully installed Yoast Duplicate Post!" welcome notice, which is a Yoast newsletter sign-up form, on the Dashboard and Plugins screens. All clone and Rewrite & Republish notices preserved |
 | Novamira | 1.12.7 | 2 | "Novamira Pro is here." upsell notice on the Dashboard, the Plugins screen and Novamira's own screens. MCP-dependency, WordPress-version, domain-change, sandbox safe-mode, Ghost Mode and connection-regression notices preserved |
+| Dynamic Visibility for Elementor | 6.0.6 | 1 | Novamira cross-sell and Dynamic Content upsell, on every admin screen. Elementor-missing and Elementor-version notices preserved |
 | Enable Media Replace (ShortPixel) | 4.2.2 | 4 | Stored "New Beta Feature!" Remove Background announcement on the Media Library and attachment screens, dismissed through the vendor's own close-button path. S3-Offload conflict warning, replace errors, success notices and ShortPixel's remote notices preserved |
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |
 | Check & Log Email | 2.0.16 | 2 | Newsletter sign-up pointer that fills in the admin's email address, and the review request. SMTP-credentials and log-threshold warnings preserved, as are both dashboard widgets |

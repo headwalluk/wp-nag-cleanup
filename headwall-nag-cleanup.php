@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.39.0
+ * Version:     1.40.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.39.0';
+		const VERSION = '1.40.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -124,6 +124,20 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		const ENABLE_MEDIA_REPLACE_PROMO_NOTICE_IDS = [
 			'EMR001',
+		];
+
+		/**
+		 * Dynamic Visibility for Elementor's promo notices, named by the user meta key its
+		 * dismissal check reads: 'dve_dismissed_' plus the notice's dismiss key.
+		 *
+		 * novamira_intro is the Novamira cross-sell, upgrade_10 the Dynamic Content upsell
+		 * shown instead when Novamira is installed. The black_friday_2025 keys of 6.0.0 to
+		 * 6.0.4 are not listed: they were date-gated to Nov 2025 and can no longer render.
+		 * docs/plugins/dynamic-visibility-for-elementor.md
+		 */
+		const DYNAMIC_VISIBILITY_PROMO_DISMISS_KEYS = [
+			'dve_dismissed_novamira_intro', // 6.0.5 onwards; current at 6.0.6.
+			'dve_dismissed_upgrade_10',     // 5.0.13 onwards; current at 6.0.6.
 		];
 
 		/**
@@ -408,6 +422,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// pre_option_ short-circuit reaches all of them with nothing written.
 			// UpdraftPlus 1.26.7. docs/plugins/updraftplus.md
 			add_filter( 'pre_option_updraftplus_dismissedautobackup', [ $this, 'answer_updraftplus_autobackup_dismissed' ] );
+
+			// Dynamic Visibility for Elementor's Novamira cross-sell and Dynamic Content upsell.
+			// Both are queued from an anonymous init closure, so the renderer skips them by
+			// answering the vendor's own per-notice dismissal check from core's
+			// get_user_metadata short-circuit. Dynamic Visibility 6.0.6.
+			// docs/plugins/dynamic-visibility-for-elementor.md
+			add_filter( 'get_user_metadata', [ $this, 'answer_dynamic_visibility_promo_dismissed' ], 10, 3 );
 
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
@@ -1193,6 +1214,32 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->log( 'updraftplus', 'Answered updraftplus_dismissedautobackup as dismissed.' );
 
 			return PHP_INT_MAX;
+		}
+
+		/**
+		 * Report Dynamic Visibility's promo notices as dismissed, without writing user meta.
+		 *
+		 * Notices::action_admin_notices() skips a queued notice when
+		 * get_user_meta( $user, 'dve_dismissed_' . $dismiss_key, true ) is truthy. A
+		 * non-null return here short-circuits that read; [ true ] because core unwraps
+		 * index 0 for a single read. Every other key gets the incoming value back, which is
+		 * null unless another filter has already answered it.
+		 *
+		 * Not used: removing action_admin_notices from Plugin::instance()->notices. That
+		 * renders the whole queue, so any operational notice a later version queues there
+		 * would go too, and instance() constructs the plugin if the autoloader reaches the
+		 * class before the vendor's own Plugin::instance() call. The init closure that
+		 * queues the promos also loads the textdomain and the plugin-row links, so it is not
+		 * a target either.
+		 * Dynamic Visibility for Elementor 6.0.6. docs/plugins/dynamic-visibility-for-elementor.md
+		 */
+		public function answer_dynamic_visibility_promo_dismissed( $meta_value, $user_id, $meta_key ) {
+			if ( null === $meta_value && in_array( $meta_key, self::DYNAMIC_VISIBILITY_PROMO_DISMISS_KEYS, true ) ) {
+				$meta_value = [ true ];
+				$this->log( 'dynamic-visibility-for-elementor', 'Answered ' . $meta_key . ' as dismissed.' );
+			}
+
+			return $meta_value;
 		}
 
 		/**
