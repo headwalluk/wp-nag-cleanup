@@ -183,7 +183,8 @@ Bench left as found again: plugin deleted, the same four `skb_*` options and the
 `skyboot_custom_icons` capability removed, original nag-cleanup file and no temp
 mu-plugin. Table, option and cron snapshots match.
 
-Widget live check: not yet done.
+Widget live — **Confirmed**, 14 Oct 2026. Paul deployed 1.42.0 to the client site and the
+widget is gone.
 
 ## Additions to `headwall-nag-cleanup.php`: 1 rule method (mechanism 2, 1.41.0) and 1 widget entry (mechanism 3, 1.42.0)
 
