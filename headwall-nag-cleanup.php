@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.41.0
+ * Version:     1.42.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.41.0';
+		const VERSION = '1.42.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -163,7 +163,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 *
 		 * Write-ups in docs/plugins/: premium-addons-for-elementor, css-hero,
 		 * woocommerce-lottery, ht-mega-and-happy-addons, quadlayers, elementskit-lite,
-		 * elementor, fusion-core, ultimate-post-kit.
+		 * elementor, fusion-core, ultimate-post-kit, skyboot-custom-icons-for-elementor.
 		 */
 		const PROMOTIONAL_DASHBOARD_WIDGETS = [
 			[
@@ -225,6 +225,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'column4',
 				'vendor'    => 'BdThemes admin-feeds, Ultimate Post Kit 4.5.3',
 				'reason'    => 'BdThemes News & Updates; fetches bdthemes.com/feed on render',
+			],
+			[
+				'widget_id' => 'skb_cife_dashboard_widget',
+				'context'   => 'normal',
+				'vendor'    => 'Skyboot Custom Icons for Elementor 1.2.0',
+				'reason'    => 'News & Updates and Pro waitlist box; takes the icon-set count with it',
 			],
 		];
 

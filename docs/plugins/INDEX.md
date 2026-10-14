@@ -122,6 +122,7 @@ rules exist.
 | `e-dashboard-overview` | `normal` | Elementor 4.2.4 | Elementor Overview; **also takes Recently Edited** |
 | `themefusion-news` | `normal` | Avada Core (fusion-core) 5.16.1 | Avada News; avada.com feed and a Buy Now button |
 | `bdt-dashboard-overview` | `column4` | BdThemes, Ultimate Post Kit 4.5.3 | BdThemes News & Updates; fetches bdthemes.com/feed |
+| `skb_cife_dashboard_widget` | `normal` | Skyboot Custom Icons for Elementor 1.2.0 | News & Updates and Pro waitlist box; **also takes the icon-set count** |
 | `dashboard_primary` | `side` | WordPress core 7.1 — **opt-in only** | Events and News; fetches api.wordpress.org |
 
 The two core entries (`dashboard_primary`, and the Welcome panel above) are **off by

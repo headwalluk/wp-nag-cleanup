@@ -5,6 +5,20 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.42.0] — 2026-10-14
+
+### Added
+
+- **Skyboot Custom Icons for Elementor 1.2.0**: the "Skyboot Custom Icons" dashboard widget,
+  `skb_cife_dashboard_widget`, removed whole. It carries a hard-coded News & Updates list
+  and a "Skyboot Pro Coming Soon — Join Waitlist" box. Both come from one render callback
+  with no filter in between, so they cannot be removed apart from the rest. The collateral
+  is an "Icon sets enabled N/16" count, a static icon-total figure and a *Manage icon sets*
+  button. That page is still in the admin menu. Agreed with Paul. Hiding the two sections
+  with CSS was considered and not done: it would be a new fifth mechanism. Confirmed on
+  bench1 over HTTP, widget 1 → 0, with the Site Health widget and the Elementor-missing
+  notice still rendering.
+
 ## [1.41.0] — 2026-10-14
 
 ### Added
