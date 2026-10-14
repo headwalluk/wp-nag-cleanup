@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.41.0] — 2026-10-14
+
+### Added
+
+- **Skyboot Custom Icons for Elementor 1.2.0**: the *"Skyboot Pro is Coming Soon!"* waitlist
+  notice (Dashboard, Plugins screen and the plugin's own pages) and the *"Enjoying Skyboot
+  Custom Icons?"* review request (Dashboard, after 7 days, re-armed on every plugin update).
+  Reported by Paul from a client site. Both are `Skb_Cife_Admin` callbacks on an instance
+  created inside an anonymous `plugins_loaded` closure and discarded, so the rule uses
+  `remove_discarded_instance_callback()`. The Elementor-missing, Elementor-version and
+  PHP-version notices are on `Skb_Cife_Base` and unaffected. The `skb_cife_is_pro` filter
+  is deliberately not used: it would unlock the PRO add-on's locked features. The
+  plugin's dashboard widget is left in place for now. Confirmed on bench1 over HTTP, 1 → 0
+  for each notice, with the Elementor-missing notice still rendering.
+
 ## [1.40.0] — 2026-10-14
 
 ### Added

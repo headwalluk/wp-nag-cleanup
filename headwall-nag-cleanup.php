@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.40.0
+ * Version:     1.41.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.40.0';
+		const VERSION = '1.41.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -463,6 +463,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_404_to_301_review_notice();
 			$this->unhook_inisev_promos();
 			$this->unhook_magical_addons_promos();
+			$this->unhook_skyboot_icons_promos();
 			$this->unhook_surerank_permalink_upsell();
 			$this->unhook_updraftplus_dashboard_panel();
 		}
@@ -579,6 +580,25 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 					$this->log( 'magical-addons-for-elementor', sprintf( 'Removed %s::%s from admin_notices.', $promo_callback[0], $promo_callback[1] ) );
 				}
 			}
+		}
+
+		/**
+		 * Remove Skyboot Custom Icons' "Skyboot Pro is Coming Soon!" waitlist notice and its
+		 * "Enjoying Skyboot Custom Icons?" review request.
+		 *
+		 * The main plugin file runs `new Skb_Cife_Admin();` inside an anonymous plugins_loaded
+		 * closure and keeps nothing, so no singleton or global reaches the instance. The
+		 * Elementor-missing, Elementor-version and PHP-version notices belong to
+		 * Skb_Cife_Base and are untouched. Neither notice exists before 1.2.0.
+		 *
+		 * Not used: the skb_cife_is_pro filter and SKB_CIFE_PRO_VERSION constant, which hide
+		 * the waitlist notice only by unlocking the PRO add-on's locked features.
+		 * Skyboot Custom Icons for Elementor 1.2.0.
+		 * docs/plugins/skyboot-custom-icons-for-elementor.md
+		 */
+		public function unhook_skyboot_icons_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Skb_Cife_Admin', 'upgrade_notice', 'skyboot-custom-icons-for-elementor' );
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Skb_Cife_Admin', 'review_notice', 'skyboot-custom-icons-for-elementor' );
 		}
 
 		/**

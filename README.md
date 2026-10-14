@@ -186,8 +186,8 @@ BdThemes, MonsterInsights' and ExactMetrics' review requests, Rank Math's dashbo
 Brainstorm Force's `bsf-analytics` opt-in notice, WPForms Lite's review request,
 ShapedPlugin, Code Snippets' competitor promotion, WP Mail SMTP's review request and
 Check & Log Email's newsletter pointer and review request, 404 to 301's review request,
-Inisev's review and Backup Migration cross-sell banners, and Simple Custom Post Order's
-review request.
+Inisev's review and Backup Migration cross-sell banners, Simple Custom Post Order's
+review request, and Skyboot Custom Icons' PRO waitlist notice and review request.
 Each has
 its own write-up, and each had to establish that the other mechanisms were all
 unavailable first — a bar that has failed more often than it has passed, and twice a
@@ -291,6 +291,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Custom Post Type UI | 1.19.3 | 2 | Pro upsell — including the branch that renders on the post-list screen of **any** public custom post type, not just CPT UI's own screens |
 | Yoast Duplicate Post | 4.7 | 2 | "You've successfully installed Yoast Duplicate Post!" welcome notice, which is a Yoast newsletter sign-up form, on the Dashboard and Plugins screens. All clone and Rewrite & Republish notices preserved |
 | Novamira | 1.12.7 | 2 | "Novamira Pro is here." upsell notice on the Dashboard, the Plugins screen and Novamira's own screens. MCP-dependency, WordPress-version, domain-change, sandbox safe-mode, Ghost Mode and connection-regression notices preserved |
+| Skyboot Custom Icons for Elementor | 1.2.0 | 2 | "Skyboot Pro is Coming Soon!" waitlist notice and the review request. Elementor-missing, Elementor-version and PHP-version notices preserved |
 | Dynamic Visibility for Elementor | 6.0.6 | 1 | Novamira cross-sell and Dynamic Content upsell, on every admin screen. Elementor-missing and Elementor-version notices preserved |
 | Enable Media Replace (ShortPixel) | 4.2.2 | 4 | Stored "New Beta Feature!" Remove Background announcement on the Media Library and attachment screens, dismissed through the vendor's own close-button path. S3-Offload conflict warning, replace errors, success notices and ShortPixel's remote notices preserved |
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |

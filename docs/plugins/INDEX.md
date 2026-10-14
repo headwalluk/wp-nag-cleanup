@@ -91,6 +91,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_simple_custom_post_order_review_notice` † | `admin_init` @ 999 | Simple Custom Post Order 2.8.8 | [simple-custom-post-order.md](simple-custom-post-order.md) |
 | `unhook_404_to_301_review_notice` † | `admin_init` @ 999 | 404 to 301 4.0.4 | [404-to-301.md](404-to-301.md) |
 | `unhook_inisev_promos` † | `admin_init` @ 999 | Copy & Delete Posts 1.5.6 (Inisev `Inisev\Subs` modules) | [copy-delete-posts.md](copy-delete-posts.md) |
+| `unhook_skyboot_icons_promos` † | `admin_init` @ 999 | Skyboot Custom Icons for Elementor 1.2.0 | [skyboot-custom-icons-for-elementor.md](skyboot-custom-icons-for-elementor.md) |
 | `unhook_magical_addons_promos` | `admin_init` @ 999 | Magical Addons for Elementor 1.5.0, review request 1.4.6 | [magical-addons-for-elementor.md](magical-addons-for-elementor.md) |
 | `unhook_surerank_permalink_upsell` | `admin_init` @ 999 | SureRank 1.10.1, via `Admin_Notice::get_instance()` | [surerank.md](surerank.md) |
 | `unhook_updraftplus_dashboard_panel` | `admin_init` @ 999 | UpdraftPlus 1.26.7, via `global $updraftplus_admin` | [updraftplus.md](updraftplus.md) |
