@@ -92,6 +92,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_404_to_301_review_notice` † | `admin_init` @ 999 | 404 to 301 4.0.4 | [404-to-301.md](404-to-301.md) |
 | `unhook_inisev_promos` † | `admin_init` @ 999 | Copy & Delete Posts 1.5.6 (Inisev `Inisev\Subs` modules) | [copy-delete-posts.md](copy-delete-posts.md) |
 | `unhook_skyboot_icons_promos` † | `admin_init` @ 999 | Skyboot Custom Icons for Elementor 1.2.0 | [skyboot-custom-icons-for-elementor.md](skyboot-custom-icons-for-elementor.md) |
+| `unhook_challan_promos` † | `admin_init` @ 999 | Challan 3.7.90 (`Challan_Notifications`, `Challan\AppServices\Insights`) | [webappick-pdf-invoice-for-woocommerce.md](webappick-pdf-invoice-for-woocommerce.md) |
 | `unhook_magical_addons_promos` | `admin_init` @ 999 | Magical Addons for Elementor 1.5.0, review request 1.4.6 | [magical-addons-for-elementor.md](magical-addons-for-elementor.md) |
 | `unhook_surerank_permalink_upsell` | `admin_init` @ 999 | SureRank 1.10.1, via `Admin_Notice::get_instance()` | [surerank.md](surerank.md) |
 | `unhook_updraftplus_dashboard_panel` | `admin_init` @ 999 | UpdraftPlus 1.26.7, via `global $updraftplus_admin` | [updraftplus.md](updraftplus.md) |
@@ -123,6 +124,7 @@ rules exist.
 | `themefusion-news` | `normal` | Avada Core (fusion-core) 5.16.1 | Avada News; avada.com feed and a Buy Now button |
 | `bdt-dashboard-overview` | `column4` | BdThemes, Ultimate Post Kit 4.5.3 | BdThemes News & Updates; fetches bdthemes.com/feed |
 | `skb_cife_dashboard_widget` | `normal` | Skyboot Custom Icons for Elementor 1.2.0 | News & Updates and Pro waitlist box; **also takes the icon-set count** |
+| `aaaa_webappick_latest_news_dashboard_widget` | `side` | Challan 3.7.90; same ID in WebAppick Product Feed 6.5.84 | WebAppick blog and Challan Pro banner; uncached webappick.com fetch |
 | `dashboard_primary` | `side` | WordPress core 7.1 — **opt-in only** | Events and News; fetches api.wordpress.org |
 
 The two core entries (`dashboard_primary`, and the Welcome panel above) are **off by

@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.42.0
+ * Version:     1.43.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.42.0';
+		const VERSION = '1.43.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -163,7 +163,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 *
 		 * Write-ups in docs/plugins/: premium-addons-for-elementor, css-hero,
 		 * woocommerce-lottery, ht-mega-and-happy-addons, quadlayers, elementskit-lite,
-		 * elementor, fusion-core, ultimate-post-kit, skyboot-custom-icons-for-elementor.
+		 * elementor, fusion-core, ultimate-post-kit, skyboot-custom-icons-for-elementor,
+		 * webappick-pdf-invoice-for-woocommerce.
 		 */
 		const PROMOTIONAL_DASHBOARD_WIDGETS = [
 			[
@@ -231,6 +232,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'context'   => 'normal',
 				'vendor'    => 'Skyboot Custom Icons for Elementor 1.2.0',
 				'reason'    => 'News & Updates and Pro waitlist box; takes the icon-set count with it',
+			],
+			[
+				// Same id in WebAppick Product Feed 6.5.84 (V5/Common/Widget.php, includes/widget.php).
+				'widget_id' => 'aaaa_webappick_latest_news_dashboard_widget',
+				'context'   => 'side',
+				'vendor'    => 'Challan (webappick-pdf-invoice-for-woocommerce) 3.7.90',
+				'reason'    => 'WebAppick blog and Challan Pro banner; uncached webappick.com fetch on render',
 			],
 		];
 
@@ -470,6 +478,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_inisev_promos();
 			$this->unhook_magical_addons_promos();
 			$this->unhook_skyboot_icons_promos();
+			$this->unhook_challan_promos();
 			$this->unhook_surerank_permalink_upsell();
 			$this->unhook_updraftplus_dashboard_panel();
 		}
@@ -605,6 +614,34 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		public function unhook_skyboot_icons_promos() : void {
 			$this->remove_discarded_instance_callback( 'admin_notices', 'Skb_Cife_Admin', 'upgrade_notice', 'skyboot-custom-icons-for-elementor' );
 			$this->remove_discarded_instance_callback( 'admin_notices', 'Skb_Cife_Admin', 'review_notice', 'skyboot-custom-icons-for-elementor' );
+		}
+
+		/**
+		 * Remove Challan's translation-volunteer request, its ZATCA and GST Pro banners, and
+		 * the WebAppick Insights usage-tracking opt-in.
+		 *
+		 * includes/notices/admin-notice-for-review.php ends `new Challan_Notifications();` and
+		 * keeps nothing. Each callback adds its own dismiss script, so removing it takes the
+		 * script too. The ZATCA banner registers only on an ar/ary locale and the GST banner
+		 * only for an IN store country or hi_IN; elsewhere nothing is found and a line is logged.
+		 *
+		 * Insights is a protected property of Woo_Invoice_WebAppickAPI::get_instance(); the
+		 * public $promotion on that singleton is a different object. Insights adds its notice
+		 * from an init closure, before admin_init. Its namespace is renamed per product
+		 * (CTXFeed\AppServices in Product Feed), so this class name covers Challan only.
+		 *
+		 * Not used: pre_option_ answers to the vendor's dismissal options. The three gates take
+		 * different shapes, ZATCA's sentinel is the misspelled 'showen_zatca_banner', and the
+		 * Insights option is keyed on the plugin's folder name. Not used either:
+		 * challan_promotions_source_url, already empty by default, so Promotions renders nothing.
+		 * The not-writable, WooCommerce-missing and font-download notices are named functions
+		 * and stay. Challan 3.7.90. docs/plugins/webappick-pdf-invoice-for-woocommerce.md
+		 */
+		public function unhook_challan_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Challan_Notifications', 'woo_invoice_translation_request', 'webappick-pdf-invoice-for-woocommerce' );
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Challan_Notifications', 'woo_invoice_free_saudi_zatca_notice', 'webappick-pdf-invoice-for-woocommerce' );
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Challan_Notifications', 'woo_invoice_free_gst_notice', 'webappick-pdf-invoice-for-woocommerce' );
+			$this->remove_discarded_instance_callback( 'admin_notices', 'Challan\\AppServices\\Insights', 'admin_notice', 'webappick-pdf-invoice-for-woocommerce' );
 		}
 
 		/**

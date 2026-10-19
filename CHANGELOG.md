@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.43.0] — 2026-10-19
+
+### Added
+
+- **Challan – PDF Invoice & Packing Slip for WooCommerce 3.7.90** (WebAppick,
+  `webappick-pdf-invoice-for-woocommerce`). Reported by Paul from a client site. Removes
+  four notices with `remove_discarded_instance_callback()`. Three come from the discarded
+  `Challan_Notifications`: the translation-volunteer request, the ZATCA Pro banner (Arabic
+  locales) and the GST Pro banner (Indian stores or `hi_IN`). The fourth is the
+  usage-tracking opt-in from the bundled WebAppick Service Library
+  (`Challan\AppServices\Insights`). Also removes the "Latest News from WebAppick Blog"
+  dashboard widget, `aaaa_webappick_latest_news_dashboard_widget`, which fetches
+  webappick.com uncached on every dashboard load. WebAppick Product Feed 6.5.84 registers
+  the same widget ID, so it goes there too. The library renames its namespace per product,
+  so the Insights rule covers Challan only. Its remote `Promotions` feed is already off by
+  default in 3.7.90. Confirmed on bench1 over HTTP: every surface 1 → 0 on Dashboard and
+  Plugins, with the Site Health widget still there and no vendor option or user meta written.
+
 ## [1.42.0] — 2026-10-14
 
 ### Added
