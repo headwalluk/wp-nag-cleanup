@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.44.0] — 2026-10-21
+
+### Added
+
+- **Menu Image 3.13** (Freshlight Lab, `menu-image`), via Freemius SDK 2.12.1. Reported by
+  Paul from a client site: the "Test all our awesome premium features with a 7-day free
+  trial" sticky (`trial_promotion`). Joins the existing Freemius rule with no new
+  mechanism. Module 4123 is added to `unhook_freemius_promos()`, which removes the trial
+  and affiliate-programme producers and the trial menu bubble. Slug `menu-image` is added
+  to the `fs_show_admin_notice_{slug}` render filter, which hides stored
+  `trial_promotion`, `affiliate_program` and `connect_account` stickies. Unlike Role Based
+  Pricing, this module runs an affiliate programme, so that producer is live. The plugin's
+  own Font Awesome setup notice is kept. Confirmed on a client site: the trial sticky
+  rendered before deployment and was gone after.
+
 ## [1.43.0] — 2026-10-19
 
 ### Added

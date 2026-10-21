@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.43.0
+ * Version:     1.44.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.43.0';
+		const VERSION = '1.44.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -81,6 +81,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		const RACBPFW_FREEMIUS_MODULE_ID = 9596;
 		const RACBPFW_FREEMIUS_SLUG      = 'role-and-customer-based-pricing-for-woocommerce';
+
+		/**
+		 * Menu Image's Freemius module, keyed the same way.
+		 * docs/plugins/menu-image.md
+		 */
+		const MENU_IMAGE_FREEMIUS_MODULE_ID = 4123;
+		const MENU_IMAGE_FREEMIUS_SLUG      = 'menu-image';
 
 		/**
 		 * Freemius modules claimed only for the render filter. Neither declares a trial or
@@ -379,6 +386,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/role-and-customer-based-pricing-for-woocommerce.md
 			add_filter(
 				'fs_show_admin_notice_' . self::RACBPFW_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
+
+			// Same Freemius stickies, Menu Image 3.13 (SDK 2.12.1).
+			// docs/plugins/menu-image.md
+			add_filter(
+				'fs_show_admin_notice_' . self::MENU_IMAGE_FREEMIUS_SLUG,
 				[ $this, 'hide_freemius_promo_notice' ],
 				self::LATE_PRIORITY,
 				2
@@ -1189,12 +1205,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * leave a badge the site owner could never clear.
 		 * Featured Images in RSS 1.7.3, Freemius SDK 2.13.4.
 		 * Role Based Pricing for WooCommerce 2.0.0, Freemius SDK 2.13.2.
+		 * Menu Image 3.13, Freemius SDK 2.12.1.
 		 * docs/plugins/featured-images-for-rss-feeds.md,
-		 * docs/plugins/role-and-customer-based-pricing-for-woocommerce.md
+		 * docs/plugins/role-and-customer-based-pricing-for-woocommerce.md,
+		 * docs/plugins/menu-image.md
 		 */
 		public function unhook_freemius_promos() : void {
 			$this->unhook_freemius_module_promos( self::FIRSS_FREEMIUS_MODULE_ID );
 			$this->unhook_freemius_module_promos( self::RACBPFW_FREEMIUS_MODULE_ID );
+			$this->unhook_freemius_module_promos( self::MENU_IMAGE_FREEMIUS_MODULE_ID );
 		}
 
 		/**
