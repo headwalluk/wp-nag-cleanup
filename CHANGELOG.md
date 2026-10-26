@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.46.0] — 2026-10-26
+
+### Added
+
+- **SkyVerge vault sweep**, following the Memberships rule. Eight vault plugins bundle the
+  SkyVerge framework. Two more rules came out of it:
+  - **Global Payments HPP 3.0.1** (`woocommerce-gateway-realex-redirect`). The framework's
+    payment gateway base class shows the same review-request milestone after the first
+    payment and the first refund. `wc_realex_redirect_milestone_message` returns an empty
+    string, the same rule as Memberships.
+  - **Sequential Order Numbers Pro 1.21.8**. Once onboarding is complete, it shows a SkyVerge
+    newsletter sign-up ("Sign me up!"). The same callback also shows the set-up prompt, on a
+    discarded object, so core's `option_` filter answers the stored onboarding status
+    `complete` as the vendor's own `updated`. Nothing is written, and the set-up prompt is kept.
+  - Google Analytics Pro, Memberships for Teams, Order Status Manager, Local Pickup Plus and
+    Tab Manager have no nags. They never trigger a milestone, and all their notices are
+    operational. No milestone filter is added for them. `docs/plugins/skyverge.md`.
+
+### Changed
+
+- WooCommerce Memberships milestone rule marked as confirmed on a client site.
+
 ## [1.45.0] — 2026-10-26
 
 ### Added

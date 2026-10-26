@@ -120,9 +120,9 @@ framework 5.1.0.
 
 ## Verification
 
-- **`wc_memberships_milestone_message`: source-verified only.** It was read from 1.30.1 and
-  checked against the vault back to 1.24.0. The client's report confirms the notice renders,
-  but it has not yet been seen to disappear after deployment. Surface: the admin notice area,
+- **`wc_memberships_milestone_message`: confirmed.** The `membership-plan-created` notice
+  rendered on a client site before deployment and was gone after (Paul, 26 Oct 2026). It was
+  also read from 1.30.1 and checked against the vault back to 1.24.0. Surface: the admin notice area,
   via the framework's `SV_WC_Admin_Notice_Handler::render_admin_notices` on `admin_notices`
   at 15. Structural probe: `data-plugin-id="memberships" data-message-id="membership-plan-created"`
 - Bench repro: create a first `wc_membership_plan` on a fresh install, or set

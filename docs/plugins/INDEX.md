@@ -39,11 +39,13 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `disable_comments_show_review_prompt` | Disable Comments 2.9.0 | [disable-comments.md](disable-comments.md) |
 | `aioseo_show_seo_news` | AIOSEO Lite 5.0.1.1, Pro 4.3.4.1 | [all-in-one-seo-pack.md](all-in-one-seo-pack.md) |
 | `wc_memberships_milestone_message` → `__return_empty_string` | WooCommerce Memberships 1.30.1 (filter present from 1.24.0) | [woocommerce-memberships.md](woocommerce-memberships.md) |
+| `wc_realex_redirect_milestone_message` → `__return_empty_string` | Global Payments HPP 3.0.1 | [skyverge.md](skyverge.md) |
 | `CYA11Y_ACCESSYES_BANNER_DISPLAYED` (constant) | WebToffee, via CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `fs_show_admin_notice_{slug}` — ids `trial_promotion`, `affiliate_program`, `connect_account` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2; Independent Analytics 2.15.5, SDK 2.13.4; Delete Comments & Disable Comments 7.1, SDK 2.11.0; Menu Image 3.13, SDK 2.12.1 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md), [independent-analytics.md](independent-analytics.md), [delete-all-comments-of-website.md](delete-all-comments-of-website.md), [menu-image.md](menu-image.md) |
 | `wpchill_telemetry_config` | Modula 2.14.39 | [modula-best-grid-gallery.md](modula-best-grid-gallery.md) |
 | `pre_transient_{campaign}` ‡ | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
 | `pre_option_updraftplus_dismissedautobackup` ‡ | UpdraftPlus 1.26.7 | [updraftplus.md](updraftplus.md) |
+| `option_wc_sequential_order_numbers_pro_onboarding_status` ‡ | Sequential Order Numbers Pro 1.21.8 | [woocommerce-sequential-order-numbers-pro.md](woocommerce-sequential-order-numbers-pro.md) |
 
 `‡` is **core's** filter, not the vendor's: Premium Addons prints its seasonal sale
 pointer from an anonymous closure that no `remove_action()` can name, and the closure's

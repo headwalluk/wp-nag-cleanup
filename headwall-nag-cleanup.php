@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.45.0
+ * Version:     1.46.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.45.0';
+		const VERSION = '1.46.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -365,14 +365,19 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/all-in-one-seo-pack.md
 			add_filter( 'aioseo_show_seo_news', '__return_false' );
 
-			// WooCommerce Memberships milestone notices ("first plan created", "first user
-			// membership created"). The SkyVerge framework builds every milestone notice as a
-			// review request and skips it when this filter returns a falsy value. Read at
-			// render, so it also covers milestones already stored in
-			// wc_memberships_milestone_messages. The filter is per plugin ID, wc_{id}_, and
-			// not namespaced by framework version. Present from 1.24.0, verified against
-			// 1.30.1. docs/plugins/woocommerce-memberships.md
+			// SkyVerge plugin-framework milestone notices. The framework builds every milestone
+			// notice as a review request and skips it when this filter returns a falsy value.
+			// Read at render, so it also covers milestones already stored in
+			// wc_{id}_milestone_messages. The filter is per plugin ID, wc_{id}_, and not
+			// namespaced by framework version. Only plugins that actually trigger a milestone
+			// are listed; the other six SkyVerge plugins in the vault never do.
+			// docs/plugins/skyverge.md
+			// WooCommerce Memberships: first plan, first user membership. 1.24.0 to 1.30.1.
+			// docs/plugins/woocommerce-memberships.md
 			add_filter( 'wc_memberships_milestone_message', '__return_empty_string' );
+			// Global Payments HPP (woocommerce-gateway-realex-redirect): first payment and
+			// first refund, from the framework's payment gateway base class. 3.0.1.
+			add_filter( 'wc_realex_redirect_milestone_message', '__return_empty_string' );
 
 			// WebToffee cross-promotion banner, shared across their range. The vendor
 			// uses this constant as a first-loader mutex, so defining it here skips the
@@ -468,6 +473,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// get_user_metadata short-circuit. Dynamic Visibility 6.0.6.
 			// docs/plugins/dynamic-visibility-for-elementor.md
 			add_filter( 'get_user_metadata', [ $this, 'answer_dynamic_visibility_promo_dismissed' ], 10, 3 );
+
+			// Sequential Order Numbers Pro's SkyVerge newsletter sign-up, shown once onboarding
+			// is complete. It shares a callback on a discarded object with the setup prompt,
+			// so the stored onboarding status is answered at read instead.
+			// Sequential Order Numbers Pro 1.21.8. docs/plugins/woocommerce-sequential-order-numbers-pro.md
+			add_filter( 'option_wc_sequential_order_numbers_pro_onboarding_status', [ $this, 'answer_sequential_order_numbers_onboarding_status' ] );
 
 			// EmbedPress needs no rule. docs/plugins/embedpress.md
 
@@ -1331,6 +1342,29 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			}
 
 			return $meta_value;
+		}
+
+		/**
+		 * Report Sequential Order Numbers Pro's onboarding status 'complete' as 'updated', without writing the option.
+		 *
+		 * Onboarding_Tips::add_onboarding_notices() shows the setup prompt on 'onboard' and the
+		 * newsletter sign-up on 'complete', and nothing on any other value. should_onboard()
+		 * tests only for 'onboard', so 'complete' has no other reader. 'updated' is the vendor's
+		 * own "complete without the merchant's sign-up" status, set by its Lifecycle on upgrade.
+		 *
+		 * Not used: removing add_onboarding_notices. It is the same callback as the setup
+		 * prompt, and the Onboarding_Tips instance is discarded when it is constructed.
+		 * Not used: the admin notice handler. SV_WC_Admin_Notice_Handler has no filter, and its
+		 * dismissed list is one array in user meta, so a read-time answer would mean merging.
+		 * Sequential Order Numbers Pro 1.21.8. docs/plugins/woocommerce-sequential-order-numbers-pro.md
+		 */
+		public function answer_sequential_order_numbers_onboarding_status( $onboarding_status ) {
+			if ( 'complete' === $onboarding_status ) {
+				$onboarding_status = 'updated';
+				$this->log( 'woocommerce-sequential-order-numbers-pro', 'Answered onboarding status complete as updated.' );
+			}
+
+			return $onboarding_status;
 		}
 
 		/**
