@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.45.0] — 2026-10-26
+
+### Added
+
+- **WooCommerce Memberships 1.30.1** (SkyVerge, `woocommerce-memberships`). Reported by
+  Paul from a client site: the "you've created your first membership plan! … please
+  consider leaving a review" notice (`membership-plan-created`). It is a SkyVerge
+  plugin-framework milestone notice, and every milestone notice is built as a review
+  request, so the vendor's `wc_memberships_milestone_message` filter returns an empty string
+  and the framework skips it. This also covers the sibling `user-membership-created`
+  milestone. The filter is read when the notice is rendered, so milestones already stored in
+  `wc_memberships_milestone_messages` are hidden too, and nothing is written. Present from
+  1.24.0. Operational notices are kept: add-on merges, Checkout/Cart block
+  incompatibility, the Action Scheduler migration notice and the setup wizard.
+
 ## [1.44.0] — 2026-10-21
 
 ### Added

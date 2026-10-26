@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.44.0
+ * Version:     1.45.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.44.0';
+		const VERSION = '1.45.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -364,6 +364,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// and Pro. AIOSEO 5.0.1.1, AIOSEO Pro 4.3.4.1.
 			// docs/plugins/all-in-one-seo-pack.md
 			add_filter( 'aioseo_show_seo_news', '__return_false' );
+
+			// WooCommerce Memberships milestone notices ("first plan created", "first user
+			// membership created"). The SkyVerge framework builds every milestone notice as a
+			// review request and skips it when this filter returns a falsy value. Read at
+			// render, so it also covers milestones already stored in
+			// wc_memberships_milestone_messages. The filter is per plugin ID, wc_{id}_, and
+			// not namespaced by framework version. Present from 1.24.0, verified against
+			// 1.30.1. docs/plugins/woocommerce-memberships.md
+			add_filter( 'wc_memberships_milestone_message', '__return_empty_string' );
 
 			// WebToffee cross-promotion banner, shared across their range. The vendor
 			// uses this constant as a first-loader mutex, so defining it here skips the
