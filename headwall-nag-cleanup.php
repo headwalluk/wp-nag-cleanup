@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.46.0
+ * Version:     1.47.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.46.0';
+		const VERSION = '1.47.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -351,6 +351,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// Present from 2.10.1. SureForms 2.12.7. docs/plugins/sureforms.md
 			add_filter( 'srfm_show_rating_notice', '__return_false' );
 
+			// SureForms Getting Started feature tour, repeating weekly. Read before the notice
+			// is queued, and no other SureForms notice gates on it. The vendor's broader
+			// srfm_hide_promotions switch is not used: it also hides the email-delivery
+			// failure and quota action items. SureForms 2.12.9. docs/plugins/sureforms.md
+			add_filter( 'srfm_show_getting_started_notice', '__return_false' );
+
 			// ThemeIsle SDK, bundled in Menu Icons, WPCF7 Redirect and others.
 			// Menu Icons 0.13.24. docs/plugins/themeisle-sdk.md
 			add_filter( 'themeisle_sdk_hide_dashboard_widget', '__return_true' );
@@ -500,7 +506,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_easy_fancybox_review_request();
 			$this->unhook_webp_converter_promos();
 			$this->unhook_mail_bank_review_notice();
-			$this->unhook_bdthemes_review_and_tracking_notices();
+			$this->unhook_bdthemes_promos();
 			$this->unhook_monsterinsights_promos();
 			$this->unhook_exactmetrics_promos();
 			$this->unhook_shapedplugin_promos();
@@ -896,7 +902,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 
 		/**
-		 * Remove BdThemes' review requests and its usage-tracking opt-in.
+		 * Remove BdThemes' review requests, usage-tracking opt-in and deals banner.
 		 *
 		 * Both plugins bundle the same feedback-hub SDK, forked per plugin so the class
 		 * name differs; Element Pack also bundles the DCI insights SDK. All three objects
@@ -904,10 +910,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * bootstrap never calls, so the static holder stays null and remove_action() has
 		 * nothing to name. Licence, Elementor-dependency and mini-cart-conflict notices
 		 * are separate callbacks and survive.
-		 * Element Pack Pro 7.11.2, Ultimate Post Kit 4.5.3.
+		 *
+		 * The deals banner is a static callback, named directly. Every BdThemes free
+		 * plugin ships its own copy behind a class_exists() guard, so one removal covers
+		 * them all. Its "Up To 86% Off" admin menu entry is the vendor's own menu and is
+		 * left alone.
+		 * Element Pack Pro 7.11.2, Ultimate Post Kit 4.6.0.
 		 * docs/plugins/bdthemes-element-pack.md, docs/plugins/ultimate-post-kit.md
 		 */
-		public function unhook_bdthemes_review_and_tracking_notices() : void {
+		public function unhook_bdthemes_promos() : void {
 			$this->remove_discarded_instance_callback(
 				'admin_notices',
 				'RC_Reviews_Collector',
@@ -926,6 +937,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				'display_global_notice',
 				'ultimate-post-kit'
 			);
+
+			// Case matters: _wp_filter_build_unique_id() keys a static callback by literal
+			// string, so a mismatch here removes nothing and looks like success.
+			$deals_callback = [ 'BdThemes_Deals_Biggopti', 'render' ];
+
+			if ( false !== has_action( 'admin_notices', $deals_callback ) ) {
+				remove_action( 'admin_notices', $deals_callback );
+				$this->log( 'bdthemes', 'Removed BdThemes_Deals_Biggopti::render from admin_notices.' );
+			}
 		}
 
 		/**

@@ -5,6 +5,30 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.47.0] — 2026-10-28
+
+### Added
+
+- **BdThemes deals banner** (Ultimate Post Kit 4.6.0, `ultimate-post-kit`). Reported by
+  Paul from a client site: *"Build More. Spend Less. Save Up to $4,899"*, an agency-bundle
+  sale with a "Grab the Deal" button. New in 4.5.10, in a self-contained, all-static
+  `BdThemes_Deals_Biggopti` class that every BdThemes free plugin ships behind one
+  `class_exists()` guard. `BdThemes_Deals_Biggopti::render` is unhooked from
+  `admin_notices`, so one rule covers the range and every future campaign id. Nothing is
+  written to the vendor's dismissal option. The new "Up To 86% Off" menu entry is the
+  vendor's own menu and is left alone. Bench-confirmed.
+- **SureForms Getting Started notice** (SureForms 2.12.9). Paul's call. It was previously
+  left as ambiguous, but it repeats weekly and reads like a review nag.
+  `srfm_show_getting_started_notice` returns false, so the notice is never queued, and no
+  other SureForms notice gates on it. The new `srfm_hide_promotions` switch (2.12.8) is
+  deliberately **not** used: it also hides the email-delivery failure and quota action
+  items, and the Recent Entries widget. Bench-confirmed.
+- Both rules live-confirmed on the client site where they were reported.
+
+### Changed
+
+- `unhook_bdthemes_review_and_tracking_notices()` renamed to `unhook_bdthemes_promos()`.
+
 ## [1.46.0] — 2026-10-26
 
 ### Added

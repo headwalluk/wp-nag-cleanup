@@ -238,7 +238,7 @@ Structural, not copy greps:
 ## Additions to `headwall-nag-cleanup.php`: 2 rules, mechanism 2
 
 ```php
-public function unhook_bdthemes_review_and_tracking_notices() : void {
+public function unhook_bdthemes_promos() : void {
 	$this->remove_discarded_instance_callback(
 		'admin_notices',
 		'RC_Reviews_Collector',
@@ -257,5 +257,16 @@ public function unhook_bdthemes_review_and_tracking_notices() : void {
 		'display_global_notice',
 		'ultimate-post-kit'
 	);
+
+	// Deals banner, 1.47.0. Static, so named directly. docs/plugins/ultimate-post-kit.md
+	$deals_callback = [ 'BdThemes_Deals_Biggopti', 'render' ];
+
+	if ( false !== has_action( 'admin_notices', $deals_callback ) ) {
+		remove_action( 'admin_notices', $deals_callback );
+		$this->log( 'bdthemes', 'Removed BdThemes_Deals_Biggopti::render from admin_notices.' );
+	}
 }
 ```
+
+Renamed from `unhook_bdthemes_review_and_tracking_notices()` in 1.47.0, when the deals
+banner joined it.

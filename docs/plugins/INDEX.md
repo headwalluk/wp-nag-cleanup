@@ -33,6 +33,7 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `cartflows_show_review_notice` | CartFlows 3.2.0 (filter added in 2.2.5) | [cartflows.md](cartflows.md) |
 | `surerank_show_rating_notice` | SureRank 1.10.1 (filter present from 1.7.4) | [surerank.md](surerank.md) |
 | `srfm_show_rating_notice` | SureForms 2.12.7 (filter present from 2.10.1) | [sureforms.md](sureforms.md) |
+| `srfm_show_getting_started_notice` | SureForms 2.12.9 (filter present from 2.10.1) | [sureforms.md](sureforms.md) |
 | `themeisle_sdk_hide_dashboard_widget` | ThemeIsle SDK, Menu Icons 0.13.24 | [themeisle-sdk.md](themeisle-sdk.md) |
 | `cky_is_module_active_review_feedback` | CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `cky_is_module_active_connect_banner` | CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
@@ -82,7 +83,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_easy_fancybox_review_request` | `admin_init` @ 999 | Easy FancyBox 2.3.22 | [easy-fancybox.md](easy-fancybox.md) |
 | `unhook_webp_converter_promos` † | `admin_init` @ 999 | Converter for Media 6.6.5 | [webp-converter-for-media.md](webp-converter-for-media.md) |
 | `unhook_mail_bank_review_notice` † | `admin_init` @ 999 | WP Mail Bank 4.0.14 | [wp-mail-bank.md](wp-mail-bank.md) |
-| `unhook_bdthemes_review_and_tracking_notices` † | `admin_init` @ 999 | Element Pack Pro 7.11.2, Ultimate Post Kit 4.5.3 | [bdthemes-element-pack.md](bdthemes-element-pack.md), [ultimate-post-kit.md](ultimate-post-kit.md) |
+| `unhook_bdthemes_promos` † | `admin_init` @ 999 | Element Pack Pro 7.11.2, Ultimate Post Kit 4.6.0 (deals banner from 4.5.10) | [bdthemes-element-pack.md](bdthemes-element-pack.md), [ultimate-post-kit.md](ultimate-post-kit.md) |
 | `unhook_monsterinsights_promos` † | `admin_init` @ 999 | MonsterInsights 11.2.0 | [google-analytics-for-wordpress.md](google-analytics-for-wordpress.md) |
 | `unhook_exactmetrics_promos` † | `admin_init` @ 999 | ExactMetrics 10.3.0 | [google-analytics-dashboard-for-wp.md](google-analytics-dashboard-for-wp.md) |
 | `unhook_shapedplugin_promos` † | `admin_init` @ 999 | Product Slider for WooCommerce 2.8.13 | [woo-product-slider.md](woo-product-slider.md) |

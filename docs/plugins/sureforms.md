@@ -1,9 +1,9 @@
 # SureForms
 
 - slug: `sureforms`
-- version analysed: `2.12.7` (the review filter checked across every vault release,
-  `2.1.0` to `2.12.7`)
-- source: `/vault/backups/wordpress/plugins/sureforms/sureforms,2.12.7.zip`
+- version analysed: `2.12.7`, re-read at `2.12.9` on 28 Oct 2026 (both filters checked
+  across every vault release, `2.1.0` to `2.12.9`)
+- source: `/vault/backups/wordpress/plugins/sureforms/sureforms,2.12.9.zip`
 - licensing: freemium (SureForms Pro is a separate plugin)
 - Freemius bundled: no. Bundles Brainstorm Force's `bsf-analytics` **1.1.29**,
   `astra-notices` **1.2.1** and Action Scheduler
@@ -18,11 +18,47 @@ operational. It was not pasted; the two candidates that fit are the "Finish sett
 *form*" prompt and the form-check action items, and **both are kept**. He asked for the
 plugin to be examined anyway, as a BSF sibling of SureRank.
 
-One rule: the 5-star review request, through the vendor's own filter. The usage-tracking
+Two rules: the 5-star review request and, since 1.47.0, the Getting Started notice, both
+through the vendor's own filters. The usage-tracking
 opt-in was already covered by the 1.25.0 `bsf-analytics` rules. SureForms' notice
 work is otherwise mostly operational. It includes a `has_action_item_warnings()` precedence
 chain so that a broken form outranks every engagement notice. The engagement notices that
 remain are onboarding for the plugin itself, and they are left as ambiguous.
+
+### 28 Oct 2026 — Getting Started notice moved to suppress (1.47.0)
+
+Paul pasted the Getting Started notice from a client site. He agreed it might just about
+count as operational, but said it *"reads exactly like a review nag, and drowns out the
+admin notification area"*. It repeats weekly, with "Maybe later" / "I already know"
+buttons. The ambiguity call below was always his to make. The doc said
+`srfm_show_getting_started_notice` was there if he decided otherwise, and he has.
+2.12.9 re-read:
+
+- `display_srfm_getting_started_notice()` still returns on
+  `! apply_filters( 'srfm_show_getting_started_notice', true )`. That is read **before**
+  `Astra_Notices::add_notice()`, so the notice is never queued. Present from 2.10.1
+- **No other notice gates on it.** It yields to the rating notice, the Thank You prompt
+  and the action items through its own `show_if`. None of them looks at Getting Started,
+  so removing it releases nothing. Grep of `admin/admin.php` for `getting_started` /
+  `getting-started`: the producer, its filter and its analytics labels only
+
+**New in 2.12.8: `srfm_hide_promotions`. Not used.** `Helper::hide_promotions()` is a
+blanket "hide SureForms promotions" switch. Its call sites are:
+
+| Call site | What it hides | Operational? |
+|---|---|---|
+| `__construct` | SureMail admin menu page | no, but it is the vendor's own menu |
+| `register_form_setup_widget`, `maybe_register_dashboard_widget`, both `enqueue_*_widget_assets` | **all** the SureForms dashboard widgets, including Recent Entries | Recent Entries is real site data. See below |
+| `display_srfm_rating_notice` | the review request | no |
+| `get_connect_surecontact_action` | SureContact connect action item | no |
+| **`get_email_delivery_action_items`** | `email_delivery_setup` / `email_delivery_limited`, which come back *"even if it was ignored before"* once a notification has **failed** | **yes** |
+| **`get_email_quota_action_items`** | `email_delivery_quota`, the SureContact sending quota running low or **exhausted** | **yes** |
+| `is_admin_pointer_visible`, `editor-nudge.php` | the admin pointer, the editor nudge | no |
+| `email-delivery/status.php` | the "install SureMail" next-step link (the status text stays) | no |
+
+So it hides notices that say form notifications are not being delivered. That is the
+"broad switch with the wrong scope" case (Monster/ExactMetrics' `hide_am_notices` is the
+precedent). The narrow per-notice filters are the correct lever, and the docblock says so.
 
 ### Search checklist
 
@@ -49,7 +85,7 @@ remain are onboarding for the plugin itself, and they are left as ambiguous.
 | Pro version compatibility | `admin_notices` → `srfm_pro_version_compatibility` | keep | Version warning |
 | Stripe webhook | `admin_notices` → `webhook_configuration_notice` | keep | Payments configuration |
 | Action Scheduler notices | three, bundled library | keep | Past-due actions, migration, comment cleanup |
-| Getting Started notice | `admin_notices` → `display_srfm_getting_started_notice` | keep, ambiguous | See below |
+| Getting Started notice (`#srfm-getting-started-notice`) | `admin_notices` → `display_srfm_getting_started_notice`, through `Astra_Notices` | **suppress** (1.47.0) | Weekly-repeating feature tour; Paul's call, 28 Oct. Was "keep, ambiguous" |
 | "SureForms is waiting for you!" pointer | `admin_enqueue_scripts` → `enqueue_admin_pointer` | keep, ambiguous | See below |
 | Recent entries widget, and its "Upgrade" footer | `sureforms_recent_entries` | keep | Mixed output; see below |
 | AI Quick Draft widget | `sureforms_ai_quick_draft` | keep | A working form-creation box, like core's Quick Draft |
@@ -69,7 +105,10 @@ form-check warning exists. `srfm_show_thankyou_prompt` would turn it off, and is
 deliberately not used. Compare SureRank's permalink upsell in `surerank.md`, which names
 nothing and offers only a purchase.
 
-### Getting Started notice
+### Getting Started notice — superseded 28 Oct 2026, now suppressed
+
+Kept for the record. The reasoning below was the original ambiguity call. Paul overruled
+it in 1.47.0 (see the top of this document). The cross-gating note is still correct.
 
 *"SureForms is ready to power your forms — explore what's possible! … discover features
 like AI Form Builder, payment integrations, and more."* After 7 days, for sites that have
@@ -112,9 +151,12 @@ change. It is noted because a debug session on a SureForms screen will find noti
 
 ## Mechanism
 
-- tier: 1 (vendor opt-out filter)
+- tier: 1 (vendor opt-out filter), both rules
 - phase: file scope, in `register_vendor_optouts()`
 - `add_filter( 'srfm_show_rating_notice', '__return_false' )`
+- `add_filter( 'srfm_show_getting_started_notice', '__return_false' )`, read at the top of
+  `display_srfm_getting_started_notice()` before `Astra_Notices::add_notice()`.
+  **Present from 2.10.1**
 - read at the top of `display_srfm_rating_notice()`, before `Astra_Notices::add_notice()`,
   so the notice is never queued. **Present from 2.10.1**. 2.1.0 and 2.3.0 have no review
   notice at all
@@ -126,6 +168,11 @@ and SureForms' own "Finish setting up" notice. See `brainstorm-force.md`.
 
 ## Drift check
 
+- `admin/admin.php`: `display_srfm_getting_started_notice()` still returns on
+  `! apply_filters( 'srfm_show_getting_started_notice', true )`, and still before
+  `add_notice()`
+- `inc/helper.php`: `hide_promotions()`. If the email-delivery action items stop
+  checking it, re-assess it. It is still too broad while Recent Entries is behind it
 - `admin/admin.php`: `display_srfm_rating_notice()` still returns on
   `! apply_filters( 'srfm_show_rating_notice', true )`. A filter nobody reads fails
   silently, and this is a BSF plugin, so re-grep on every new release
@@ -135,7 +182,7 @@ and SureForms' own "Finish setting up" notice. See `brainstorm-force.md`.
 
 ```bash
 unzip -p /vault/backups/wordpress/plugins/sureforms/sureforms,<version>.zip \
-  sureforms/admin/admin.php | command grep -n "srfm_show_rating_notice\|function display_srfm_rating_notice"
+  sureforms/admin/admin.php | command grep -n "srfm_show_rating_notice\|srfm_show_getting_started_notice\|function display_srfm_"
 ```
 
 ## Verification
@@ -153,6 +200,31 @@ trap in `surerank.md` applies here too.
 
 No log line: a mechanism 1 rule cannot report a suppression (see Debug logging in
 `CLAUDE.md`).
+
+### Getting Started notice — **Confirmed** (bench, 28 Oct 2026)
+
+Bench: `bench1.local`, SureForms **2.12.9** and Ultimate Post Kit 4.6.0 from the vault,
+captured over an authenticated admin HTTP request. Before = 1.46.0 (HEAD), after = 1.47.0
+working copy. Zero forms, so the review milestone is unmet and Getting Started is the
+eligible notice. The 7-day `display-notice-after` gate was opened with the vendor's own
+state. The first view sets the `srfm-getting-started-notice` transient and user meta
+`delayed-notice`. Deleting the transient leaves the meta, which `is_expired()` reads as
+"delay completed".
+
+| Check | Before | After |
+|---|---|---|
+| `id="srfm-getting-started-notice"`, `index.php` (`id="dashboard-widgets"` asserted) | **1** | **0** |
+| `id="srfm-getting-started-notice"`, `plugins.php` (`id="the-list"` asserted) | **1** | **0** |
+| `has_filter( 'srfm_show_getting_started_notice' )`, harness | — | true |
+| PHP fatals / warnings | 0 | 0 |
+
+**Bench trap, cost one capture:** bench1's `headwall-hosting` mu-plugin bundles its own
+copy of this plugin (`mu-plugins/headwall-hosting/headwall-nag-cleanup.php`, 1.44.0 at the
+time). It loads first, so a copy dropped into `mu-plugins/` is a silent no-op behind the
+`class_exists` guard. The first "after" capture ran 1.44.0 and showed nothing removed.
+Assert `Plugin::VERSION` through the harness, and swap the bundled file, not a sibling.
+
+**Live-confirmed 28 Oct 2026**: Paul deployed 1.47.0 to the client site where he found it and reports the notice gone.
 
 ### Negative checks
 
@@ -173,9 +245,10 @@ SureForms review request, so it was not observed there and this rule remains
 The "Finish setting up" notice and the action items were not exercised: one needs a
 starter-template import, the other a failing form check. No rule names either.
 
-## Additions to `headwall-nag-cleanup.php`: 1 rule, mechanism 1
+## Additions to `headwall-nag-cleanup.php`: 2 rules, mechanism 1
 
 ```php
 // In register_vendor_optouts():
 add_filter( 'srfm_show_rating_notice', '__return_false' );
+add_filter( 'srfm_show_getting_started_notice', '__return_false' ); // 1.47.0
 ```
