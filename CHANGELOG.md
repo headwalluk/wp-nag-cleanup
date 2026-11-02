@@ -5,6 +5,20 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.48.0] — 2026-11-02
+
+### Added
+
+- **Product Feed Manager Black Friday banner** (Product Feed Manager for WooCommerce 2.24.1,
+  `wp-product-feed-manager`, WP Marketing Robot). Reported by Paul from a client site:
+  *"Product Feed Manager - Black Friday: Save 35% on Premium"* with a discount code, on every
+  admin screen. `wppfm_sales_promotion_notice` is a plain named function on `admin_notices`
+  and does nothing but render the vendor's seasonal sale. The same function carried the 2024
+  campaign, so the rule names it rather than the year-stamped dismiss option. The old-logger
+  conflict and cron memory warnings stay, and so do the Black Friday cards on the vendor's
+  own Support page. Bench-confirmed, and live-confirmed on the client site where it was
+  reported.
+
 ## [1.47.0] — 2026-10-28
 
 ### Added

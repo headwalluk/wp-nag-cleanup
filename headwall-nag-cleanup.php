@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.47.0
+ * Version:     1.48.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.47.0';
+		const VERSION = '1.48.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -523,6 +523,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_challan_promos();
 			$this->unhook_surerank_permalink_upsell();
 			$this->unhook_updraftplus_dashboard_panel();
+			$this->unhook_wp_product_feed_manager_sale_banner();
 		}
 
 		/**
@@ -1603,6 +1604,25 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			if ( false !== has_action( 'admin_notices', 'novamira_render_pro_welcome_notice' ) ) {
 				remove_action( 'admin_notices', 'novamira_render_pro_welcome_notice' );
 				$this->log( 'novamira', 'Removed novamira_render_pro_welcome_notice from admin_notices.' );
+			}
+		}
+
+		/**
+		 * Remove Product Feed Manager's seasonal sale banner (Black Friday 2026: 35% off Premium).
+		 *
+		 * A plain named function at the default priority, added when the plugin file loads.
+		 * The function name has carried every campaign since at least 2.23.6 (Black Friday
+		 * 2024); the gate and dismiss option are renamed per campaign, so they are not used.
+		 * Not used: pre_option_wppfm_black_friday_promotion_2026_dismissed. It is year-stamped
+		 * and would stop matching at the next campaign. The function also enqueues the
+		 * banner's own stylesheet, so removing it takes that too.
+		 * The old-logger conflict and cron memory-limit warnings are separate callbacks and stay.
+		 * Product Feed Manager for WooCommerce 2.24.1. docs/plugins/wp-product-feed-manager.md
+		 */
+		public function unhook_wp_product_feed_manager_sale_banner() : void {
+			if ( false !== has_action( 'admin_notices', 'wppfm_sales_promotion_notice' ) ) {
+				remove_action( 'admin_notices', 'wppfm_sales_promotion_notice' );
+				$this->log( 'wp-product-feed-manager', 'Removed wppfm_sales_promotion_notice from admin_notices.' );
 			}
 		}
 
