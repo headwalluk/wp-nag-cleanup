@@ -44,6 +44,7 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `CYA11Y_ACCESSYES_BANNER_DISPLAYED` (constant) | WebToffee, via CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
 | `fs_show_admin_notice_{slug}` — ids `trial_promotion`, `affiliate_program`, `connect_account` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2; Independent Analytics 2.15.5, SDK 2.13.4; Delete Comments & Disable Comments 7.1, SDK 2.11.0; Menu Image 3.13, SDK 2.12.1; Goal Tracker 1.1.6, SDK 2.11.0 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md), [independent-analytics.md](independent-analytics.md), [delete-all-comments-of-website.md](delete-all-comments-of-website.md), [menu-image.md](menu-image.md), [goal-tracker-ga.md](goal-tracker-ga.md) |
 | `wpchill_telemetry_config` | Modula 2.14.39 | [modula-best-grid-gallery.md](modula-best-grid-gallery.md) |
+| `userfeedback_admin_script_localization` | UserFeedback Lite 1.12.0 | [userfeedback-lite.md](userfeedback-lite.md) |
 | `pre_transient_{campaign}` ‡ | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
 | `pre_option_updraftplus_dismissedautobackup` ‡ | UpdraftPlus 1.26.7 | [updraftplus.md](updraftplus.md) |
 | `pre_option_gtga_review_notice_dismissed` ‡ | Goal Tracker 1.1.6 | [goal-tracker-ga.md](goal-tracker-ga.md) |
@@ -87,6 +88,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | `unhook_bdthemes_promos` † | `admin_init` @ 999 | Element Pack Pro 7.11.2, Ultimate Post Kit 4.6.0 (deals banner from 4.5.10) | [bdthemes-element-pack.md](bdthemes-element-pack.md), [ultimate-post-kit.md](ultimate-post-kit.md) |
 | `unhook_monsterinsights_promos` † | `admin_init` @ 999 | MonsterInsights 11.2.0 | [google-analytics-for-wordpress.md](google-analytics-for-wordpress.md) |
 | `unhook_exactmetrics_promos` † | `admin_init` @ 999 | ExactMetrics 10.3.0 | [google-analytics-dashboard-for-wp.md](google-analytics-dashboard-for-wp.md) |
+| `unhook_userfeedback_review_request` † | `admin_init` @ 999 | UserFeedback Lite 1.12.0 | [userfeedback-lite.md](userfeedback-lite.md) |
 | `unhook_shapedplugin_promos` † | `admin_init` @ 999 | Product Slider for WooCommerce 2.8.13 | [woo-product-slider.md](woo-product-slider.md) |
 | `unhook_complianz_review_notice` | `admin_init` @ 999 | Complianz GDPR 7.5.5 | [complianz-gdpr.md](complianz-gdpr.md) |
 | `unhook_cptui_pro_upsell` | `admin_init` @ 999 | Custom Post Type UI 1.19.3 | [custom-post-type-ui.md](custom-post-type-ui.md) |
@@ -156,6 +158,7 @@ one alone lets the other appear, so do not trim that constant to a single entry.
 | `remove_discarded_instance_callback()` | Front door to the above: find the entry, remove it, log it. Used by every `†` rule |
 | `hide_freemius_promo_notice()` | Mechanism 1 callback for `fs_show_admin_notice_{slug}`. Passes the incoming value straight back for ids we do not claim |
 | `disable_wpchill_telemetry()` | Mechanism 1 callback for `wpchill_telemetry_config` |
+| `hide_userfeedback_recommended_plugin()` | Mechanism 1 callback for `userfeedback_admin_script_localization` |
 | `get_freemius_module()` | Reaches a Freemius module by id without booting the SDK |
 | `unhook_freemius_module_promos()` | Removes one Freemius module's trial and affiliate producers. Called once per claimed module id from `unhook_freemius_promos()`; a module missing there keeps its menu badge |
 | `get_elementor_admin_notices_component()` | Reaches Elementor's admin-notices component |

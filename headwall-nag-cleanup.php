@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.49.0
+ * Version:     1.50.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.49.0';
+		const VERSION = '1.50.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -462,6 +462,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// docs/plugins/modula-best-grid-gallery.md
 			add_filter( 'wpchill_telemetry_config', [ $this, 'disable_wpchill_telemetry' ] );
 
+			// UserFeedback's Duplicator "Recommended Plugin" line in its dashboard widget.
+			// The widget is drawn in the browser, and these two keys of the script data are
+			// what it tests. UserFeedback Lite 1.12.0. docs/plugins/userfeedback-lite.md
+			add_filter( 'userfeedback_admin_script_localization', [ $this, 'hide_userfeedback_recommended_plugin' ], self::LATE_PRIORITY );
+
 			// Premium Addons for Elementor's seasonal sale pointer, a wp-pointer popup
 			// anchored to its admin menu item on the dashboard and on its own page. It is
 			// printed from an anonymous closure on in_admin_header (includes/promotion-pointer.php),
@@ -532,6 +537,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_bdthemes_promos();
 			$this->unhook_monsterinsights_promos();
 			$this->unhook_exactmetrics_promos();
+			$this->unhook_userfeedback_review_request();
 			$this->unhook_shapedplugin_promos();
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
@@ -1041,6 +1047,24 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		}
 
 		/**
+		 * Remove UserFeedback's "give it a 5-star review" request.
+		 *
+		 * The same Awesome Motive review class as MonsterInsights_Review, renamed:
+		 * class-userfeedback-review.php ends `new UserFeedback_Review();` and keeps nothing.
+		 *
+		 * Not used: hide_am_notices. It is read only by this notice in UserFeedback, but it is
+		 * a key of the userfeedback_settings array, so answering it means filtering the whole
+		 * option, and userfeedback_save_options() and userfeedback_update_option() both write
+		 * back whatever get_option() returns, which would store the forced value. Not used either:
+		 * pre_option_userfeedback_review, which would be a bespoke method for a gate the
+		 * MonsterInsights family already handles with this reader.
+		 * UserFeedback Lite 1.12.0. docs/plugins/userfeedback-lite.md
+		 */
+		public function unhook_userfeedback_review_request() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'UserFeedback_Review', 'review_request', 'userfeedback-lite' );
+		}
+
+		/**
 		 * Mechanism 4: drop a stored notification the vendor has already banked.
 		 *
 		 * For vendors that write notices into an option and render them from a shared
@@ -1322,6 +1346,26 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			}
 
 			return $show_notice;
+		}
+
+		/**
+		 * Report UserFeedback's recommended plugin as installed and active, so its widget skips the pitch.
+		 *
+		 * Only dashboard-widget.js reads recommended_plugin_is_installed and _is_activated, and
+		 * only to choose between the Install and Activate variants of the Duplicator line. The
+		 * onboarding wizard's "recommended_plugins" group is a different key and is not touched.
+		 * The survey entry figures in the same widget are site data and stay, which is why the
+		 * widget is not removed with remove_meta_box().
+		 */
+		public function hide_userfeedback_recommended_plugin( $script_data ) {
+			if ( is_array( $script_data ) && array_key_exists( 'recommended_plugin_is_installed', $script_data ) ) {
+				$script_data['recommended_plugin_is_installed'] = true;
+				$script_data['recommended_plugin_is_activated'] = true;
+			} else {
+				// Vendor changed the data shape; pass it through rather than guess.
+			}
+
+			return $script_data;
 		}
 
 		/**

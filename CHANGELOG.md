@@ -5,6 +5,25 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.50.0] — 2026-11-04
+
+### Added
+
+- **UserFeedback review request and dashboard-widget cross-sell** (UserFeedback Lite 1.12.0,
+  `userfeedback-lite`, Awesome Motive). The *"give it a 5-star review"* notice is
+  `UserFeedback_Review`, MonsterInsights' review class renamed. It is constructed and
+  discarded the same way, so it is removed through the same `$wp_filter` reader. The
+  *"Recommended Plugin: Duplicator"* line under the survey figures in the dashboard widget is
+  hidden through the vendor's `userfeedback_admin_script_localization` filter, by reporting
+  the recommended plugin as installed and active. The widget and its entry counts stay.
+  `hide_am_notices` is not used, because answering it would be written back into
+  `userfeedback_settings`. The Pro-conflict, PHP and WordPress version, and Action Scheduler
+  notices are preserved, as is the mixed notifications inbox inside the vendor's own UI.
+  Bench-confirmed.
+- The investigation started from a PHP warning about the vendor's dead notifications feed.
+  That was fixed in the headwall-hosting mu-plugin by blocking the request, not here.
+  Unhooking the cron fetch would have rescheduled it on every admin page.
+
 ## [1.49.0] — 2026-11-04
 
 ### Added
