@@ -42,10 +42,11 @@ Registered at file scope in `register_vendor_optouts()`. No unhooking, no `$wp_f
 | `wc_memberships_milestone_message` → `__return_empty_string` | WooCommerce Memberships 1.30.1 (filter present from 1.24.0) | [woocommerce-memberships.md](woocommerce-memberships.md) |
 | `wc_realex_redirect_milestone_message` → `__return_empty_string` | Global Payments HPP 3.0.1 | [skyverge.md](skyverge.md) |
 | `CYA11Y_ACCESSYES_BANNER_DISPLAYED` (constant) | WebToffee, via CookieYes 3.5.5 | [cookie-law-info.md](cookie-law-info.md) |
-| `fs_show_admin_notice_{slug}` — ids `trial_promotion`, `affiliate_program`, `connect_account` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2; Independent Analytics 2.15.5, SDK 2.13.4; Delete Comments & Disable Comments 7.1, SDK 2.11.0; Menu Image 3.13, SDK 2.12.1 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md), [independent-analytics.md](independent-analytics.md), [delete-all-comments-of-website.md](delete-all-comments-of-website.md), [menu-image.md](menu-image.md) |
+| `fs_show_admin_notice_{slug}` — ids `trial_promotion`, `affiliate_program`, `connect_account` | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2; Independent Analytics 2.15.5, SDK 2.13.4; Delete Comments & Disable Comments 7.1, SDK 2.11.0; Menu Image 3.13, SDK 2.12.1; Goal Tracker 1.1.6, SDK 2.11.0 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md), [independent-analytics.md](independent-analytics.md), [delete-all-comments-of-website.md](delete-all-comments-of-website.md), [menu-image.md](menu-image.md), [goal-tracker-ga.md](goal-tracker-ga.md) |
 | `wpchill_telemetry_config` | Modula 2.14.39 | [modula-best-grid-gallery.md](modula-best-grid-gallery.md) |
 | `pre_transient_{campaign}` ‡ | Premium Addons for Elementor 4.11.103 | [premium-addons-for-elementor.md](premium-addons-for-elementor.md) |
 | `pre_option_updraftplus_dismissedautobackup` ‡ | UpdraftPlus 1.26.7 | [updraftplus.md](updraftplus.md) |
+| `pre_option_gtga_review_notice_dismissed` ‡ | Goal Tracker 1.1.6 | [goal-tracker-ga.md](goal-tracker-ga.md) |
 | `option_wc_sequential_order_numbers_pro_onboarding_status` ‡ | Sequential Order Numbers Pro 1.21.8 | [woocommerce-sequential-order-numbers-pro.md](woocommerce-sequential-order-numbers-pro.md) |
 
 `‡` is **core's** filter, not the vendor's: Premium Addons prints its seasonal sale
@@ -67,7 +68,7 @@ sanctioned `$wp_filter` reader, because the vendor discards the instance.
 | Rule method | Phase | Vendor verified against | Doc |
 |---|---|---|---|
 | `unhook_wpcode_promos` † | `admin_init` @ 1 | WPCode 2.3.9 | [insert-headers-and-footers.md](insert-headers-and-footers.md) |
-| `unhook_freemius_promos` | `admin_init` @ 1 | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2; Menu Image 3.13, SDK 2.12.1 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md), [menu-image.md](menu-image.md) |
+| `unhook_freemius_promos` | `admin_init` @ 1 | Featured Images in RSS 1.7.3, Freemius SDK 2.13.4; Role Based Pricing for WooCommerce 2.0.0, SDK 2.13.2; Menu Image 3.13, SDK 2.12.1; Goal Tracker 1.1.6, SDK 2.11.0 | [featured-images-for-rss-feeds.md](featured-images-for-rss-feeds.md), [role-and-customer-based-pricing-for-woocommerce.md](role-and-customer-based-pricing-for-woocommerce.md), [menu-image.md](menu-image.md), [goal-tracker-ga.md](goal-tracker-ga.md) |
 | `unhook_bsf_analytics_optin_notice` † | `admin_init` @ 1 | CartFlows 3.2.0, bsf-analytics 1.1.29 | [cartflows.md](cartflows.md), [brainstorm-force.md](brainstorm-force.md) |
 | `unhook_astra_theme_wc_upsell` | `admin_init` @ 1 | Astra **theme** 4.13.11 | [astra-theme.md](astra-theme.md) |
 | `unhook_wpforms_review_promos` † | `admin_init` @ 1 | WPForms Lite 2.0.1.1 | [wpforms-lite.md](wpforms-lite.md) |

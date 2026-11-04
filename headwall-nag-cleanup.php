@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.48.0
+ * Version:     1.49.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.48.0';
+		const VERSION = '1.49.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -88,6 +88,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		const MENU_IMAGE_FREEMIUS_MODULE_ID = 4123;
 		const MENU_IMAGE_FREEMIUS_SLUG      = 'menu-image';
+
+		/**
+		 * Goal Tracker's Freemius module, keyed the same way.
+		 * docs/plugins/goal-tracker-ga.md
+		 */
+		const GOAL_TRACKER_FREEMIUS_MODULE_ID = 11325;
+		const GOAL_TRACKER_FREEMIUS_SLUG      = 'goal-tracker-ga';
 
 		/**
 		 * Freemius modules claimed only for the render filter. Neither declares a trial or
@@ -420,6 +427,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				2
 			);
 
+			// Same Freemius stickies, Goal Tracker 1.1.6 (SDK 2.11.0).
+			// docs/plugins/goal-tracker-ga.md
+			add_filter(
+				'fs_show_admin_notice_' . self::GOAL_TRACKER_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
+
 			// Same Freemius stickies, Independent Analytics 2.15.5 (SDK 2.13.4). Only the
 			// connect_account opt-in is ever produced here.
 			// docs/plugins/independent-analytics.md
@@ -472,6 +488,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// pre_option_ short-circuit reaches all of them with nothing written.
 			// UpdraftPlus 1.26.7. docs/plugins/updraftplus.md
 			add_filter( 'pre_option_updraftplus_dismissedautobackup', [ $this, 'answer_updraftplus_autobackup_dismissed' ] );
+
+			// Goal Tracker's "Give it a ★★★★★ Rating" review request, on every admin screen.
+			// Its only gate is `! get_option( 'gtga_review_notice_dismissed' )`, read nowhere
+			// else and shown on no settings screen, so answering true skips it with nothing
+			// written. The callback's Wp_Goal_Tracker_Ga_Admin instance is discarded by
+			// run_wp_goal_tracker_ga(). Goal Tracker 1.1.6. docs/plugins/goal-tracker-ga.md
+			add_filter( 'pre_option_gtga_review_notice_dismissed', '__return_true' );
 
 			// Dynamic Visibility for Elementor's Novamira cross-sell and Dynamic Content upsell.
 			// Both are queued from an anonymous init closure, so the renderer skips them by
@@ -1247,14 +1270,16 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Featured Images in RSS 1.7.3, Freemius SDK 2.13.4.
 		 * Role Based Pricing for WooCommerce 2.0.0, Freemius SDK 2.13.2.
 		 * Menu Image 3.13, Freemius SDK 2.12.1.
+		 * Goal Tracker 1.1.6, Freemius SDK 2.11.0.
 		 * docs/plugins/featured-images-for-rss-feeds.md,
 		 * docs/plugins/role-and-customer-based-pricing-for-woocommerce.md,
-		 * docs/plugins/menu-image.md
+		 * docs/plugins/menu-image.md, docs/plugins/goal-tracker-ga.md
 		 */
 		public function unhook_freemius_promos() : void {
 			$this->unhook_freemius_module_promos( self::FIRSS_FREEMIUS_MODULE_ID );
 			$this->unhook_freemius_module_promos( self::RACBPFW_FREEMIUS_MODULE_ID );
 			$this->unhook_freemius_module_promos( self::MENU_IMAGE_FREEMIUS_MODULE_ID );
+			$this->unhook_freemius_module_promos( self::GOAL_TRACKER_FREEMIUS_MODULE_ID );
 		}
 
 		/**

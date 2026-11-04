@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.49.0] — 2026-11-04
+
+### Added
+
+- **Goal Tracker Freemius trial promotion and review request** (Goal Tracker 1.1.6,
+  `goal-tracker-ga`, pinewise, Freemius SDK 2.11.0). Reported by Paul from a client
+  site: *"Hey! How do you like Goal Tracker so far? Test all our awesome premium features
+  with a 7-day free trial."* Module 11325 joins the existing Freemius rule, which covers the
+  `trial_promotion`, `affiliate_program` and `connect_account` stickies and the trial menu
+  counter. The SDK parts the rule depends on were re-read in 2.11.0, the oldest SDK on it so
+  far. The plugin's own "Give it a ★★★★★ Rating" review request, shown on every admin
+  screen, is skipped by answering its only gate,
+  `pre_option_gtga_review_notice_dismissed`, with nothing written. Every other Freemius
+  notice is preserved. Live-confirmed on the client site where it was reported.
+
 ## [1.48.0] — 2026-11-02
 
 ### Added
