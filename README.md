@@ -188,7 +188,8 @@ ShapedPlugin, Code Snippets' competitor promotion, WP Mail SMTP's review request
 Check & Log Email's newsletter pointer and review request, 404 to 301's review request,
 Inisev's review and Backup Migration cross-sell banners, Simple Custom Post Order's
 review request, Skyboot Custom Icons' PRO waitlist notice and review request, and
-Challan's translation request, ZATCA and GST Pro banners and WebAppick Insights opt-in.
+Challan's translation request, ZATCA and GST Pro banners and WebAppick Insights opt-in,
+and PDF Embedder's review request.
 Each has
 its own write-up, and each had to establish that the other mechanisms were all
 unavailable first — a bar that has failed more often than it has passed, and twice a
@@ -297,6 +298,7 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Novamira | 1.12.7 | 2 | "Novamira Pro is here." upsell notice on the Dashboard, the Plugins screen and Novamira's own screens. MCP-dependency, WordPress-version, domain-change, sandbox safe-mode, Ghost Mode and connection-regression notices preserved |
 | Skyboot Custom Icons for Elementor | 1.2.0 | 2, 3 | "Skyboot Pro is Coming Soon!" waitlist notice, the review request, and the dashboard widget (News & Updates and a Pro waitlist box; takes the icon-set count with it). Elementor-missing, Elementor-version and PHP-version notices preserved |
 | Challan – PDF Invoice & Packing Slip for WooCommerce (WebAppick) | 3.7.90 | 2, 3 | WebAppick Insights usage-tracking opt-in, the translation-volunteer request, the ZATCA and GST Pro banners, and the "Latest News from WebAppick Blog" dashboard widget (an uncached webappick.com fetch on every dashboard load; the same widget ID in WebAppick Product Feed goes too). WooCommerce-missing, directory-not-writable and font-download notices preserved |
+| PDF Embedder | 5.0.2 | 2 | Review request, and the rating text that replaces core's admin footer on its own screens. PHP-version notice preserved |
 | Dynamic Visibility for Elementor | 6.0.6 | 1 | Novamira cross-sell and Dynamic Content upsell, on every admin screen. Elementor-missing and Elementor-version notices preserved |
 | Enable Media Replace (ShortPixel) | 4.2.2 | 4 | Stored "New Beta Feature!" Remove Background announcement on the Media Library and attachment screens, dismissed through the vendor's own close-button path. S3-Offload conflict warning, replace errors, success notices and ShortPixel's remote notices preserved |
 | WP Mail SMTP | 4.9.0 | 2 | Review request. Every mailer-setup, connection, domain and deliverability notice preserved, as is the email-deliverability dashboard widget |

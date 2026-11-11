@@ -5,6 +5,20 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.51.0] — 2026-11-11
+
+### Added
+
+- **PDF Embedder review request and footer rating text** (PDF Embedder 5.0.2,
+  `pdf-embedder`). Reported by Paul from a client site: *"Hey, it looks like you are using
+  PDF Embedder for quite a while, which is great! Can you please give it a 5-star rating on
+  WordPress.org…"*. The notice comes from a `WPorgReview` object that is constructed and
+  discarded on `admin_init`, so it is removed through the `$wp_filter` reader. The
+  *"Please rate PDF Embedder ★★★★★"* text that replaces core's admin footer on the vendor's
+  screens is removed by name through `pdf_embedder()->admin()`. The PHP-version notice is
+  preserved. Nothing is written to the vendor's `wppdf_review` option. Bench-confirmed with
+  the WP_ADMIN harness, and live-confirmed by Paul on the client site where it was reported.
+
 ## [1.50.0] — 2026-11-04
 
 ### Added

@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.50.0
+ * Version:     1.51.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.50.0';
+		const VERSION = '1.51.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -538,6 +538,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_monsterinsights_promos();
 			$this->unhook_exactmetrics_promos();
 			$this->unhook_userfeedback_review_request();
+			$this->unhook_pdf_embedder_review_promos();
 			$this->unhook_shapedplugin_promos();
 			$this->unhook_complianz_review_notice();
 			$this->unhook_cptui_pro_upsell();
@@ -1062,6 +1063,34 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		public function unhook_userfeedback_review_request() : void {
 			$this->remove_discarded_instance_callback( 'admin_notices', 'UserFeedback_Review', 'review_request', 'userfeedback-lite' );
+		}
+
+		/**
+		 * Remove PDF Embedder's "give it a 5-star rating" review request and its footer rating text.
+		 *
+		 * Admin::init() runs `( new WPorgReview() )->hooks();` on admin_init/10 and keeps nothing,
+		 * so the notice goes through the $wp_filter reader. Not used: pre_option_wppdf_review
+		 * answering `dismissed`, which would be a bespoke method for a gate the reader already
+		 * handles. The footer text is Admin::render_page_footer, on the admin_footer_text filter
+		 * at priority 1; that Admin instance is reachable through pdf_embedder()->admin(), so it is
+		 * named directly. The PHP-version notice in requirements.php is a separate closure and stays.
+		 * PDF Embedder 5.0.2. docs/plugins/pdf-embedder.md
+		 */
+		public function unhook_pdf_embedder_review_promos() : void {
+			$this->remove_discarded_instance_callback( 'admin_notices', 'PDFEmbedder\\Admin\\WPorgReview', 'display_review', 'pdf-embedder' );
+
+			if ( ! function_exists( 'pdf_embedder' ) || ! class_exists( 'PDFEmbedder\\Admin\\Admin' ) ) {
+				// Not installed.
+			} else {
+				$pdf_embedder_admin = pdf_embedder()->admin();
+
+				if ( ! $pdf_embedder_admin instanceof \PDFEmbedder\Admin\Admin || false === has_filter( 'admin_footer_text', [ $pdf_embedder_admin, 'render_page_footer' ] ) ) {
+					$this->log( 'pdf-embedder', 'Installed, but Admin::render_page_footer is not on admin_footer_text; no action taken.' );
+				} else {
+					remove_filter( 'admin_footer_text', [ $pdf_embedder_admin, 'render_page_footer' ], 1 );
+					$this->log( 'pdf-embedder', 'Removed Admin::render_page_footer from admin_footer_text priority 1.' );
+				}
+			}
 		}
 
 		/**
