@@ -1,13 +1,59 @@
 # Simple Custom Post Order
 
 - slug: `simple-custom-post-order`
-- version analysed: `2.8.8`
+- version analysed: `2.8.8`; re-checked against `2.8.12` on 16 Nov 2026 (class rename)
 - source: `/vault/backups/wordpress/plugins/simple-custom-post-order/simple-custom-post-order,2.8.8.zip`
 - licensing: free
 - Freemius bundled: no
 - vendor: Colorlib. The review class is the Epsilon/WPChill `*_Review` pattern also shipped
   by Check & Log Email (`check-email.md`): same `five_star_wp_rate_notice` / `ajax_script`
   method names, same `epsilon-*` button IDs
+
+## Update, 16 Nov 2026 — class renamed in 2.8.9 (rule 1.51.1)
+
+Paul reported the review notice back on a live site, same markup and same
+`#simple-custom-post-order-epsilon-review-notice` ID. In **2.8.9** the vendor renamed the class
+from `Simple_Review` to `SCPO_Review_Notice`. Their header comment says the generic name was
+shared by other Epsilon-framework plugins, and declaring it twice is fatal. Nothing else changed
+apart from a new `ABSPATH` guard. The hooks, priorities, method names, the `simple-rate-time` gate
+and the `epsilon_simple_review` AJAX action are all the same. 2.8.9 to 2.8.12 ship the
+identical file. A whole-file `diff` against 2.8.8 shows every line changed, but that is only
+line endings: 2.8.8 is CRLF and 2.8.9+ is LF.
+
+The 1.33.0 rule matched `instanceof Simple_Review`. On 2.8.9+ that class does not exist, so
+`remove_discarded_instance_callback()` took its silent "not installed" branch. No drift line
+was logged, so the miss could not be seen in the debug log. 1.51.1 adds the same two calls for
+`SCPO_Review_Notice` and keeps the `Simple_Review` pair for sites still on 2.8.7/2.8.8.
+
+The new class is still unprefixed by namespace and still discarded (`new SCPO_Review_Notice();`).
+No singleton, no filter, nothing in `SCPO_Engine` holds it, so mechanism 2 through the reader
+is still the only route.
+
+### Verification of 1.51.1 — **Confirmed (harness, and live)**
+
+Live: Paul deployed 1.51.1 to the client site where the notice was reported, on 16 Nov 2026,
+and confirmed it gone.
+
+Bench: `bench1.local`, 16 Nov 2026, Simple Custom Post Order **2.8.12** unzipped from the vault.
+quick-2fa is on bench1, so this is a **harness** capture, not HTTP:
+`wp --exec='define( "WP_ADMIN", true ); define( "HEADWALL_NAG_CLEANUP_DEBUG", true );' eval-file`,
+with user 1 set, `simple-rate-time` backdated one hour, and the vendor's own
+`new SCPO_Review_Notice();` re-run once an admin was set (the load-time instance ran with no user).
+Then `admin_init` fired, and `admin_notices` and `admin_print_footer_scripts` were captured. Each
+build was copied over the bundled copy in `mu-plugins/headwall-hosting/`, and its version was
+asserted in the output.
+
+| | 1.50.0 (old rule) | 1.51.1 |
+|---|---|---|
+| `id="simple-custom-post-order-epsilon-review-notice"` | **1** | **0** |
+| `epsilon_simple_review` in footer scripts | **1** | **0** |
+| Debug line for this rule | none: the silent miss | `Removed SCPO_Review_Notice::five_star_wp_rate_notice from admin_notices priority 10.` and `… ::ajax_script from admin_print_footer_scripts priority 10.` |
+
+No line for the absent `Simple_Review` class, as intended. The setup notice was not exercised:
+`scporder_notice_not_checked()` needs a current screen, and the harness has none, so it showed 0
+in both runs. The rule does not touch `SCPO_Engine`, and the 1.33.0 HTTP check of that notice
+still holds. Bench restored: bundled copy byte-for-byte (sha256), plugin removed through its own
+uninstaller, and the option, table and cron snapshots match.
 
 ## Analysis
 
@@ -112,11 +158,17 @@ done   # 2.8.8: review=4 did_action=1. 2.6.0–2.8.6: review=4 did_action=0, not
 ```
 
 - `class-simple-review.php`: if the class gets a namespace, is renamed, or is kept by
-  `SCPO_Engine`, the rule has to change
+  `SCPO_Engine`, the rule has to change. **It was renamed once already**, in 2.8.9
+  (`Simple_Review` → `SCPO_Review_Notice`). A rename produces **no** debug line, because the
+  reader treats a missing class as "not installed". So check the `^class ` line of this file on
+  every new vendor release:
+  `unzip -p "${PLUGIN_ZIP}" simple-custom-post-order/class-simple-review.php | command grep "^class \|^new "`
 - If the `did_action` fix is ever reverted, the rule finds nothing and logs
   `Simple_Review::five_star_wp_rate_notice not registered on admin_notices`. That is correct
   behaviour, not a failure
-- Versions in the vault: 2.5.7 → 2.8.8 (no 2.8.5 or 2.8.7). 2.5.7–2.5.9 include the file
+- Versions in the vault: 2.5.7 → 2.8.12 (no 2.8.5 or 2.8.7). 2.8.9–2.8.12 declare
+  `SCPO_Review_Notice`; the drift loop above greps for `Simple_Review` and reports
+  `review=2` for them (the two `[ ... ]` hook lines only). 2.5.7–2.5.9 include the file
   at construction time and register the notice. Their old `enqueue` method (jQuery only) is
   not targeted: it loads nothing promotional
 

@@ -133,7 +133,8 @@ vendor registers the same callback **twice**, so the rule loops the finder rathe
 calling it once) and WP Mail SMTP (1.26.0, the review request) and Check & Log Email (1.28.0, the newsletter
 pointer and the review request) and 404 to 301 (1.29.0, the review request) and Copy & Delete Posts (1.31.0, Inisev's
 shared `Inisev\Subs` review and cross-sell modules, matched by class so sibling Inisev
-plugins are covered) and Simple Custom Post Order (1.33.0, the review request) and Skyboot Custom Icons for Elementor
+plugins are covered) and Simple Custom Post Order (1.33.0, the review request; 1.51.1 added the
+class renamed in 2.8.9) and Skyboot Custom Icons for Elementor
 (1.41.0, the PRO waitlist notice and the review request) and Challan, WebAppick's PDF invoice plugin
 (1.43.0, the translation request, the ZATCA and GST Pro banners and the WebAppick Insights opt-in)
 and PDF Embedder (1.51.0, the review request). Never add a second reader;

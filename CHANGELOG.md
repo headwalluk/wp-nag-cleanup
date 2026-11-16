@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.51.1] — 2026-11-16
+
+### Fixed
+
+- **Simple Custom Post Order review request is back on 2.8.9 and later**
+  (`simple-custom-post-order`). Reported by Paul: the *"Stoked to see you're using Simple
+  Custom Post Order"* notice reappeared. 2.8.9 renamed the review class from the generic
+  `Simple_Review` to `SCPO_Review_Notice`, with no other change, so the 1.33.0 rule found
+  no instance of its class and the notice survived. The rule now names both classes, so
+  sites still on 2.8.7/2.8.8 stay covered. The class that is not loaded is skipped
+  silently. Verified against 2.8.12 source, the latest in the vault. Harness-confirmed on
+  the bench, and live-confirmed by Paul on the client site where it was reported.
+
 ## [1.51.0] — 2026-11-11
 
 ### Added
