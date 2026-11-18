@@ -5,6 +5,20 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.51.2] — 2026-11-18
+
+### Fixed
+
+- **Premium Addons seasonal sale pointer is back on 4.11.112 and later**
+  (`premium-addons-for-elementor`). Reported by Paul: a *"Black Friday Sale 2026!"*
+  `wp-pointer` popup on the Premium Addons admin menu item. The rule answers the pointer's
+  campaign-scoped dismissal transient, and the vendor has renamed it three times since
+  1.27.0: `pa_aut26` (4.11.112), `pa_hall26` (4.11.118) and `pa_bf26` (4.11.120). All three
+  are added to `PREMIUM_ADDONS_POINTER_TRANSIENTS`; the older names stay for sites on older
+  releases. The gate is otherwise unchanged. The notice dispatcher swap and the
+  `pa-stories` widget rule were re-verified against 4.11.120, the latest in the vault.
+  Not bench-tested.
+
 ## [1.51.1] — 2026-11-16
 
 ### Fixed

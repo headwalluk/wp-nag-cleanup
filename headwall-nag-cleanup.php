@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.51.1
+ * Version:     1.51.2
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.51.1';
+		const VERSION = '1.51.2';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -159,7 +159,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * writes when the site owner dismisses it.
 		 *
 		 * The name is campaign-scoped, so a new campaign needs a new entry here rather
-		 * than a pattern: five names appeared between 4.11.62 and 4.11.103. pa_summer26
+		 * than a pattern: eight names appeared between 4.11.62 and 4.11.120. pa_summer26
 		 * and pa_sumr26 are two different campaigns, not a typo — 4.11.84 renamed the
 		 * transient, which re-showed the pointer to everyone who had dismissed it.
 		 * docs/plugins/premium-addons-for-elementor.md
@@ -169,7 +169,10 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			'pa_val26_pointer_dismiss',    // 4.11.68 to 4.11.72.
 			'pa_spring26_pointer_dismiss', // 4.11.73 to 4.11.76.
 			'pa_summer26_pointer_dismiss', // 4.11.77 to 4.11.83.
-			'pa_sumr26_pointer_dismiss',   // 4.11.84 onwards; current at 4.11.103.
+			'pa_sumr26_pointer_dismiss',   // 4.11.84 to 4.11.111.
+			'pa_aut26_pointer_dismiss',    // 4.11.112 to 4.11.117.
+			'pa_hall26_pointer_dismiss',   // 4.11.118 to 4.11.119.
+			'pa_bf26_pointer_dismiss',     // 4.11.120 onwards; current at 4.11.120.
 		];
 
 		/**
@@ -184,8 +187,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			[
 				'widget_id' => 'pa-stories',
 				'context'   => 'column3',
-				'vendor'    => 'Premium Addons for Elementor 4.11.103',
-				'reason'    => 'Premium Addons News; fetches premiumaddons.com on render',
+				'vendor'    => 'Premium Addons for Elementor 4.11.120',
+				'reason'    => 'Premium Addons News, a vendor story feed',
 			],
 			[
 				'widget_id' => 'widget_cssheronews',
@@ -469,7 +472,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 
 			// Premium Addons for Elementor's seasonal sale pointer, a wp-pointer popup
 			// anchored to its admin menu item on the dashboard and on its own page. It is
-			// printed from an anonymous closure on in_admin_header (includes/promotion-pointer.php),
+			// printed from an anonymous closure on in_admin_header (admin/includes/promotion-pointer.php),
 			// so remove_action() has nothing to name and the $wp_filter reader cannot help
 			// either — it matches instances of a class, and a closure is neither.
 			//
@@ -482,7 +485,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// residue and records no dismissal the site owner did not make.
 			//
 			// The hook is core's rather than the vendor's; only the transient name comes
-			// from the vendor, and that is what drifts. Premium Addons 4.11.103.
+			// from the vendor, and that is what drifts. Premium Addons 4.11.120.
 			// docs/plugins/premium-addons-for-elementor.md
 			foreach ( self::PREMIUM_ADDONS_POINTER_TRANSIENTS as $pointer_transient ) {
 				add_filter( 'pre_transient_' . $pointer_transient, '__return_true' );
@@ -1583,7 +1586,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * One callback prints the Elementor dependency notice and three promos. Both
 		 * methods are public, so the dispatcher is swapped for the operational half
 		 * rather than the promos being dismissed on the site owner's behalf.
-		 * Premium Addons for Elementor 4.11.103. docs/plugins/premium-addons-for-elementor.md
+		 * Premium Addons for Elementor 4.11.120. docs/plugins/premium-addons-for-elementor.md
 		 */
 		public function unhook_premium_addons_promos() : void {
 			$notices_class = '\\PremiumAddons\\Admin\\Includes\\Admin_Notices';

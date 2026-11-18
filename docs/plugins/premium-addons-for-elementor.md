@@ -1,8 +1,8 @@
 # Premium Addons for Elementor
 
 - slug: `premium-addons-for-elementor`
-- version analysed: `4.11.103` (first pass `4.11.102`)
-- source: `/vault/backups/wordpress/plugins/premium-addons-for-elementor/premium-addons-for-elementor,4.11.103.zip`
+- version analysed: `4.11.120` (first pass `4.11.102`, second `4.11.103`)
+- source: `/vault/backups/wordpress/plugins/premium-addons-for-elementor/premium-addons-for-elementor,4.11.120.zip`
 - licensing: freemium (free on wordpress.org, Premium Addons PRO sold at premiumaddons.com)
 - Freemius bundled: no
 
@@ -15,6 +15,11 @@ Re-analysed on 12 Sep 2026 by Claude Code (Claude Opus 5), from a second nag Pau
 on a live client site — a `wp-pointer` popup, "Summer Sale 2026!", anchored to the Premium
 Addons admin menu item. **A third rule was added**, and the two existing rules were
 re-verified against 4.11.103 unchanged.
+
+Re-analysed on 18 Nov 2026 by Claude Code (Claude Opus 5), from a third report from Paul:
+the same pointer, now *"Black Friday Sale 2026!"*. **Drift, not a new surface** — see
+[Third pass](#third-pass--18-nov-2026-the-rule-drifted-twice-unnoticed). Three campaign
+names added; all three rules re-verified against 4.11.120.
 
 4 fleet sites. **Two rules added on the first pass.** The "Premium Addons News" dashboard widget is
 removed, and the three promotional notices are removed by **swapping the vendor's notice
@@ -31,7 +36,7 @@ below, because the technique generalises.
 | Pass | Result |
 |---|---|
 | `admin_notices` registrations | **1** — `Admin_Notices::admin_notices`, a dispatcher printing several notices |
-| `in_admin_header` registrations | **1** — an anonymous closure in `includes/promotion-pointer.php`, the seasonal sale pointer. **Missed by the first pass**; see below |
+| `in_admin_header` registrations | **1** — an anonymous closure in `admin/includes/promotion-pointer.php` (`includes/` before 4.11.112), the seasonal sale pointer. **Missed by the first pass**; see below |
 | Vendor opt-out filters | None relevant. Only `premium_addons/angie/is_pa_widget` and a WooCommerce filter |
 | Vendor opt-out constants | None usable — see `check_hide_notifications()` below |
 | Dashboard widgets | **1**: `pa-stories`, "Premium Addons News", context `column3`, registered on `wp_dashboard_setup` priority 111 |
@@ -53,7 +58,8 @@ below, because the technique generalises.
 ## The seasonal sale pointer — second pass, 12 Sep 2026
 
 `includes/promotion-pointer.php`, included unconditionally from `PA_Core::pa_init()` on
-`plugins_loaded`. It registers an **anonymous closure** on `in_admin_header` which prints
+`plugins_loaded`. From 4.11.112 it is `admin/includes/promotion-pointer.php`, included from
+the end of `Admin_Notices::__construct()`, after the `check_hide_notifications()` bail. It registers an **anonymous closure** on `in_admin_header` which prints
 an inline script opening a core `wp-pointer` popup against `#toplevel_page_premium-addons`:
 
 > **Summer Sale 2026!** Unlock the full power of Elementor with 90+ advanced elements and
@@ -127,8 +133,8 @@ and that is the part that drifts.
 
 ### The campaign name is the maintenance cost
 
-The transient is scoped to the campaign, so a new campaign silently escapes the rule. Five
-names in the 4.11.62–4.11.103 range, every one found by reading the vault:
+The transient is scoped to the campaign, so a new campaign silently escapes the rule. Eight
+names in the 4.11.62–4.11.120 range, every one found by reading the vault:
 
 | Transient | Campaign | Versions |
 |---|---|---|
@@ -136,13 +142,16 @@ names in the 4.11.62–4.11.103 range, every one found by reading the vault:
 | `pa_val26_pointer_dismiss` | "Biggest Sale Until Summer 2026" | 4.11.68 – 4.11.72 |
 | `pa_spring26_pointer_dismiss` | Spring 2026 | 4.11.73 – 4.11.76 |
 | `pa_summer26_pointer_dismiss` | Summer Sale 2026 | 4.11.77 – 4.11.83 |
-| `pa_sumr26_pointer_dismiss` | Summer Sale 2026 | 4.11.84 – 4.11.103 |
+| `pa_sumr26_pointer_dismiss` | Summer Sale 2026 | 4.11.84 – 4.11.111 |
+| `pa_aut26_pointer_dismiss` | Autumn Sale 2026 | 4.11.112 – 4.11.117 |
+| `pa_hall26_pointer_dismiss` | Halloween Sale 2026 | 4.11.118 – 4.11.119 |
+| `pa_bf26_pointer_dismiss` | Black Friday Sale 2026 | 4.11.120 – |
 
 The last two are the **same campaign under two names**: 4.11.84 renamed the transient
 without changing the copy, which re-shows the pointer to every site that had dismissed it.
 Worth knowing before assuming a name is stable for the life of a campaign.
 
-All five are listed in `PREMIUM_ADDONS_POINTER_TRANSIENTS`, not just the current one — the
+All eight are listed in `PREMIUM_ADDONS_POINTER_TRANSIENTS`, not just the current one — the
 fleet runs whatever version each site happens to have, and an old release still nags. No
 pattern match, for the same reason mechanism 4 names every ID: a sweep over
 `pre_transient_*` cannot exist, and would be the wrong shape if it could.
@@ -154,6 +163,40 @@ filter answers the gate on both. That is not the "vendor's own settings screen" 
 in `CLAUDE.md`, which is about modifying the vendor's own UI — locked panels, upgrade tabs,
 feature gating. This is one floating overlay injected into the admin header, identical on
 both screens, and the Premium Addons settings page itself is untouched.
+
+## Third pass — 18 Nov 2026: the rule drifted twice unnoticed
+
+Paul reported the pointer back on a live client site as *"Black Friday Sale 2026! … Save
+up to 40% Now"*, `utm_campaign=bf26`. The rule had not broken; the vendor had renamed the
+transient, exactly as the drift check below predicts. Listing the name across every vault
+release from 4.11.100 showed it had happened **three** times since the second pass, not
+once:
+
+```bash
+for PLUGIN_ZIP in $( ls -1 "${VAULT_PATH}"/*.zip | sort -V ); do
+	unzip -p "${PLUGIN_ZIP}" '*/includes/promotion-pointer.php' | command grep -o "pa_[a-z0-9]*_pointer_dismiss" | sort -u
+done
+```
+
+Autumn (4.11.112) and Halloween (4.11.118) went out with no rule covering them, and nobody
+noticed until a third campaign ran. A mechanism 1 filter cannot log a miss, so this is
+invisible from the debug log; the only signals are a report or re-running that loop.
+
+The gate was diffed against 4.11.103 at 4.11.112, 4.11.118 and 4.11.120. Each changes
+**only** the transient name, the end date (30 Oct, 15 Nov, 15 Dec 2026) and the copy. The
+four OR'd conditions, their order, and the position of the `_pa_plugin_pointer_priority`
+write after the gate are unchanged, so adding the names is the whole fix. The `*/` glob
+in the loop above matters: 4.11.112 moved the file under `admin/`, and a literal
+`includes/` path would have reported the pointer as gone.
+
+Also re-verified at 4.11.120: `admin_notices()` still calls only `required_plugins_check()`,
+`show_review_notice()` and `get_connect_ai_notice()` (the Angie branch has been removed);
+`required_plugins_check()` is still `public`; the widget is still `pa-stories` in
+`column3`. `show_review_notice()` is now `public` too, but nothing outside the dispatcher
+calls it, so the swap still removes it.
+
+Not bench-tested. The change is three names added to a constant whose rule was
+bench-confirmed and live-confirmed in the second pass; the gate it answers is unchanged.
 
 ## Deliberately left alone
 
@@ -260,8 +303,15 @@ Three rules.
 - context: **`column3`**, not the default `normal` — `wp_add_dashboard_widget()` is called
   with `$context = 'column3'` and `$priority = 'core'`, and `remove_meta_box()` must match
 
-Removing the meta box means the render callback never runs, so the
-`premiumaddons.com/wp-json/stories/v2/get` request is never made.
+Removing the meta box removes the widget, but **does not prevent the
+`premiumaddons.com/wp-json/stories/v2/get` request**. Corrected 18 Nov 2026; the earlier
+text here claimed it did. `show_story_widget()` calls `get_pa_stories()` *before*
+`wp_add_dashboard_widget()`, at priority 111, so the fetch has already happened when our
+999 runs. It is cached in a transient (a week on success, a day on failure), so it is one
+request a week per site, not one per dashboard load. True of every version read, 4.11.102
+to 4.11.120. Unhooking `show_story_widget` at 111 through `Admin_Notices::get_instance()`
+would stop it. Not done in the third pass, which was scoped to the pointer; raised with
+Paul as a possible follow-up.
 
 ## Drift check
 
@@ -273,7 +323,7 @@ Re-check when a new version appears in the vault:
   and must stay the whole of the operational output of `admin_notices()`.** If the
   dispatcher gains further operational notices, the swap would silently drop them. This is
   the single most important line to re-read on a new version
-- `includes/promotion-pointer.php` — **the transient name in the first `get_transient()`
+- `admin/includes/promotion-pointer.php` — **the transient name in the first `get_transient()`
   call.** A new campaign renames it and the rule stops matching, silently and with no log
   line, because a mechanism 1 filter has nothing to report. This is the one thing in this
   document that needs checking on every release, not just on a major one:
