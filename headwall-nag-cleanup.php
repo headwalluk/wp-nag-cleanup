@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.51.2
+ * Version:     1.52.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.51.2';
+		const VERSION = '1.52.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -399,6 +399,56 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			// uses this constant as a first-loader mutex, so defining it here skips the
 			// banner everywhere. CookieYes 3.5.5. docs/plugins/cookie-law-info.md
 			defined( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED' ) || define( 'CYA11Y_ACCESSYES_BANNER_DISPLAYED', true );
+
+			// WebToffee Import Export basic plugins (users, order, product). Their review request
+			// and their "Did You Know?" cross-sells on WooCommerce Orders, Products, Users and
+			// Reports all skip rendering when one of two request globals is already true. The
+			// vendor sets them itself, as a cross-plugin mutex, once one banner has rendered.
+			// Both are only ever read by those banners and only ever set to true, in all three
+			// plugins. Users Import Export 2.7.8, Order 2.8.1, Product 2.7.0.
+			// docs/plugins/users-customers-import-export-for-wp-woocommerce.md
+			// Do not drop either one: on 2.7.8 the first gates everything, but the second is the
+			// "Did You Know?" banner's own gate and the only one covering it in 2.7.0 to 2.7.2.
+			// Not used: pre_option_ answers on {prefix}_review_request. The review banner reads
+			// all three siblings' states and rotates between them, so one answer is not enough.
+			$GLOBALS['wt_iew_review_banner_shown']   = true;
+			$GLOBALS['wt_iew_wc_pages_banner_shown'] = true;
+
+			// WebToffee Import Export Black Friday banner. Its screen list is built entirely on
+			// this filter, which the vendor fills at the default priority, so an empty list
+			// shows it nowhere. Shared by the users, order and product basic plugins. The PDF
+			// invoice plugin filters wtpdf_bfcm_banner_screens instead and is not covered.
+			// Users Import Export 2.7.8. docs/plugins/users-customers-import-export-for-wp-woocommerce.md
+			add_filter( 'wt_bfcm_banner_screens', '__return_empty_array', self::LATE_PRIORITY );
+
+			// WebToffee Import Export Suite cross-sell on the History screen. The vendor only
+			// loads the banner class while this constant is undefined, as a first-loader mutex
+			// between the three basic plugins. Users Import Export 2.7.8 (banner since 2.7.4).
+			// docs/plugins/users-customers-import-export-for-wp-woocommerce.md
+			defined( 'WT_IEW_HISTORY_BANNER_LOADED' ) || define( 'WT_IEW_HISTORY_BANNER_LOADED', true );
+
+			// WebToffee cross-sells on WooCommerce screens outside the notice area. Each one is a
+			// first-loader mutex: the vendor checks it is undefined before rendering, then defines
+			// it, so defining it first skips that banner in every WebToffee plugin that ships a copy.
+			// Every check is guarded, so defining it here never triggers a redefinition warning.
+			// Users Import Export 2.7.8; uses also read in Order 2.8.1, Product 2.7.0, Smart Coupons
+			// 2.3.4, PDF Invoices 5.0.4 and Related Products 1.8.0.
+			// docs/plugins/users-customers-import-export-for-wp-woocommerce.md
+			// Analytics → Products and Analytics → Orders: Import Export Suite / Premium upsells,
+			// injected from admin_footer because the Analytics screens are a React app.
+			defined( 'WT_IEW_ANALYTICS_PRODUCTS_BANNER_LOADED' ) || define( 'WT_IEW_ANALYTICS_PRODUCTS_BANNER_LOADED', true );
+			defined( 'WT_IEW_ANALYTICS_ORDERS_BANNER_LOADED' ) || define( 'WT_IEW_ANALYTICS_ORDERS_BANNER_LOADED', true );
+			// Analytics → Revenue: Smart Coupons cross-sell, also from admin_footer.
+			defined( 'WBTE_SMART_COUPONS_ANALYTICS_BANNER' ) || define( 'WBTE_SMART_COUPONS_ANALYTICS_BANNER', true );
+			// Side meta boxes selling PDF Invoices (order edit), Smart Coupons (coupon edit) and
+			// Product Import Export (product edit, once a store has 50 products).
+			defined( 'WT_PDF_INVOICE_PLUGIN_DISPLAY_BANNER' ) || define( 'WT_PDF_INVOICE_PLUGIN_DISPLAY_BANNER', true );
+			defined( 'WT_SMART_COUPON_DISPLAY_BANNER' ) || define( 'WT_SMART_COUPON_DISPLAY_BANNER', true );
+			defined( 'WT_PRODUCT_IMPORT_EXPORT_DISPLAY_BANNER' ) || define( 'WT_PRODUCT_IMPORT_EXPORT_DISPLAY_BANNER', true );
+			// Coupons list: the "Did you know?" Smart Coupons pitch beside the page-title button.
+			// Smart Coupons reads it too, for its own Pro pitch (sc_pro_coupons_page_banner). That is
+			// the last banner in its chain, so its coupon-activity tips are not affected.
+			defined( 'WBTE_BFCM_SC_COUPONS_PAGE' ) || define( 'WBTE_BFCM_SC_COUPONS_PAGE', true );
 
 			// Freemius promotional stickies, bundled in Featured Images in RSS 1.7.3
 			// (SDK 2.13.4). Filters are namespaced per module as fs_{tag}_{slug}, so this

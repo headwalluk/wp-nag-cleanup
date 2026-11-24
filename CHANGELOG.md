@@ -5,6 +5,37 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.52.0] — 2026-11-24
+
+### Added
+
+- **WebToffee Import Export cross-sells, review request and Black Friday banner**
+  (Export and Import Users and Customers 2.7.8, `users-customers-import-export-for-wp-woocommerce`).
+  Reported by Paul from a client site: a *"Did You Know? There's a faster way to manage orders…"*
+  banner on the WooCommerce Orders screen. WebToffee's three basic import/export plugins (users,
+  order, product) coordinate their banners through request globals and define-guards used as
+  cross-plugin mutexes. This release claims those mutexes first, so one set of rules covers all
+  three siblings. Six surfaces go: the "Did You Know?" cross-sells on WooCommerce Orders, Products,
+  Users and Reports; the 5-star review request on the dashboard, Plugins and WooCommerce screens;
+  the Black Friday 2026 sale banner (`wt_bfcm_banner_screens`); and the Import Export Suite
+  cross-sell on the History screen (`WT_IEW_HISTORY_BANNER_LOADED`). The server-security notice
+  about public access to `wp-content/webtoffee_import`, and the minimum-WooCommerce-version notice,
+  are preserved. Nothing is written to the vendor's options. Harness-confirmed on the bench for
+  five surfaces, with the server-security notice still rendering. The dashboard/Plugins
+  review-request branch is source-verified only. On 2.7.2 and earlier, the Reports cross-sell is
+  not covered. Order Import Export 2.8.1 and Product Import Export 2.7.0 were read for the shared
+  identifiers but not separately analysed.
+- **WebToffee cross-sells outside the notice area**, through seven more of the vendor's first-loader
+  constants. The Import Export Suite / Premium upsells injected into WooCommerce Analytics → Orders
+  and → Products. The Smart Coupons pitch on Analytics → Revenue. The side meta boxes selling
+  PDF Invoices (order edit), Smart Coupons (coupon edit) and Product Import Export (product edit).
+  The *"Did you know?"* Smart Coupons pitch on the Coupons list. The constants are shared across
+  WebToffee's range, so every use was read in Smart Coupons 2.3.4, PDF Invoices 5.0.4 and Related
+  Products 1.8.0 as well. Each gates a promotion only, and each vendor `define()` is guarded, so there
+  are no redefinition warnings. In Smart Coupons itself, the Coupons-list constant also stops its own
+  Pro pitch, the last banner in its chain. Its coupon-activity banners are unaffected and not ruled
+  on. All seven harness-confirmed on the bench.
+
 ## [1.51.2] — 2026-11-18
 
 ### Fixed
