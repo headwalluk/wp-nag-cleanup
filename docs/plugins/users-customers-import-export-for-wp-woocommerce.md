@@ -206,7 +206,8 @@ Structural probes, before → after:
 
 Per rule:
 
-- `$wt_iew_review_banner_shown` / `$wt_iew_wc_pages_banner_shown`: **confirmed (harness)** for the
+- `$wt_iew_review_banner_shown` / `$wt_iew_wc_pages_banner_shown`: the reported Orders "Did You Know?"
+  banner is **live-confirmed**: Paul saw it gone on the client site, 24 Nov 2026. **Confirmed (harness)** for the
   Orders, Products and Reports cross-sells and the type-specific review banner. The common review banner
   (dashboard, Plugins) is **source-verified only**: its gate needs `wt_iew_action_history` job rows,
   and the bench had none. It is behind the same first-line check in `check_condition()`
@@ -221,6 +222,8 @@ Per rule:
   2 → 0, Revenue `wbte_sc_analytics_banner` 2 → 0, meta boxes `wbte_pdf_invoice_pro`,
   `wbte_coupon_import_export_pro` and `wbte_product_import_export_pro` 1 → 0 each, Coupons list
   `data-wbte-sc-promotion-banner-id="sc_cpns_page"` 1 → 0. All seven constants **confirmed (harness)**.
+  The Analytics upsells are also **live-confirmed**: Paul saw them gone on the client site where they
+  were reported, 24 Nov 2026, once 1.52.0 was deployed.
   No constant-redefinition warnings across the runs. The first-round probes were re-run on the final
   build: all 0, server-security notice still 1
 - Nothing written: after the run there was no `wt_*_iew_basic_review_request`, no

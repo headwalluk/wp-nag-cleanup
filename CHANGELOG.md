@@ -34,7 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Products 1.8.0 as well. Each gates a promotion only, and each vendor `define()` is guarded, so there
   are no redefinition warnings. In Smart Coupons itself, the Coupons-list constant also stops its own
   Pro pitch, the last banner in its chain. Its coupon-activity banners are unaffected and not ruled
-  on. All seven harness-confirmed on the bench.
+  on. All seven harness-confirmed on the bench. The Analytics upsells, and the Orders "Did You Know?"
+  banner from the first entry, are live-confirmed by Paul on the client site where they were reported.
 
 ## [1.51.2] — 2026-11-18
 
