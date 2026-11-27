@@ -3,7 +3,7 @@
  * Plugin Name: Headwall Nag Cleanup
  * Plugin URI:  https://github.com/headwalluk/wp-nag-cleanup
  * Description: Removes promotional clutter from the WordPress admin notice area and dashboard, leaving operational notices intact.
- * Version:     1.52.0
+ * Version:     1.53.0
  * Author:      Paul Faulkner
  * Author URI:  https://headwall-hosting.com/
  * License:     GPL-2.0-or-later
@@ -34,7 +34,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 	 */
 	class Plugin {
 
-		const VERSION = '1.52.0';
+		const VERSION = '1.53.0';
 
 		/**
 		 * Priority for our own unhooking and for overriding vendor filter values.
@@ -95,6 +95,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 */
 		const GOAL_TRACKER_FREEMIUS_MODULE_ID = 11325;
 		const GOAL_TRACKER_FREEMIUS_SLUG      = 'goal-tracker-ga';
+
+		/**
+		 * Digital Goods for WooCommerce Checkout's Freemius module, keyed the same way.
+		 * docs/plugins/woo-checkout-for-digital-goods.md
+		 */
+		const WCDG_FREEMIUS_MODULE_ID = 4703;
+		const WCDG_FREEMIUS_SLUG      = 'woo-checkout-for-digital-goods';
 
 		/**
 		 * Freemius modules claimed only for the render filter. Neither declares a trial or
@@ -489,6 +496,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 				2
 			);
 
+			// Same Freemius stickies, Digital Goods for WooCommerce Checkout 3.8.6 (SDK 2.13.5).
+			// docs/plugins/woo-checkout-for-digital-goods.md
+			add_filter(
+				'fs_show_admin_notice_' . self::WCDG_FREEMIUS_SLUG,
+				[ $this, 'hide_freemius_promo_notice' ],
+				self::LATE_PRIORITY,
+				2
+			);
+
 			// Same Freemius stickies, Independent Analytics 2.15.5 (SDK 2.13.4). Only the
 			// connect_account opt-in is ever produced here.
 			// docs/plugins/independent-analytics.md
@@ -607,6 +623,36 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 			$this->unhook_surerank_permalink_upsell();
 			$this->unhook_updraftplus_dashboard_panel();
 			$this->unhook_wp_product_feed_manager_sale_banner();
+			$this->unhook_ctyw_review_notice();
+		}
+
+		/**
+		 * Remove Custom Thank You for WooCommerce's "How do you like…? Leave Feedback" review request.
+		 *
+		 * CTYW_Settings' constructor adds it to admin_notices at the default priority when the
+		 * plugin file loads, and the vendor keeps the instance in the global $ctyw_settings.
+		 *
+		 * Not used: answering pre_option_ctyw_notice_dismiss with '1'. It would work, but the
+		 * instance is reachable, so the unhook is the lower mechanism. The WooCommerce-missing
+		 * notice is CTYW_Init's, and stays.
+		 * Custom Thank You for WooCommerce 1.1.6. docs/plugins/custom-thank-you-for-woocommerce.md
+		 */
+		public function unhook_ctyw_review_notice() : void {
+			global $ctyw_settings;
+
+			if ( ! is_a( $ctyw_settings, 'CTYW_Settings' ) ) {
+				// Not installed.
+			} else {
+				$review_callback = [ $ctyw_settings, 'ctyw_admin_notice' ];
+				$priority        = has_action( 'admin_notices', $review_callback );
+
+				if ( false === $priority ) {
+					$this->log( 'custom-thank-you-for-woocommerce', 'CTYW_Settings is loaded but ctyw_admin_notice is not on admin_notices.' );
+				} else {
+					remove_action( 'admin_notices', $review_callback, $priority );
+					$this->log( 'custom-thank-you-for-woocommerce', sprintf( 'Removed CTYW_Settings::ctyw_admin_notice from admin_notices priority %d.', $priority ) );
+				}
+			}
 		}
 
 		/**
@@ -1383,15 +1429,18 @@ if ( ! class_exists( __NAMESPACE__ . '\\Plugin' ) ) {
 		 * Role Based Pricing for WooCommerce 2.0.0, Freemius SDK 2.13.2.
 		 * Menu Image 3.13, Freemius SDK 2.12.1.
 		 * Goal Tracker 1.1.6, Freemius SDK 2.11.0.
+		 * Digital Goods for WooCommerce Checkout 3.8.6, Freemius SDK 2.13.5.
 		 * docs/plugins/featured-images-for-rss-feeds.md,
 		 * docs/plugins/role-and-customer-based-pricing-for-woocommerce.md,
-		 * docs/plugins/menu-image.md, docs/plugins/goal-tracker-ga.md
+		 * docs/plugins/menu-image.md, docs/plugins/goal-tracker-ga.md,
+		 * docs/plugins/woo-checkout-for-digital-goods.md
 		 */
 		public function unhook_freemius_promos() : void {
 			$this->unhook_freemius_module_promos( self::FIRSS_FREEMIUS_MODULE_ID );
 			$this->unhook_freemius_module_promos( self::RACBPFW_FREEMIUS_MODULE_ID );
 			$this->unhook_freemius_module_promos( self::MENU_IMAGE_FREEMIUS_MODULE_ID );
 			$this->unhook_freemius_module_promos( self::GOAL_TRACKER_FREEMIUS_MODULE_ID );
+			$this->unhook_freemius_module_promos( self::WCDG_FREEMIUS_MODULE_ID );
 		}
 
 		/**

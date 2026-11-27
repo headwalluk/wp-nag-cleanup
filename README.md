@@ -314,6 +314,8 @@ and has a written analysis in [`docs/plugins/`](docs/plugins/).
 | Product Slider for WooCommerce (ShapedPlugin) | 2.8.13 | 2 | Seasonal offer banner (a full-width advert on **every** admin page), 5-star review request and the admin-footer rating text. WooCommerce-dependency notice, the two vendor-screen cross-sells and the footer version string preserved. Not the same plugin as WPB WooCommerce Product Slider |
 | WPForms Lite | 2.0.1.1 | 2 | 5-star review request and the admin-footer rating text. The "Made with ♥" footer block, the entry-reports dashboard widget, and every operational notice preserved — Stripe/PayPal/Square webhook, domain and card-testing-fraud warnings, requirement failures, Lite Connect backup errors and the Lite/Pro conflict notice |
 | Astra (the free **theme**, not `astra-addon`) | 4.13.11 | 2 | "Running a WooCommerce store? You need more than just a theme" Business Toolkit upsell, shown on the WooCommerce admin screens. PHP memory-limit warning, both Astra Pro version-mismatch notices and the deprecated-hook warnings preserved |
+| Digital Goods for WooCommerce Checkout (theDotstore), via Freemius | 3.8.6, SDK 2.13.5 | 1, 2 | Freemius trial promotion, affiliate-program and usage-tracking opt-in notices, and the trial menu counter bubble, on the same rule as Featured Images in RSS. WooCommerce-missing notice preserved |
+| Custom Thank You for WooCommerce (Artios Media) | 1.1.6 | 2 | "How do you like…? Leave Feedback" review request, on every admin screen. WooCommerce-missing notice preserved |
 | WordPress core | 7.1 | 3 | "WordPress Events and News" widget — **opt-in only**, off by default |
 | WordPress core | 7.1 | 2 | Dashboard "Welcome" panel — **opt-in only**, off by default |
 

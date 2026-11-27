@@ -5,6 +5,26 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.53.0] — 2026-11-27
+
+### Added
+
+- **Digital Goods for WooCommerce Checkout Freemius trial promotion** (theDotstore,
+  `woo-checkout-for-digital-goods` 3.8.6, Freemius SDK 2.13.5). Reported by Paul from a client
+  site: *"Hey! How do you like Digital Goods for WooCommerce Checkout so far? Test all our awesome
+  premium features with a 14-day free trial."* The module joins the existing Freemius rule: the
+  `trial_promotion`, `affiliate_program` and `connect_account` stickies are hidden at render, and
+  the trial and affiliate producers are unhooked so the trial menu counter goes too. SDK 2.13.5 is
+  the newest on the rule; the parts it depends on were re-read in this copy. Licence and trial-state
+  notices, and the WooCommerce-missing notice, preserved. theDotstore's remote promotional bar is on
+  the plugin's own settings header and is out of scope. Live-confirmed by Paul on the client site
+  where it was reported. The trial menu-counter unhook is source-verified only.
+- **Custom Thank You for WooCommerce review request** (Artios Media, 1.1.6). Reported by Paul from
+  a client site: *"How do you like Custom Thank You for WooCommerce? … Leave Feedback"*, on every
+  admin screen. Unhooked from `admin_notices` through the vendor's global `$ctyw_settings`. The
+  WooCommerce-missing notice is preserved. Nothing is written. Live-confirmed by Paul on the client
+  site where it was reported.
+
 ## [1.52.0] — 2026-11-24
 
 ### Added
